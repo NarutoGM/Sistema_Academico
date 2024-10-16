@@ -4,12 +4,18 @@ import userThree from '../images/user/user-01.png';
 import { isAuthenticated } from '@/utils/auth';
 
 const Settings = () => {
+  const [userData, setUserData] = useState({
+    userName: '',
+    email: '',
+  });
 
-  const [userName, setUserName] = useState('');
   useEffect(() => {
     const authData = isAuthenticated(); // Llama a tu función para obtener los datos de autenticación
     if (authData) {
-      setUserName(authData.name); // Guarda el nombre en el estado
+      setUserData({
+        userName: authData.name, // Guarda el nombre en el estado
+        email: authData.email, // Guarda el email en el estado
+      });
     }
   }, []);
 
@@ -67,7 +73,7 @@ const Settings = () => {
                           type="text"
                           name="fullName"
                           id="fullName"
-                          value={userName}
+                          value={userData.userName}
                         />
                       </div>
                     </div>
@@ -128,8 +134,7 @@ const Settings = () => {
                         type="email"
                         name="emailAddress"
                         id="emailAddress"
-                        placeholder="devidjond45@gmail.com"
-                        defaultValue="devidjond45@gmail.com"
+                        value={userData.email}
                       />
                     </div>
                   </div>

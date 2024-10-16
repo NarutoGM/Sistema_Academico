@@ -24,6 +24,7 @@ class AuthController extends Controller
             'token' => $user->createToken("login-token-".$user->id)->plainTextToken,
             'role' => $rol ? $rol->name : null,
             'name' => $user->name,
+            'email' => $user->email,
         ]);
     }
     

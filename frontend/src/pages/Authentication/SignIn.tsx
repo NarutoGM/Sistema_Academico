@@ -10,49 +10,59 @@ import fetcher from '@/utils/fetcher';
 
 const SignIn: React.FC = () => {
   const LoginSchema = z.object({
-    email: z.string().trim().email({ message: "Formato de correo no válido" }),
+    email: z.string().trim().email({ message: 'Formato de correo no válido' }),
     password: z.string().trim(),
-  })
+  });
 
   type FormData = z.infer<typeof LoginSchema>;
 
-  const { register, handleSubmit, formState: { errors }, clearErrors, reset } = useForm<FormData>({ resolver: zodResolver(LoginSchema) });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    clearErrors,
+    reset,
+  } = useForm<FormData>({ resolver: zodResolver(LoginSchema) });
 
   type LoginResponse = {
-      token: string,
-      role: string
-      name: string
-  }
+    token: string;
+    role: string;
+    name: string;
+    email: string;
+  };
 
   const navigate = useNavigate();
 
   async function onSubmit(data: any) {
     try {
-        const response = await fetcher(`/api/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        });
+      const response = await fetcher(`/api/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-        if (!response.ok) {
-            const errorData = await response.json(); // Lee el cuerpo solo una vez
-            throw new Error(errorData.message || 'Error desconocido');
-        }
-        
-        const responseJ = await response.json(); // Lee el cuerpo aquí
-        handleLogin(responseJ.token, responseJ.role, responseJ.name);
-        navigate('/dashboard');
-        clearErrors();
-        reset();
+      if (!response.ok) {
+        const errorData = await response.json(); // Lee el cuerpo solo una vez
+        throw new Error(errorData.message || 'Error desconocido');
+      }
+
+      const responseJ = await response.json(); // Lee el cuerpo aquí
+      handleLogin(
+        responseJ.token,
+        responseJ.role,
+        responseJ.name,
+        responseJ.email,
+      );
+      navigate('/dashboard');
+      clearErrors();
+      reset();
     } catch (error) {
-        console.error('Error en el login:', error);
-        alert(error.message);
+      console.error('Error en el login:', error);
+      alert(error.message);
     }
-}
-
-
+  }
 
   return (
     <>
@@ -211,7 +221,7 @@ const SignIn: React.FC = () => {
                   </label>
                   <div className="relative">
                     <input
-                      {...register("email", { required: true })}
+                      {...register('email', { required: true })}
                       type="email"
                       placeholder="Enter your email"
                       className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
@@ -243,7 +253,7 @@ const SignIn: React.FC = () => {
                   </label>
                   <div className="relative">
                     <input
-                      {...register("password", { required: true })}
+                      {...register('password', { required: true })}
                       type="password"
                       placeholder="6+ Characters, 1 Capital letter"
                       className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
