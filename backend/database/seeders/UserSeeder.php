@@ -13,9 +13,9 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $medicoDefault = User::create([
-            "name" => "Admin",
-            "email" => "admin@example.org",
+        $user = User::create([
+            "name" => "Fernando Pantoja",
+            "email" => "t1053300121@unitru.edu.pe",
             "password" => bcrypt("password")
         ]);
     }
