@@ -12,7 +12,6 @@ import ModalEliminar from './ModalEliminar';
 interface Roles {
   id: number;
   name: string;
-  guard_name: string;
 }
 
 interface Permiso {
@@ -31,12 +30,10 @@ const FilteredUnidad: React.FC = () => {
   const [formData, setFormData] = useState<{
     id: number | '';
     name: string;
-    guard_name: string;
     permisos: any[];
   }>({
     id: '',
     name: '',
-    guard_name: '',
     permisos: [],
   });
   
@@ -44,7 +41,6 @@ const FilteredUnidad: React.FC = () => {
   const [data, setData] = useState<Roles[]>([]);
   const [filters, setFilters] = useState({
     name: '',
-    guard_name: '',
   });
   const [sortConfig, setSortConfig] = useState<{ key: keyof Roles | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
   const [token, setToken] = useState<string | null>(null);
@@ -117,7 +113,6 @@ const FilteredUnidad: React.FC = () => {
   // Filtrar datos
   const filteredData = data.filter((item) => {
     const matchesName = filters.name === '' || item.name.toLowerCase().includes(filters.name.toLowerCase());
-    const matchesGuardName = filters.guard_name === '' || item.guard_name.toLowerCase().includes(filters.guard_name.toLowerCase());
     return matchesName && matchesGuardName;
   });
 
@@ -126,7 +121,7 @@ const FilteredUnidad: React.FC = () => {
     const headers = ['Rol', 'GuardName'];
     const csvContent = [
       headers.join(','),
-      ...data.map((item) => [item.name, item.guard_name].join(',')),
+      ...data.map((item) => [item.name].join(',')),
     ].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -173,7 +168,6 @@ const FilteredUnidad: React.FC = () => {
     setFormData({
       id: '',
       name: '',
-      guard_name: '',
       permisos: [],
     });
     setSelectedPermisosAsActivities([]); // Reiniciar permisos seleccionados
@@ -193,14 +187,12 @@ const FilteredUnidad: React.FC = () => {
         setFormData({
           id: data.id,
           name: data.name,
-          guard_name: data.guard_name,
           permisos: data.permisos || [],
         });
       } else { // Modal de creación
         setFormData({
           id: '',
           name: '',
-          guard_name: '',
           permisos: [],
         });
       }
@@ -264,16 +256,7 @@ const FilteredUnidad: React.FC = () => {
               className="w-full p-2 border rounded-md" 
             />
           </div>
-          <div>
-            <input 
-              type="text" 
-              name="guard_name"
-              value={filters.guard_name}
-              onChange={handleFilterChange}
-              placeholder="Guard_name" 
-              className="w-full p-2 border rounded-md" 
-            />
-          </div>
+
         </div>
       </div>
 
@@ -304,7 +287,7 @@ const FilteredUnidad: React.FC = () => {
         <table className="w-full table-auto border-collapse">
           <thead className="bg-gray-50">
             <tr className="bg-primary text-left text-white">
-              {['Name', 'GuardName'].map((key) => (
+              {['Name', 'Permisos'].map((key) => (
                 <th 
                   key={key}
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
@@ -323,7 +306,6 @@ const FilteredUnidad: React.FC = () => {
             {filteredData.map((item) => (
               <tr key={item.id} className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
                 <td className="border-b border-gray-200 py-4 px-6">{item.name}</td>
-                <td className="border-b border-gray-200 py-4 px-6">{item.guard_name}</td>
                 <td className="border-b border-gray-200 py-4 px-6">
                   <div className="flex items-center space-x-4">
                     {/* Botón Editar */}
