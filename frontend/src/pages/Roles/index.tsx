@@ -62,7 +62,7 @@ const FilteredUnidad: React.FC = () => {
   const fetchData = async () => {
     setLoading(true); // Comienza la carga
     try {
-      const tokenResponse = await login('admin@example.org', 'password');
+      const tokenResponse = await login('t1053300121@unitru.edu.pe', 'password');
       setToken(tokenResponse);
       const roles = await getRoles(tokenResponse);
       setData(roles);
@@ -144,7 +144,7 @@ const FilteredUnidad: React.FC = () => {
   // Función para manejar la asignación de permisos a un rol
   const handleSave = async (selectedActivities: Activity[]) => {
     try {
-      const tokenResponse = token || await login('admin@example.org', 'password');
+      const tokenResponse = token || await login('t1053300121@unitru.edu.pe', 'password');
       const rolId = formData.id;
 
       const permisosToSave = selectedActivities.map((permiso) => ({
