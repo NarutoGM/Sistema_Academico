@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +10,11 @@ class RolPermiso extends Model
 
     protected $table = 'RolPermiso';
 
+    // Indica que no hay columna 'id' autoincremental
+    protected $primaryKey = null;
+    public $incrementing = false;
+
+    // Permitir timestamps automáticos
     public $timestamps = true;
 
     protected $fillable = [
@@ -19,14 +23,12 @@ class RolPermiso extends Model
         'estado',
     ];
 
-
-    public function rol(): BelongsTo
+    public function rol()
     {
-        return $this->belongsTo(Rol::class, 'idRol');
+        return $this->belongsTo(Role::class, 'idRol');
     }
 
-
-    public function permiso(): BelongsTo
+    public function permiso()
     {
         return $this->belongsTo(Permiso::class, 'idPermiso');
     }
