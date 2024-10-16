@@ -61,7 +61,7 @@ export const getRoles = async (): Promise<Rol[]> => {
 
 
 // Función para crear un nuevo rol
-export const createRol = async (token: string, formData: { name: string; guard_name: string }) => {
+export const createRol = async (token: string, formData: { name: string }) => {
   const response = await fetch(`http://127.0.0.1:8000/api/roles`, {
     method: 'POST',
     headers: {

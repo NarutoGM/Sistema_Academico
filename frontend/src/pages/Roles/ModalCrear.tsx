@@ -7,13 +7,11 @@ interface ModalCrearProps {
   formData: {
     id: number | '';
     name: string;
-    guard_name: string;
     permisos: any[];
   };
   setFormData: React.Dispatch<React.SetStateAction<{
     id: number | '';
     name: string;
-    guard_name: string;
     permisos: any[];
   }>>;
   handleSubmit: () => void;
@@ -54,15 +52,7 @@ const ModalCrear: React.FC<ModalCrearProps> = ({ isModalCrearOpen, closeModalCre
               />
             </div>
 
-            <div className="mb-4">
-              <label className="block text-gray-700">Guard Name</label>
-              <input
-                type="text"
-                value={formData.guard_name || ''} // Controlado
-                onChange={(e) => setFormData({ ...formData, guard_name: e.target.value })}
-                className="w-full p-2 border rounded-md"
-              />
-            </div>
+           
 
             <div className="flex justify-end space-x-4">
               <button
