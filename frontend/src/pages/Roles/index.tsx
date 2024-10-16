@@ -113,12 +113,12 @@ const FilteredUnidad: React.FC = () => {
   // Filtrar datos
   const filteredData = data.filter((item) => {
     const matchesName = filters.name === '' || item.name.toLowerCase().includes(filters.name.toLowerCase());
-    return matchesName && matchesGuardName;
+    return matchesName ;
   });
 
   // Exportar a CSV
   const exportToCSV = () => {
-    const headers = ['Rol', 'GuardName'];
+    const headers = ['Rol'];
     const csvContent = [
       headers.join(','),
       ...data.map((item) => [item.name].join(',')),
@@ -287,7 +287,7 @@ const FilteredUnidad: React.FC = () => {
         <table className="w-full table-auto border-collapse">
           <thead className="bg-gray-50">
             <tr className="bg-primary text-left text-white">
-              {['Name', 'Permisos'].map((key) => (
+              {['Name'].map((key) => (
                 <th 
                   key={key}
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"

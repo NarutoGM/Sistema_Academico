@@ -22,9 +22,8 @@ class RoleController extends Controller
     {
         // Validación
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'guard_name' => 'required|string|max:255',
-        ]);
+            'name' => 'required|string|max:255'
+                ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
