@@ -13,7 +13,7 @@ import FlujoActividades from './pages/Activities/FlujoActividades';
 import Persona from './pages/Persona/index';
 
 import Unidades from './pages/Unidades/Unidades';
-import Especialidad from './pages/Especialidad/index';
+import Permisos from './pages/Permisos/index';
 import Roles from './pages/Roles/index';
 import Tramite from './pages/Tramite';
 import TramiteAsesor from './pages/TramiteAsesor';
@@ -268,11 +268,11 @@ const router = createBrowserRouter([
             },
          
             {
-                path: '/especialidad',
+                path: '/permisos',
                 element: (
-                    <ProtectedRoute allowedRoles={['Profesores']}>
-                        <PageTitle title="Especialidad | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-                        <Especialidad />
+                    <ProtectedRoute >
+                        <PageTitle title="Permisos | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+                        <Permisos />
                         </ProtectedRoute>
                 ),
             },

@@ -1,49 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronUp, ChevronDown, Plus, Edit, Download, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getEspecialidades, login, createEspecialidad, updateEspecialidad, deleteEspecialidad } from "@/pages/services/especialidad.services";
+import Cookies from 'js-cookie';
+import { getPermisos, createPermiso, updatePermiso, deletePermiso } from "@/pages/services/permisos.services";
 import ModalUnidad from './ModalUnidad';
 import ModalEliminar from './ModalEliminar';
 
 const FilteredUnidad = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<1 | 2 | null>(null); // 1: Crear, 2: Editar
+  const [modalType, setModalType] = useState<1 | 2 | null>(null);
   const [formData, setFormData] = useState<{
     id: number | '';
-    Descripcion: string;
-    AsesorFree: boolean;
-    idResponsableArea: number; // Nuevo campo
-    idResponsableSecretaria: number; // Nuevo campo
+    descripcion: string;
+    estado: boolean; 
   }>({
     id: '',
-    Descripcion: '',
-    AsesorFree: true,
-    idResponsableArea: 0, // Nuevo campo
-    idResponsableSecretaria: 0, // Nuevo campo
+    descripcion: '',
+    estado: true,
   });
-  const [unidadToDelete, setUnidadToDelete] = useState<null | { id: number; Descripcion: string; AsesorFree: boolean }>(null);
-  const [data, setData] = useState<Especialidad[]>([]);
-  const [sortConfig, setSortConfig] = useState<{ key: keyof Especialidad | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
+  const [permisoToDelete, setPermisoToDelete] = useState<null | { id: number; descripcion: string; estado: boolean }>(null);
+  const [data, setData] = useState<Permiso[]>([]);
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Permiso | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
   const [filters, setFilters] = useState({
-    Descripcion: '',
-    AsesorFree: '',
+    descripcion: '',
+    estado: '',
   });
-  const [token, setToken] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const openModal = (type: 1 | 2, data: Especialidad | null = null) => {
+  const openModal = (type: 1 | 2, data: Permiso | null = null) => {
     setModalType(type);
     if (type === 2 && data) {
       setFormData({
         id: data.id,
-        Descripcion: data.Descripcion,
-        AsesorFree: data.AsesorFree, // Asegúrate de que este valor sea correcto
-        idResponsableArea: data.idResponsableArea || 0, // Asegúrate de que estás configurando estos campos también si son relevantes
-        idResponsableSecretaria: data.idResponsableSecretaria || 0,
+        descripcion: data.descripcion,
+        estado: data.estado,
       });
     } else {
-      setFormData({ id: '', Descripcion: '', AsesorFree: true ,idResponsableArea: 0,idResponsableSecretaria: 0 });
+      setFormData({ id: '', descripcion: '', estado: true });
     }
     setIsModalOpen(true);
   };
@@ -53,60 +47,46 @@ const FilteredUnidad = () => {
     setModalType(null);
   };
 
-  const openDeleteModal = (unidad: Especialidad) => {
-    setUnidadToDelete(unidad);
+  const openDeleteModal = (permiso: Permiso) => {
+    setPermisoToDelete(permiso);
     setIsDeleteModalOpen(true);
   };
 
   const closeDeleteModal = () => setIsDeleteModalOpen(false);
 
   const handleDelete = async () => {
-    if (!unidadToDelete) return;
+    if (!permisoToDelete) return;
 
     try {
-      await deleteEspecialidad(unidadToDelete.id);
-      setData((prevData) => prevData.filter((item) => item.id !== unidadToDelete.id));
+      await deletePermiso(permisoToDelete.id);
+      setData((prevData) => prevData.filter((item) => item.id !== permisoToDelete.id));
       closeDeleteModal();
     } catch (error) {
-      console.error('Error al eliminar especialidad:', error);
-      // Aquí puedes agregar lógica para mostrar una notificación al usuario
+      console.error('Error al eliminar permiso:', error);
     }
   };
+
   const handleSubmit = async () => {
     try {
-      const especialidadData = {
-        Descripcion: formData.Descripcion,
-        AsesorFree: formData.AsesorFree , // Convertir booleano a string
-        idResponsableArea: formData.idResponsableArea,
-        idResponsableSecretaria: formData.idResponsableSecretaria,
+      const permisoData = {
+        descripcion: formData.descripcion,
+        estado: formData.estado,
       };
 
       if (modalType === 1) {
-        const nuevaEspecialidad = await createEspecialidad(especialidadData);
-
-        // Asegúrate de que todos los campos estén presentes en el nuevo estado
-        setData((prevData) => [
-          ...prevData, 
-          {
-            ...nuevaEspecialidad, // Debería tener todos los campos
-            AsesorFree: nuevaEspecialidad.AsesorFree ? '1' : '0',  // Asegúrate de que se incluye
-            idResponsableArea: nuevaEspecialidad.idResponsableArea,
-            idResponsableSecretaria: nuevaEspecialidad.idResponsableSecretaria,
-          }
-        ]);
+        const nuevoPermiso = await createPermiso(permisoData);
+        setData((prevData) => [...prevData, nuevoPermiso]);
       } else if (modalType === 2 && typeof formData.id === 'number') {
-        const especialidadActualizada = await updateEspecialidad(formData.id, especialidadData);
+        const permisoActualizado = await updatePermiso(formData.id, permisoData);
         setData((prevData) =>
           prevData.map((item) =>
-            item.id === especialidadActualizada.id ? especialidadActualizada : item
+            item.id === permisoActualizado.id ? permisoActualizado : item
           )
         );
       }
       closeModal();
     } catch (error) {
-      console.error('Error al crear/editar especialidad:', error);
-  
-      // Si el backend devuelve un error detallado, intenta extraerlo
+      console.error('Error al crear/editar permiso:', error);
       if (error.response && error.response.data) {
         alert(`Error: ${error.response.data.message || JSON.stringify(error.response.data)}`);
       } else {
@@ -115,31 +95,18 @@ const FilteredUnidad = () => {
     }
   };
 
-
-
   const filteredData = data.filter((item) => {
-    const matchesDescripcion = filters.Descripcion === '' || item.Descripcion.toLowerCase().includes(filters.Descripcion.toLowerCase());
-    
-    // Aquí añadimos el filtro de AsesorFree
-    const matchesAsesorFree = filters.AsesorFree === '' || item.AsesorFree === filters.AsesorFree;
-    
-    return matchesDescripcion && matchesAsesorFree;
+    const matchesDescripcion = filters.descripcion === '' || item.descripcion.toLowerCase().includes(filters.descripcion.toLowerCase());
+    const matchesEstado = filters.estado === '' || (item.estado ? '1' : '0') === filters.estado;
+    return matchesDescripcion && matchesEstado;
   });
-  
-
-
-
-  const handleNavigate = (path: string) => {
-    navigate(path);
-  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = await login('admin@gmail.com', 'admin1234');
-        setToken(token);
-        const especialidades = await getEspecialidades();
-        setData(especialidades);
+        const token = Cookies.get('token'); // Obtener el token de las cookies
+        const permisos = await getPermisos(token); // Pasar el token a la función getPermisos
+        setData(permisos);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -152,7 +119,7 @@ const FilteredUnidad = () => {
     setFilters((prevFilters) => ({ ...prevFilters, [name]: value }));
   };
 
-  const sortData = (key: keyof Especialidad) => {
+  const sortData = (key: keyof Permiso) => {
     let direction: 'ascending' | 'descending' = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
@@ -168,7 +135,7 @@ const FilteredUnidad = () => {
     setData(sortedData);
   };
 
-  const getSortIcon = (key: keyof Especialidad) => {
+  const getSortIcon = (key: keyof Permiso) => {
     if (sortConfig.key === key) {
       return sortConfig.direction === 'ascending' ? <ChevronUp size={14} /> : <ChevronDown size={14} />;
     }
@@ -176,10 +143,10 @@ const FilteredUnidad = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ['Descripcion', 'AsesorFree'];
+    const headers = ['Descripción', 'Estado'];
     const csvContent = [
       headers.join(','),
-      ...data.map((item) => [item.descripcion, item.asesorFree ? '1' : '0'].join(',')),
+      ...data.map((item) => [item.descripcion, item.estado ? '1' : '0'].join(',')),
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -203,26 +170,24 @@ const FilteredUnidad = () => {
           <div>
             <input 
               type="text" 
-              name="Descripcion"
-              value={filters.Descripcion}
+              name="descripcion"
+              value={filters.descripcion}
               onChange={handleFilterChange}
               placeholder="Descripción" 
               className="w-full p-2 border rounded-md" 
             />
           </div>
           <div>
-          <select 
-  name="AsesorFree"
-  value={filters.AsesorFree}
-  onChange={handleFilterChange}
-  className="w-full p-2 border rounded-md bg-white"
->
-  <option value="">AsesorFree</option>
-  <option value="1">Activo</option> {/* Coincide con "1" del backend */}
-  <option value="0">Inactivo</option> {/* Coincide con "0" del backend */}
-</select>
-
-
+            <select 
+              name="estado"
+              value={filters.estado}
+              onChange={handleFilterChange}
+              className="w-full p-2 border rounded-md bg-white"
+            >
+              <option value="">Estado</option>
+              <option value="1">Activo</option>
+              <option value="0">Inactivo</option>
+            </select>
           </div>
         </div>
       </div>
@@ -249,15 +214,15 @@ const FilteredUnidad = () => {
         <table className="w-full table-auto border-collapse">
           <thead className="bg-gray-50">
             <tr className="bg-primary text-left text-white">
-              {['Descripcion', 'AsesorFree'].map((key) => (
+              {['Descripción', 'Estado'].map((key) => (
                 <th 
                   key={key}
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => sortData(key as keyof Especialidad)}
+                  onClick={() => sortData(key as keyof Permiso)}
                 >
                   <div className="flex items-center">
                     {key.charAt(0).toUpperCase() + key.slice(1)}
-                    {getSortIcon(key as keyof Especialidad)}
+                    {getSortIcon(key as keyof Permiso)}
                   </div>
                 </th>
               ))}
@@ -267,15 +232,11 @@ const FilteredUnidad = () => {
           <tbody>
             {filteredData.map((item) => (
               <tr key={item.id} className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
-                <td className="border-b border-gray-200 py-4 px-6">{item.Descripcion}</td>
+                <td className="border-b border-gray-200 py-4 px-6">{item.descripcion}</td>
                 <td className="border-b border-gray-200 py-4 px-6">
-                <p
-  className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
-    item.AsesorFree === '0' ? 'bg-danger text-danger' : 'bg-success text-success'
-  }`}
->
-  {item.AsesorFree === '1' ? 'Activo' : 'Inactivo'}
-</p>
+                  <p className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${item.estado ? 'bg-success text-success' : 'bg-danger text-danger'}`}>
+                    {item.estado ? 'Activo' : 'Inactivo'}
+                  </p>
                 </td>
                 <td className="border-b border-gray-200 py-4 px-6">
                   <div className="flex items-center space-x-4">
