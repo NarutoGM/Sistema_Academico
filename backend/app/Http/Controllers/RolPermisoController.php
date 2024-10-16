@@ -23,7 +23,7 @@ class RolPermisoController extends Controller
             $request->validate([
                 'rol_id' => 'required|exists:roles,id',
                 'permisos' => 'nullable|array',
-                'permisos.*.id' => 'nullable|exists:permiso,id',
+                'permisos.*.id' => 'nullable|exists:Permiso,id',
             ]);
     
             $rolId = $request->input('rol_id');
@@ -41,7 +41,7 @@ class RolPermisoController extends Controller
             // Obtener la fecha y hora actual
             $now = now();
     
-            // Si hay permisos, crea nuevos
+            // Si no hay permisos, crea nuevos
             if (!empty($permisos)) {
                 foreach ($permisos as $permiso) {
                     RolPermiso::create([
@@ -56,7 +56,10 @@ class RolPermisoController extends Controller
     
             return response()->json(['message' => 'Permisos guardados exitosamente'], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error guardando permisos: ' . $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Error guardando permisos: ' . $e->getMessage(),
+                'trace' => $e->getTrace()
+            ], 500);
         }
     }
     
