@@ -1,7 +1,18 @@
+import { useEffect, useState } from 'react';
 import Breadcrumb from '../components/Breadcrumbs/Breadcrumb';
-import userThree from '../images/user/user-03.png';
+import userThree from '../images/user/user-01.png';
+import { isAuthenticated } from '@/utils/auth';
 
 const Settings = () => {
+
+  const [userName, setUserName] = useState('');
+  useEffect(() => {
+    const authData = isAuthenticated(); // Llama a tu función para obtener los datos de autenticación
+    if (authData) {
+      setUserName(authData.name); // Guarda el nombre en el estado
+    }
+  }, []);
+
   return (
     <>
       <div className="mx-auto max-w-270">
@@ -12,7 +23,7 @@ const Settings = () => {
             <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
               <div className="border-b border-stroke py-4 px-7 dark:border-strokedark">
                 <h3 className="font-medium text-black dark:text-white">
-                  Personal Information
+                  Información Personal
                 </h3>
               </div>
               <div className="p-7">
@@ -23,7 +34,7 @@ const Settings = () => {
                         className="mb-3 block text-sm font-medium text-black dark:text-white"
                         htmlFor="fullName"
                       >
-                        Full Name
+                        Nombre Completo
                       </label>
                       <div className="relative">
                         <span className="absolute left-4.5 top-4">
@@ -56,8 +67,7 @@ const Settings = () => {
                           type="text"
                           name="fullName"
                           id="fullName"
-                          placeholder="Devid Jhon"
-                          defaultValue="Devid Jhon"
+                          value={userName}
                         />
                       </div>
                     </div>
