@@ -4,23 +4,13 @@ import { createBrowserRouter, Route, Routes, useLocation } from 'react-router-do
 import Loader from './common/Loader';
 import PageTitle from './components/PageTitle';
 import DefaultLayout from './layout/DefaultLayout';
-import CrearFlujoActividades from './pages/Activities/CrearFlujoActividades';
-import ThesisEvaluation from './pages/Thesis evaluation/Calificación de Tesis Component';
-import ThesisDetails from './pages/Thesis evaluation/Detalle de Tesis Component';
-import Responsable from './pages/Responsable';
-import CreateActivity from './pages/Activities/CreateActivity';
-import FlujoActividades from './pages/Activities/FlujoActividades';
-import Persona from './pages/Persona/index';
 
-import Unidades from './pages/Unidades/Unidades';
 import Permisos from './pages/Permisos/index';
 import Roles from './pages/Roles/index';
 
 import AdministrarUsuarios from './pages/AdministrarUsuarios/index';
 
 
-import Tramite from './pages/Tramite';
-import TramiteAsesor from './pages/TramiteAsesor';
 
 
 
@@ -37,10 +27,7 @@ import Settings from './pages/Settings';
 import Tables from './pages/Tables';
 import Alerts from './pages/UiElements/Alerts';
 import Buttons from './pages/UiElements/Buttons';
-import { FlujoIndex } from './pages/flujos';
 import ProtectedRoute from './components/Auth/protected_route';
-import FilteredUnidad from './pages/Unidades/Unidades';
-import FilteredThesis from './pages/Thesis evaluation/Filtered Table Component';
 import { User } from 'lucide-react';
 
 const router = createBrowserRouter([
@@ -81,60 +68,9 @@ const router = createBrowserRouter([
 
                 ),
             },
-            {
-                path: '/activity',
-                element: (
-                    <ProtectedRoute allowedRoles={['Profesores','Estudiante']}>
-                        <PageTitle title="CreateActivity | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-                        <CreateActivity />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: '/flujoactividades',
-                element: (
-                    <ProtectedRoute allowedRoles={['Profesores', 'Administrador']}>
-                        <PageTitle title="FlujoActividades | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-                        <FlujoActividades />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: '/crearflujoactividades',
-                element: (
-                    <ProtectedRoute allowedRoles={['Profesores', 'Administrador']}>
-                        <PageTitle title="CrearFlujoActividades | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-                        <CrearFlujoActividades />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: '/thesis',
-                element: (
-                    <ProtectedRoute allowedRoles={['Profesores', 'Administrador']}>
-                        <PageTitle title="Filtered Thesis | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-                        <FilteredThesis />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: '/thesisEvaluation',
-                element: (
-                    <ProtectedRoute allowedRoles={['Profesores', 'Administrador']}>
-                        <PageTitle title="Thesis Evaluation | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-                        <ThesisEvaluation />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: '/thesisDetails',
-                element: (
-                    <ProtectedRoute allowedRoles={['Profesores', 'Administrador']}>
-                        <PageTitle title="Thesis Details | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-                        <ThesisDetails />
-                    </ProtectedRoute>
-                ),
-            },
+          
+            
+        
             {
                 path: '/profile',
                 element: (
@@ -144,24 +80,7 @@ const router = createBrowserRouter([
                     </ProtectedRoute>
                 ),
             },
-            {
-                path: '/responsable',
-                element: (
-                    <ProtectedRoute allowedRoles={['Profesores', 'Administrador']}>
-                        <PageTitle title="Responsable | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-                        <Responsable />
-                        </ProtectedRoute>
-                ),
-            },
-            {
-                path: '/responsable',
-                element: (
-                    <ProtectedRoute allowedRoles={['Profesores', 'Administrador']}>
-                        <PageTitle title="Responsable | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-                        <Responsable />
-                        </ProtectedRoute>
-                ),
-            },
+   
             {
                 path: '/forms/form-elements',
                 element: (
@@ -243,33 +162,8 @@ const router = createBrowserRouter([
                     </ProtectedRoute>
                 ),
             },
-            {
-                path: '/flujos',
-                element: (
-                    <ProtectedRoute allowedRoles={['Profesores', 'Administrador']}>
-                        <PageTitle title="Flujos" />
-                        <FlujoIndex />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: '/users',
-                element: (
-                    <ProtectedRoute allowedRoles={['Profesores', 'Administrador']}>
-                        <PageTitle title="Flujos" />
-                        <Persona />
-                    </ProtectedRoute>
-                ),
-            },
-            {
-                path: '/unidades',
-                element: (
-                    <ProtectedRoute allowedRoles={['Profesores', 'Administrador']}>
-                        <PageTitle title="Unidades | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-                        <Unidades />
-                        </ProtectedRoute>
-                ),
-            },
+      
+
          
             {
                 path: '/permisos',
@@ -289,15 +183,7 @@ const router = createBrowserRouter([
                         </ProtectedRoute>
                 ),
             },
-            {
-                path: '/tramite',
-                element: (
-                    <ProtectedRoute allowedRoles={['Profesores','Estudiante','Asesor']}>
-                        <PageTitle title="Tramites | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-                        <Tramite/>
-                        </ProtectedRoute>
-                ),
-            },
+    
             {
                 path: '/administrarusuario',
                 element: (

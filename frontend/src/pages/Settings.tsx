@@ -7,18 +7,14 @@ const Settings = () => {
   const [userData, setUserData] = useState({
     userName: '',
     email: '',
-    id: '',
   });
 
   useEffect(() => {
     const authData = isAuthenticated(); // Llama a tu función para obtener los datos de autenticación
-alert(authData.id);
     if (authData) {
       setUserData({
         userName: authData.name, // Guarda el nombre en el estado
         email: authData.email, // Guarda el email en el estado
-        id: authData.id, // Guarda el email en el estado
-
       });
     }
   }, []);
