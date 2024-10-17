@@ -264,7 +264,7 @@ const handleSave = async (selectedActivities: Activity[]) => {
               name="name"
               value={filters.name}
               onChange={handleFilterChange}
-              placeholder="Rol" 
+              placeholder="Nombre de Usuario" 
               className="w-full p-2 border rounded-md" 
             />
           </div>
