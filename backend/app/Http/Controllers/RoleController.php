@@ -17,6 +17,13 @@ class RoleController extends Controller
             return response()->json($roles);
     }
 
+    public function rolesdisponibles()
+    {
+        $roles = Role::all();
+        return response()->json($roles);
+    }
+    
+
     // POST /api/roles - Crear un nuevo rol
     public function store(Request $request)
     {

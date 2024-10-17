@@ -18,6 +18,8 @@ use App\Http\Controllers\TramitesController;
 use App\Http\Controllers\ResponsableController;
 use App\Http\Controllers\RolPrueba;
 use App\Http\Controllers\FileUploadController;
+use App\Models\Role;
+use App\Models\RoleUser;
 use App\Models\Tramite;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
@@ -62,6 +64,9 @@ Route::get('/roles/{id}', [RoleController::class, 'show']);
 Route::put('/roles/{id}', [RoleController::class, 'update']);
 Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
 
+
+
+
 Route::get('role-user', [RoleUserController::class, 'index']);
 Route::post('role-user', [RoleUserController::class, 'store']);
 Route::get('role-user/{user_id}/{role_id}', [RoleUserController::class, 'show']);
@@ -71,6 +76,7 @@ Route::delete('role-user/{user_id}/{role_id}', [RoleUserController::class, 'dest
 
 Route::get('/permisos', [PermisoController::class, 'index']); // Obtener todos los permisos
 Route::get('/permisosdisponibles', [PermisoController::class, 'permisosdisponibles']); // Obtener todos los permisos con estado 1
+Route::get('/rolesdisponibles', [RoleController::class, 'rolesdisponibles']); // Obtener todos los permisos con estado 1
 
 
 Route::post('/permisos', [PermisoController::class, 'store']); // Crear un nuevo permiso
@@ -87,6 +93,7 @@ Route::delete('/rol-permiso/{idRol}/{idPermiso}', [RolPermisoController::class, 
 
 Route::post('/roles/guardar-permisos', [RolPermisoController::class, 'guardarPermisos']);
 
+Route::post('/roles/guardar-roles', [RoleUserController::class, 'guardarRoles']);
 
 
 Route::get('/responsables', [ResponsableController::class, 'index']); // Obtener todos los responsables

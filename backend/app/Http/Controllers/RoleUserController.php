@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\RoleUser;
 use Illuminate\Support\Facades\Validator;
 
 class RoleUserController extends Controller
@@ -15,6 +16,44 @@ class RoleUserController extends Controller
         $roleUser = DB::table('RoleUser')->get();
         return response()->json($roleUser);
     }
+
+/////////////////////////////////////////////////////////
+public function guardarRoles(Request $request)
+{
+    try {
+        // Validar los datos de entrada
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'roles' => 'nullable|array',
+            'roles.*.id' => 'nullable|exists:roles,id',
+        ]);
+
+        $user_id = $request->input('user_id');
+        $roles = $request->input('roles', []);
+
+        // Buscar el usuario
+        $user = User::find($user_id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        // Extraer solo los IDs de roles de la entrada
+        $role_ids = collect($roles)->pluck('id')->toArray();
+
+        // Sincronizar los roles del usuario con los nuevos roles (elimina los roles anteriores)
+        $user->roles()->sync($role_ids);
+
+        return response()->json(['message' => 'Roles guardados exitosamente'], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Error guardando roles: ' . $e->getMessage(),
+            'trace' => $e->getTrace()
+        ], 500);
+    }
+}
+
+
 
     public function store(Request $request)
     {

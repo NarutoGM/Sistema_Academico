@@ -12,9 +12,17 @@ class UserController extends Controller
     // GET /api/users - Obtener todos los usuarios
     public function index()
     {
-        $users = User::all();
+        $users = User::with('roles')->get()->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'roles' => $user->roles, // Esto incluye toda la info de los roles
+            ];
+        });
+    
         return response()->json($users);
     }
+
 
     // POST /api/users - Crear un nuevo usuario
     public function store(Request $request)

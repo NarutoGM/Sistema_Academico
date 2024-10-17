@@ -15,6 +15,10 @@ import Persona from './pages/Persona/index';
 import Unidades from './pages/Unidades/Unidades';
 import Permisos from './pages/Permisos/index';
 import Roles from './pages/Roles/index';
+
+import AdministrarUsuarios from './pages/AdministrarUsuarios/index';
+
+
 import Tramite from './pages/Tramite';
 import TramiteAsesor from './pages/TramiteAsesor';
 
@@ -295,11 +299,11 @@ const router = createBrowserRouter([
                 ),
             },
             {
-                path: '/tramiteasesor',
+                path: '/administrarusuario',
                 element: (
-                    <ProtectedRoute allowedRoles={['Profesores','Estudiante','Asesor']}>
-                        <PageTitle title="Tramites | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-                        <TramiteAsesor/>
+                    <ProtectedRoute >
+                        <PageTitle title="Administrar usuario | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+                        <AdministrarUsuarios/>
                         </ProtectedRoute>
                 ),
             },
