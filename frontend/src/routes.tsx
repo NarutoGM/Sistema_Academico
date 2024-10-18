@@ -111,7 +111,7 @@ const router = createBrowserRouter([
             {
                 path: '/settings',
                 element: (
-                    <ProtectedRoute allowedRoles={['Administrador','Alumno']}>
+                    <ProtectedRoute >
                         <PageTitle title="Settings | TailAdmin - Tailwind CSS Admin Dashboard Template" />
                         <Settings />
                     </ProtectedRoute>
