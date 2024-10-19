@@ -15,7 +15,7 @@ const Settings = () => {
       setUserData({
         userName: authData.name, // Guarda el nombre en el estado
         email: authData.email, // Guarda el email en el estado
-      });sp
+      });
     }
   }, []);
 
