@@ -7,6 +7,7 @@ import { getRoles, login, getPermisos ,deleteRol,createRol,savePermisos} from "@
 import Modal from './Modal';
 import ModalCrear from './ModalCrear';
 import ModalEliminar from './ModalEliminar';
+import Cookies from 'js-cookie';
 
 // Interfaces para tipado
 interface Roles {
@@ -139,14 +140,17 @@ const FilteredUnidad: React.FC = () => {
   // Función para manejar la asignación de permisos a un rol
   const handleSave = async (selectedActivities: Activity[]) => {
     try {
-      const tokenResponse = token || await login('t1053300121@unitru.edu.pe', 'password');
+
+      const token = Cookies.get('token'); // Obtener el token de las cookies
+
+      
       const rolId = formData.id;
 
       const permisosToSave = selectedActivities.map((permiso) => ({
         id: permiso.id,
       }));
 
-      const result = await savePermisos(tokenResponse, rolId, permisosToSave);
+      const result = await savePermisos(token, rolId, permisosToSave);
       
       console.log('Permisos guardados:', result);
       await fetchData(); // Actualiza la lista después de guardar
