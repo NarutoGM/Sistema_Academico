@@ -168,7 +168,7 @@ const router = createBrowserRouter([
             {
                 path: '/permisos',
                 element: (
-                    <ProtectedRoute allowedRoles={['Administrador','Alumno']}>
+                    <ProtectedRoute >
                         <PageTitle title="Permisos | TailAdmin - Tailwind CSS Admin Dashboard Template" />
                         <Permisos />
                         </ProtectedRoute>
@@ -177,7 +177,7 @@ const router = createBrowserRouter([
             {
                 path: '/roles',
                 element: (
-                    <ProtectedRoute allowedRoles={['Administrador','Alumno']}>
+                    <ProtectedRoute >
                         <PageTitle title="Especialidad | TailAdmin - Tailwind CSS Admin Dashboard Template" />
                         <Roles />
                         </ProtectedRoute>
@@ -187,7 +187,7 @@ const router = createBrowserRouter([
             {
                 path: '/administrarusuario',
                 element: (
-                    <ProtectedRoute allowedRoles={['Administrador','Alumno']}>
+                    <ProtectedRoute >
                         <PageTitle title="Administrar usuario | TailAdmin - Tailwind CSS Admin Dashboard Template" />
                         <AdministrarUsuarios/>
                         </ProtectedRoute>

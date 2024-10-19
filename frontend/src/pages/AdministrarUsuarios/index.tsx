@@ -3,11 +3,10 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ChevronUp, ChevronDown, Plus, Edit, Download, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getUsuarios, createRol, getRoles,saveRoles} from "@/pages/services/rolesyusuarios.services";
+import { getUsuarios, getRoles, saveRoles } from "@/pages/services/rolesyusuarios.services";
 import Modal from './Modal';
 import ModalCrear from './ModalCrear';
 import ModalEliminar from './ModalEliminar';
-import Cookies from 'js-cookie';
 
 // Interfaces para tipado
 interface Users {
@@ -37,7 +36,7 @@ const FilteredUnidad: React.FC = () => {
     name: '',
     permisos: [],
   });
-  
+
   const [unidadToDelete, setUnidadToDelete] = useState<null | { id: number; Name: string; AsesorFree: boolean }>(null);
   const [data, setData] = useState<Users[]>([]);
   const [filters, setFilters] = useState({
@@ -59,15 +58,12 @@ const FilteredUnidad: React.FC = () => {
   const fetchData = async () => {
     setLoading(true); // Comienza la carga
     try {
-      const token = Cookies.get('token'); // Obtener el token de las cookies
-  
-      const users = await getUsuarios(token);
-      console.log('Usuarios obtenidos:', users); // Agregar esta línea para ver los datos en la consola
+      const users = await getUsuarios(); // Llamada simplificada sin pasar el token
+      console.log('Usuarios obtenidos:', users); // Ver los datos en la consola
       setData(users);
-  
-      const roles = await getRoles(token);
-      console.log('Roles obtenidos:', roles); // Agregar esta línea para ver los datos en la consola
 
+      const roles = await getRoles(); // También simplificada
+      console.log('Roles obtenidos:', roles); // Ver los datos en la consola
 
       setOriginalBoxBActivities(roles);
       const updatedActivities = roles.map((rol) => ({
@@ -82,7 +78,8 @@ const FilteredUnidad: React.FC = () => {
       setLoading(false); // Termina la carga
     }
   };
-  
+
+
 
   useEffect(() => {
     fetchData();
@@ -120,7 +117,7 @@ const FilteredUnidad: React.FC = () => {
   // Filtrar datos
   const filteredData = data.filter((item) => {
     const matchesName = filters.name === '' || item.name.toLowerCase().includes(filters.name.toLowerCase());
-    return matchesName ;
+    return matchesName;
   });
 
   // Exportar a CSV
@@ -143,37 +140,35 @@ const FilteredUnidad: React.FC = () => {
     }
   };
 
-// Función para manejar la asignación de permisos a un rol
-const handleSave = async (selectedActivities: Activity[]) => {
-  try {
-    const token = Cookies.get('token'); // Obtener el token de las cookies
-    console.log('Token:', token); // Ver el token
+  // Función para manejar la asignación de permisos a un rol
+  const handleSave = async (selectedActivities: Activity[]) => {
+    try {
 
-    const rolId = formData.id;
-    console.log('Rol ID:', rolId); // Ver el ID del rol
+      const rolId = formData.id;
+      console.log('Rol ID:', rolId); // Ver el ID del rol
 
-    // Mapea las actividades seleccionadas para crear un array de roles a guardar
-    const rolesToSave = selectedActivities.map((rol) => ({
-      id: rol.id,
-    }));
-    console.log('Roles a guardar:', rolesToSave); // Ver los roles que se van a guardar
+      // Mapea las actividades seleccionadas para crear un array de roles a guardar
+      const rolesToSave = selectedActivities.map((rol) => ({
+        id: rol.id,
+      }));
+      console.log('Roles a guardar:', rolesToSave); // Ver los roles que se van a guardar
 
-    const result = await saveRoles(token, rolId, rolesToSave);
-    console.log('Roles guardados:', result); // Ver el resultado de la operación
+      const result = await saveRoles(rolId, rolesToSave);
+      console.log('Roles guardados:', result); // Ver el resultado de la operación
 
-    await fetchData(); // Actualiza la lista después de guardar
-    setBoxBActivities(originalBoxBActivities); // Resetea las actividades
-    closeModalCrear(); // Cierra el modal
-  } catch (error: any) {
-    console.error('Error guardando permisos:', error.message);
-  }
-};
+      await fetchData(); // Actualiza la lista después de guardar
+      setBoxBActivities(originalBoxBActivities); // Resetea las actividades
+      closeModalCrear(); // Cierra el modal
+    } catch (error: any) {
+      console.error('Error guardando permisos:', error.message);
+    }
+  };
 
   // Función para manejar el clic en guardar permisos
   const handleSaveClick = () => {
     handleSave(selectedPermisosAsActivities); // Pasa los permisos seleccionados
     closeModal(); // Cierra el modal de permisos
-  };  
+  };
 
   // Función para abrir el modal de creación
   const openCreateModal = () => {
@@ -235,22 +230,22 @@ const handleSave = async (selectedActivities: Activity[]) => {
   };
 
   // Función para crear rol
-  const handleSubmit = async () => {
-    try {
-      if (!token) {
-        alert('No estás autenticado. Por favor, inicia sesión nuevamente.');
-        return;
-      }
-  
-      await createRol(token, formData); // Llamada a la función del servicio
-  
-      closeModalCrear();
-      fetchData(); // Actualizar la lista de users
-    } catch (error: any) {
-      console.error('Error:', error);
-      alert(`Error al crear el rol: ${error.message}`);
-    }
-  };
+ // const handleSubmit = async () => {
+  //  try {
+  //    if (!token) {
+  //      alert('No estás autenticado. Por favor, inicia sesión nuevamente.');
+   //     return;
+   //   }
+
+   //   await createRol(token, formData); // Llamada a la función del servicio
+
+   //   closeModalCrear();
+    //  fetchData(); // Actualizar la lista de users
+   // } catch (error: any) {
+  //    console.error('Error:', error);
+ //     alert(`Error al crear el rol: ${error.message}`);
+ //   }
+ // };
 
   return (
     <div className="p-4 bg-gray-50">
@@ -259,13 +254,13 @@ const handleSave = async (selectedActivities: Activity[]) => {
         <h2 className="text-xl font-semibold mb-4">Filtros</h2>
         <div className="grid grid-cols-5 gap-4">
           <div>
-            <input 
-              type="text" 
+            <input
+              type="text"
               name="name"
               value={filters.name}
               onChange={handleFilterChange}
-              placeholder="Nombre de Usuario" 
-              className="w-full p-2 border rounded-md" 
+              placeholder="Nombre de Usuario"
+              className="w-full p-2 border rounded-md"
             />
           </div>
 
@@ -275,7 +270,7 @@ const handleSave = async (selectedActivities: Activity[]) => {
       {/* Tabla y Botones */}
       <div className="w-full max-w-full rounded-lg shadow-lg bg-white p-6 dark:bg-boxdark">
         {/* Botón Agregar */}
-        <button 
+        <button
           onClick={openCreateModal} // Abrir el modal de creación
           className="flex items-center bg-primary text-white font-bold py-2 px-4 rounded hover:bg-blue-600 mb-4"
         >
@@ -286,7 +281,7 @@ const handleSave = async (selectedActivities: Activity[]) => {
         {/* Título y Botón Exportar */}
         <div className="p-4 flex justify-between items-center">
           <h3 className="text-lg font-semibold">Resultados</h3>
-          <button 
+          <button
             onClick={exportToCSV}
             className="inline-flex items-center justify-center gap-2.5 rounded-md bg-primary py-4 px-10 text-center font-medium text-white hover:bg-opacity-90 lg:px-8 xl:px-10"
           >
@@ -300,7 +295,7 @@ const handleSave = async (selectedActivities: Activity[]) => {
           <thead className="bg-gray-50">
             <tr className="bg-primary text-left text-white">
               {['Name'].map((key) => (
-                <th 
+                <th
                   key={key}
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                   onClick={() => sortData(key as keyof Users)}
@@ -314,39 +309,39 @@ const handleSave = async (selectedActivities: Activity[]) => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
             </tr>
           </thead>
-                  <tbody>
-                  {filteredData.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
-                      <td className="border-b border-gray-200 py-4 px-6">{item.name}</td>
-                      <td className="border-b border-gray-200 py-4 px-6">
-                        <div className="flex items-center space-x-4">
-                          {/* Botón Editar */}
-                          <Edit
-                            className="w-5 h-5 text-gray-600 hover:text-blue-600 cursor-pointer"
-                            onClick={() => openModal(item)} // Abrir modal de edición
-                          />
-                          {/* Botón Eliminar */}
-                          <Trash2
-                            className="w-5 h-5 text-gray-600 hover:text-yellow-600 cursor-pointer"
-                            onClick={() => openDeleteModal(item)} // Abrir modal de eliminación
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+          <tbody>
+            {filteredData.map((item) => (
+              <tr key={item.id} className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+                <td className="border-b border-gray-200 py-4 px-6">{item.name}</td>
+                <td className="border-b border-gray-200 py-4 px-6">
+                  <div className="flex items-center space-x-4">
+                    {/* Botón Editar */}
+                    <Edit
+                      className="w-5 h-5 text-gray-600 hover:text-blue-600 cursor-pointer"
+                      onClick={() => openModal(item)} // Abrir modal de edición
+                    />
+                    {/* Botón Eliminar */}
+                    <Trash2
+                      className="w-5 h-5 text-gray-600 hover:text-yellow-600 cursor-pointer"
+                      onClick={() => openDeleteModal(item)} // Abrir modal de eliminación
+                    />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
 
       {/* Otros Modales */}
-      <DndProvider backend={HTML5Backend}> 
+      <DndProvider backend={HTML5Backend}>
         <Modal
           isModalOpen={isModalOpen}
           closeModal={() => setIsModalOpen(false)}
           originalBoxBActivities={boxBActivities}
           handleSave={handleSave} // Asegúrate de que esto esté pasando correctamente
           initialFormData={formData}
-        /> 
+        />
       </DndProvider>
       <ModalEliminar
         isDeleteModalOpen={isDeleteModalOpen}
@@ -354,14 +349,18 @@ const handleSave = async (selectedActivities: Activity[]) => {
         handleDelete={handleDelete}
       />
 
-      {/* Modal Crear */}
-      <ModalCrear
+      {/* <ModalCrear
         isModalCrearOpen={isModalCrearOpen}
         closeModalCrear={closeModalCrear}
         formData={formData}
         setFormData={setFormData}
         handleSubmit={handleSubmit}
-      />
+      /> */
+      
+      
+      
+      }
+      
     </div>
   );
 };

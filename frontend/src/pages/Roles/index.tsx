@@ -3,11 +3,10 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ChevronUp, ChevronDown, Plus, Edit, Download, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getRoles, login, getPermisos ,deleteRol,createRol,savePermisos} from "@/pages/services/rolesypermisos.services";
+import { getRoles,  getPermisos ,createRol,savePermisos, deleteRol} from "@/pages/services/rolesypermisos.services";
 import Modal from './Modal';
 import ModalCrear from './ModalCrear';
 import ModalEliminar from './ModalEliminar';
-import Cookies from 'js-cookie';
 
 // Interfaces para tipado
 interface Roles {
@@ -59,11 +58,9 @@ const FilteredUnidad: React.FC = () => {
   const fetchData = async () => {
     setLoading(true); // Comienza la carga
     try {
-      const tokenResponse = await login('t1053300121@unitru.edu.pe', 'password');
-      setToken(tokenResponse);
-      const roles = await getRoles(tokenResponse);
+      const roles = await getRoles();
       setData(roles);
-      const permisos = await getPermisos(tokenResponse);
+      const permisos = await getPermisos();
       setOriginalBoxBActivities(permisos);
       const updatedActivities = permisos.map((permiso) => ({
         id: permiso.id,
@@ -141,7 +138,6 @@ const FilteredUnidad: React.FC = () => {
   const handleSave = async (selectedActivities: Activity[]) => {
     try {
 
-      const token = Cookies.get('token'); // Obtener el token de las cookies
 
       
       const rolId = formData.id;
@@ -150,7 +146,7 @@ const FilteredUnidad: React.FC = () => {
         id: permiso.id,
       }));
 
-      const result = await savePermisos(token, rolId, permisosToSave);
+      const result = await savePermisos( rolId, permisosToSave);
       
       console.log('Permisos guardados:', result);
       await fetchData(); // Actualiza la lista después de guardar
@@ -229,12 +225,9 @@ const FilteredUnidad: React.FC = () => {
   // Función para crear rol
   const handleSubmit = async () => {
     try {
-      if (!token) {
-        alert('No estás autenticado. Por favor, inicia sesión nuevamente.');
-        return;
-      }
+
   
-      await createRol(token, formData); // Llamada a la función del servicio
+      await createRol(formData); // Llamada a la función del servicio
   
       closeModalCrear();
       fetchData(); // Actualizar la lista de roles

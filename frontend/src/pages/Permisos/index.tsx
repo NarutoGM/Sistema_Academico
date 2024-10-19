@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronUp, ChevronDown, Plus, Edit, Download, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
 import { getPermisos, createPermiso, updatePermiso, deletePermiso } from "@/pages/services/permisos.services";
 import ModalUnidad from './ModalUnidad';
 import ModalEliminar from './ModalEliminar';
@@ -55,8 +54,12 @@ const FilteredUnidad = () => {
   const closeDeleteModal = () => setIsDeleteModalOpen(false);
 
   const handleDelete = async () => {
-    if (!permisoToDelete) return;
 
+    
+    if (!permisoToDelete) return;
+  
+    console.log('Eliminando permiso con ID:', permisoToDelete.id);
+  
     try {
       await deletePermiso(permisoToDelete.id);
       setData((prevData) => prevData.filter((item) => item.id !== permisoToDelete.id));
@@ -65,6 +68,7 @@ const FilteredUnidad = () => {
       console.error('Error al eliminar permiso:', error);
     }
   };
+  
 
   const handleSubmit = async () => {
     try {
@@ -101,19 +105,21 @@ const FilteredUnidad = () => {
     return matchesDescripcion && matchesEstado;
   });
 
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = Cookies.get('token'); // Obtener el token de las cookies
-        const permisos = await getPermisos(token); // Pasar el token a la función getPermisos
+        const permisos = await getPermisos(); // Llamada simplificada sin pasar el token
         setData(permisos);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     };
+  
     fetchData();
   }, []);
-
+  
+        
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFilters((prevFilters) => ({ ...prevFilters, [name]: value }));
