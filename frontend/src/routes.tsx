@@ -177,7 +177,7 @@ const router = createBrowserRouter([
                 path: '/roles',
                 element: (
                     <ProtectedRoute >
-                        <PageTitle title="Especialidad | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+                        <PageTitle title="Roles | TailAdmin - Tailwind CSS Admin Dashboard Template" />
                         <Roles />
                         </ProtectedRoute>
                 ),
