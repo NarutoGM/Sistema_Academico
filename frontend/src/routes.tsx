@@ -28,7 +28,6 @@ import Tables from './pages/Tables';
 import Alerts from './pages/UiElements/Alerts';
 import Buttons from './pages/UiElements/Buttons';
 import ProtectedRoute from './components/Auth/protected_route';
-import { User } from 'lucide-react';
 
 const router = createBrowserRouter([
     {
@@ -173,7 +172,7 @@ const router = createBrowserRouter([
                         <Permisos />
                         </ProtectedRoute>
                 ),
-            },
+            }, 
             {
                 path: '/roles',
                 element: (
