@@ -1,7 +1,7 @@
 import { isAuthenticated } from '@/utils/auth'; // Importa tu función isAuthenticated
 
 // Definición de la URL de la API directamente
-const apiUrl = "http://127.0.0.1:8000/api"; // Cambia esta URL a la que necesites
+const apiUrl = 'http://127.0.0.1:8000/api'; // Cambia esta URL a la que necesites
 
 // Función para obtener el token desde el almacenamiento
 const getToken = (): string | null => {
@@ -26,7 +26,7 @@ export const getPermisos = async (): Promise<Permiso[]> => {
   const response = await fetch(`${apiUrl}/permisos`, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${authData.token}`,
+      Authorization: `Bearer ${authData.token}`,
       'Content-Type': 'application/json',
     },
   });
@@ -39,7 +39,9 @@ export const getPermisos = async (): Promise<Permiso[]> => {
 };
 
 // Función para crear un nuevo permiso
-export const createPermiso = async (permisoData: Omit<Permiso, 'id'>): Promise<Permiso> => {
+export const createPermiso = async (
+  permisoData: Omit<Permiso, 'id'>,
+): Promise<Permiso> => {
   const authData = isAuthenticated(); // Verificar autenticación
   console.log(authData);
 
@@ -51,7 +53,7 @@ export const createPermiso = async (permisoData: Omit<Permiso, 'id'>): Promise<P
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authData.token}`,
+      Authorization: `Bearer ${authData.token}`,
     },
     body: JSON.stringify(permisoData),
   });
@@ -65,10 +67,11 @@ export const createPermiso = async (permisoData: Omit<Permiso, 'id'>): Promise<P
   return response.json();
 };
 
-
-
 // Función para actualizar un permiso
-export const updatePermiso = async (id: number, permisoData: Omit<Permiso, 'id'>): Promise<Permiso> => {
+export const updatePermiso = async (
+  id: number,
+  permisoData: Omit<Permiso, 'id'>,
+): Promise<Permiso> => {
   const authData = isAuthenticated(); // Verificar autenticación
   console.log(authData);
 
@@ -80,7 +83,7 @@ export const updatePermiso = async (id: number, permisoData: Omit<Permiso, 'id'>
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authData.token}`,
+      Authorization: `Bearer ${authData.token}`,
     },
     body: JSON.stringify(permisoData),
   });
@@ -104,7 +107,7 @@ export const deletePermiso = async (id: number): Promise<void> => {
   const response = await fetch(`${apiUrl}/permisos/${id}`, {
     method: 'DELETE',
     headers: {
-      'Authorization': `Bearer ${authData.token}`,
+      Authorization: `Bearer ${authData.token}`,
     },
   });
 
