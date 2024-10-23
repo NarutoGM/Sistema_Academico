@@ -88,7 +88,7 @@ const SignIn: React.FC = () => {
                 {...register('email')}
                 type="email"
                 placeholder="Ingresa tu correo"
-                className="w-full rounded-lg border border-stroke bg-transparent py-2 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none"
+                className="w-full rounded-lg border border-stroke bg-transparent py-2 pl-6 pr-10 text-white outline-none focus:border-primary focus-visible:shadow-none"
               />
               <span className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center justify-center">
                 <svg
@@ -122,7 +122,7 @@ const SignIn: React.FC = () => {
                 {...register('password')}
                 type="password"
                 placeholder="****************"
-                className="w-full rounded-lg border border-stroke bg-transparent py-2 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none"
+                className="w-full rounded-lg border border-stroke bg-transparent py-2 pl-6 pr-10 text-white outline-none focus:border-primary focus-visible:shadow-none"
               />
               <span className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center justify-center">
                 {' '}
