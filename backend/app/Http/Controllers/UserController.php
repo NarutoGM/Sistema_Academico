@@ -17,6 +17,11 @@ class UserController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'roles' => $user->roles, // Esto incluye toda la info de los roles
+                'telefono' => $user->telefono, // Esto incluye toda la info de los roles
+                'foto' => $user->foto, // Esto incluye toda la info de los roles
+                'direccion' => $user->direccion, // Esto incluye toda la info de los roles
+                'email' => $user->email
+
             ];
         });
     
@@ -27,27 +32,53 @@ class UserController extends Controller
     // POST /api/users - Crear un nuevo usuario
     public function store(Request $request)
     {
-        // Validación de datos de entrada
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+        try {
+            // Validar los datos de entrada
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'telefono' => 'nullable|string|max:20',
+                'direccion' => 'nullable|string|max:255',
+                'email' => 'required|email|max:255|unique:users,email',
+                'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'password' => 'required|string|min:8',
+            ]);
+    
+            // Manejar la subida de la foto, si existe
+            $fotoUrl = null; // Inicializar la variable para la URL de la foto
+            if ($request->hasFile('foto')) {
+                // Guardar la foto en el directorio 'fotos'
+                $fotoPath = $request->file('foto')->store('fotos', 'public'); // Cambiado
+                $fotoUrl = \Storage::url($fotoPath); // Obtener la URL de la imagen guardada
+            }
+    
+            // Crear la persona con los datos validados
+            $user = new User();
+            $user->name = $validatedData['name'];
+            $user->telefono = $validatedData['telefono'];
+            $user->direccion = $validatedData['direccion'];
+            $user->email = $validatedData['email'];
+            $user->foto = $fotoUrl; // Cambiar a 'foto' y guardar la URL de la foto
+            $user->password = bcrypt($validatedData['password']);
+    
+            $user->save(); // Guardar la persona en la base de datos
+    
+            return response()->json([
+                'message' => 'Persona creada exitosamente',
+                'persona' => $user,
+            ], 201);
+    
+        } catch (\Exception $e) {
+            // Si ocurre un error, devuelve una respuesta en JSON
+            return response()->json([
+                'error' => 'Error al crear la persona',
+                'message' => $e->getMessage(),
+            ], 500);
         }
-
-        // Crear el usuario con la contraseña hasheada
-        $user = User::create([
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-            'password' => Hash::make($request->input('password')), // Hashear la contraseña
-        ]);
-
-        return response()->json($user, 201);
     }
-
+    
+    
+    
+    
     // GET /api/users/{id} - Obtener un usuario por ID
     public function show($id)
     {

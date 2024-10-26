@@ -3,15 +3,19 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ChevronUp, ChevronDown, Plus, Edit, Download, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getUsuarios, getRoles, saveRoles , createUsuario } from "@/pages/services/rolesyusuarios.services";
+import { getUsuarios, getRoles, saveRoles } from "@/pages/services/rolesyusuarios.services";
 import Modal from './Modal';
 import ModalCrear from './ModalCrear';
 import ModalEliminar from './ModalEliminar';
+import PersonaModal from './PersonaModal'; // Import PersonaModal
 
 // Interfaces para tipado
 interface Users {
   id: number;
   name: string;
+  email: string;
+  telefono: string;
+  direccion: string;
 }
 
 interface Permiso {
@@ -37,85 +41,18 @@ const FilteredUnidad: React.FC = () => {
     permisos: [],
   });
 
-  const [formData2, setFormData2] = useState<{
-    id: number | '';
-    name: string;
-    permisos: any[];
-  }>({
-    id: '',
-    name: '',
-    permisos: [],
-  });
-
-  
-
   const [unidadToDelete, setUnidadToDelete] = useState<null | { id: number; Name: string; AsesorFree: boolean }>(null);
   const [data, setData] = useState<Users[]>([]);
   const [filters, setFilters] = useState({
     name: '',
   });
   const [sortConfig, setSortConfig] = useState<{ key: keyof Users | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
+  const [token, setToken] = useState<string | null>(null);
   const navigate = useNavigate();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false); // State for PersonaModal
-  // Función para abrir PersonaModal
   const [isModalCrearOpen, setIsModalCrearOpen] = useState(false);
-
-  const openPersonaModal = () => setIsPersonaModalOpen(true);
-  const closePersonaModal = () => setIsPersonaModalOpen(false);
-
-  const closeModalCrear = () => {
-    setIsModalCrearOpen(false);
-  };
-
-  const handleSavePersona = (formData: FormData) => {
-    console.log('Contenido de formData:');
-  
-    // Convertir FormData a objeto plano
-    const personaData: any = Object.fromEntries(formData.entries());
-    
-    // Crear un objeto solo con los campos necesarios
-    const cleanedData = {
-      name: personaData.Nombres,
-      telefono: personaData.Celular,
-      direccion: personaData.Direccion,
-      foto: formData.get('Foto'), // Aquí obtenemos el archivo directamente de formData
-      email: personaData.Email,
-      password: personaData.Password,
-    };
-  
-    console.log('Datos de la persona antes de enviar:', cleanedData);
-  
-    // Crear una nueva instancia de FormData para enviar al servidor
-    const newFormData = new FormData();
-    for (const key in cleanedData) {
-      if (cleanedData.hasOwnProperty(key)) {
-        // Aquí se añade el archivo como un objeto File
-        newFormData.append(key, cleanedData[key]);
-      }
-    }
-  
-    // Llamar a createUsuario con el nuevo FormData
-    createUsuario(newFormData)
-      .then(result => {
-        console.log('Usuario creado:', result);
-      })
-      .catch(error => {
-        console.error('Error al crear usuario:', error);
-      });
-  
-    // Cerrar el modal de persona
-    closePersonaModal();
-  };
-  
-  
-  
-  
-
-  
-
-
+  const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false); // State for PersonaModal
 
   const [boxBActivities, setBoxBActivities] = useState<Activity[]>([]);
   const [originalBoxBActivities, setOriginalBoxBActivities] = useState<Activity[]>([]);
@@ -146,8 +83,6 @@ const FilteredUnidad: React.FC = () => {
       setLoading(false); // Termina la carga
     }
   };
-
-
 
   useEffect(() => {
     fetchData();
@@ -211,7 +146,6 @@ const FilteredUnidad: React.FC = () => {
   // Función para manejar la asignación de permisos a un rol
   const handleSave = async (selectedActivities: Activity[]) => {
     try {
-
       const rolId = formData.id;
       console.log('Rol ID:', rolId); // Ver el ID del rol
 
@@ -232,6 +166,28 @@ const FilteredUnidad: React.FC = () => {
     }
   };
 
+  // Función para manejar el clic en guardar permisos
+  const handleSaveClick = () => {
+    handleSave(selectedPermisosAsActivities); // Pasa los permisos seleccionados
+    closeModal(); // Cierra el modal de permisos
+  };
+
+  // Función para abrir el modal de creación
+  const openCreateModal = () => {
+    setFormData({
+      id: '',
+      name: '',
+      permisos: [],
+    });
+    setSelectedPermisosAsActivities([]); // Reiniciar permisos seleccionados
+    setBoxBActivities([...originalBoxBActivities]); // Copiar permisos originales
+    setIsModalCrearOpen(true); // Abrir el modal de creación
+  };
+
+  // Función para cerrar el modal de creación
+  const closeModalCrear = () => {
+    setIsModalCrearOpen(false);
+  };
 
   // Funciones para editar Users (no modificar)
   const openModal = (data: Users | null = null) => {
@@ -240,13 +196,13 @@ const FilteredUnidad: React.FC = () => {
         setFormData({
           id: data.id,
           name: data.name,
-          roles: data.roles || [],
+          permisos: data.permisos || [],
         });
       } else { // Modal de creación
         setFormData({
           id: '',
           name: '',
-          roles: [],
+          permisos: [],
         });
       }
       setSelectedPermisosAsActivities([]); // Reiniciar permisos seleccionados
@@ -254,6 +210,7 @@ const FilteredUnidad: React.FC = () => {
       setIsModalOpen(true); // Abrir el modal de edición
     }
   };
+
   const closeModal = () => setIsModalOpen(false);
 
   // Funciones para eliminar Users (no modificar)
@@ -275,6 +232,32 @@ const FilteredUnidad: React.FC = () => {
     }
   };
 
+  // Función para crear rol
+  const handleSubmit = async () => {
+    try {
+      if (!token) {
+        alert('No estás autenticado. Por favor, inicia sesión nuevamente.');
+        return;
+      }
+
+      await saveRoles(formData.id, formData.permisos); // Llamada a la función del servicio
+
+      closeModalCrear();
+      fetchData(); // Actualizar la lista de users
+    } catch (error: any) {
+      console.error('Error:', error);
+      alert(`Error al crear el rol: ${error.message}`);
+    }
+  };
+
+  // Función para abrir PersonaModal
+  const openPersonaModal = () => setIsPersonaModalOpen(true);
+  const closePersonaModal = () => setIsPersonaModalOpen(false);
+
+  const handleSavePersona = (formData: FormData) => {
+    console.log('Persona guardada:', formData);
+    closePersonaModal();
+  };
 
   return (
     <div className="p-4 bg-gray-50">
@@ -292,7 +275,6 @@ const FilteredUnidad: React.FC = () => {
               className="w-full p-2 border rounded-md"
             />
           </div>
-
         </div>
       </div>
 
@@ -300,9 +282,8 @@ const FilteredUnidad: React.FC = () => {
       <div className="w-full max-w-full rounded-lg shadow-lg bg-white p-6 dark:bg-boxdark">
         {/* Botón Agregar */}
         <button
-        
-        onClick={openPersonaModal} // Abrir PersonaModal
-        className="flex items-center bg-primary text-white font-bold py-2 px-4 rounded hover:bg-blue-600 mb-4"
+          onClick={openPersonaModal} // Abrir PersonaModal
+          className="flex items-center bg-primary text-white font-bold py-2 px-4 rounded hover:bg-blue-600 mb-4"
         >
           <Plus className="w-5 h-5 text-white mr-2" />
           Agregar
@@ -324,7 +305,7 @@ const FilteredUnidad: React.FC = () => {
         <table className="w-full table-auto border-collapse">
           <thead className="bg-gray-50">
             <tr className="bg-primary text-left text-white">
-              {['Name'].map((key) => (
+              {['Name','Email','Telefono'].map((key) => (
                 <th
                   key={key}
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
@@ -343,6 +324,9 @@ const FilteredUnidad: React.FC = () => {
             {filteredData.map((item) => (
               <tr key={item.id} className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
                 <td className="border-b border-gray-200 py-4 px-6">{item.name}</td>
+                <td className="border-b border-gray-200 py-4 px-6">{item.email}</td>
+                <td className="border-b border-gray-200 py-4 px-6">{item.telefono}</td>
+
                 <td className="border-b border-gray-200 py-4 px-6">
                   <div className="flex items-center space-x-4">
                     {/* Botón Editar */}
@@ -369,7 +353,7 @@ const FilteredUnidad: React.FC = () => {
           isModalOpen={isModalOpen}
           closeModal={() => setIsModalOpen(false)}
           originalBoxBActivities={boxBActivities}
-          handleSave={handleSave} // Asegúrate de que esto esté pasando correctamente
+          handleSave={handleSave}
           initialFormData={formData}
         />
       </DndProvider>
@@ -379,16 +363,20 @@ const FilteredUnidad: React.FC = () => {
         handleDelete={handleDelete}
       />
 
-       <ModalCrear
+      <ModalCrear
+        isModalCrearOpen={isModalCrearOpen}
+        closeModalCrear={closeModalCrear}
+        formData={formData}
+        setFormData={setFormData}
+        handleSubmit={handleSubmit}
+      />
+
+      {/* Persona Modal */}
+      <PersonaModal
         isOpen={isPersonaModalOpen}
         onClose={closePersonaModal}
         onSave={handleSavePersona}
-      /> 
-      
-      
-      
-      
-      
+      />
     </div>
   );
 };

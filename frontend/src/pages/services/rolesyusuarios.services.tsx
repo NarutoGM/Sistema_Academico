@@ -20,6 +20,38 @@ export interface Permiso {
   estado: boolean;
 }
 
+// Función para crear una nueva persona
+export const createUsuario = async (formData: FormData): Promise<any> => {
+  const authData = isAuthenticated();
+  const token = authData?.token;
+
+  if (!token) {
+    throw new Error('Token no disponible');
+  }
+
+  // Verifica que el campo name esté presente
+  if (!formData.get('name')) {
+    throw new Error('El campo name es requerido');
+  }
+
+  const response = await fetch(`${apiUrl}/users`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorResponse = await response.json();
+    console.error('Error al crear la persona:', errorResponse);
+    throw new Error(`Estado: ${response.status}, Mensaje: ${errorResponse.message || 'Error desconocido al crear persona'}`);
+  }
+
+  const result = await response.json();
+  console.log('Persona creada:', result);
+  return result;
+};
 
 
 // Función para obtener todos los usuarios

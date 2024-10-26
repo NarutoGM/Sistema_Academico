@@ -9,11 +9,11 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('escuelas', function (Blueprint $table) {
-            $table->id('idEscuela'); // Columna idEscuela como clave primaria
-            $table->string('name', 100); // Columna name tipo varchar de longitud 100
+        Schema::create('condicion', function (Blueprint $table) {
+            $table->id('idCondicion');
+            $table->string('nombreCondicion'); 
             $table->timestamps(4);
         });
     }
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('escuelas');
+        Schema::dropIfExists('condicion');
     }
 };
