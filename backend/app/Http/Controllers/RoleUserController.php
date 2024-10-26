@@ -41,8 +41,32 @@ public function guardarRoles(Request $request)
         // Extraer solo los IDs de roles de la entrada
         $role_ids = collect($roles)->pluck('id')->toArray();
 
-        // Sincronizar los roles del usuario con los nuevos roles (elimina los roles anteriores)
-        $user->roles()->sync($role_ids);
+        // Obtener los IDs de roles actuales
+        $current_roles = $user->roles()->pluck('id')->toArray();
+
+        // Eliminar los roles que ya no están en la lista de nuevos roles
+        foreach ($current_roles as $current_role_id) {
+            if (!in_array($current_role_id, $role_ids)) {
+                $user->roles()->detach($current_role_id);
+            }
+        }
+
+        // Agregar los nuevos roles que no estén en los roles actuales
+        foreach ($role_ids as $role_id) {
+            if (!in_array($role_id, $current_roles)) {
+                $rol = Role::find($role_id);
+                if($rol->name = 'Director de escuela'){
+                    $director = new Director();
+
+                }else{
+                    if ($rol->name = 'Docente'){
+                        $docente = new Docente();
+
+                    }
+                }
+                $user->roles()->attach($role_id);
+            }
+        }
 
         return response()->json(['message' => 'Roles guardados exitosamente'], 200);
     } catch (\Exception $e) {
@@ -52,6 +76,7 @@ public function guardarRoles(Request $request)
         ], 500);
     }
 }
+
 
 
 
