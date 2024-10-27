@@ -10,6 +10,7 @@ import Roles from './pages/Roles/index';
 
 import AdministrarUsuarios from './pages/AdministrarUsuarios/index';
 import Escuelas from './pages/Escuelas/index';
+import Horarios from './pages/Horarios/index';
 
 
 
@@ -199,6 +200,15 @@ const router = createBrowserRouter([
                     <ProtectedRoute >
                         <PageTitle title="Administrar usuario | TailAdmin - Tailwind CSS Admin Dashboard Template" />
                         <Escuelas/>
+                        </ProtectedRoute>
+                ),
+            },
+            {
+                path: '/horarios',
+                element: (
+                    <ProtectedRoute >
+                        <PageTitle title="Administrar usuario | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+                        <Horarios/>
                         </ProtectedRoute>
                 ),
             },
