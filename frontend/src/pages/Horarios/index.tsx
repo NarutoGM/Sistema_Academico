@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface Curso {
   nombre: string;
@@ -30,41 +30,48 @@ const cursos: Curso[] = [
     horasLaboratorio: 2,
     numLaboratorios: 2,
   },
-
-  // Añade más cursos según sea necesario
-  // Añade más cursos según sea necesario
-
-    // Añade más cursos según sea necesario
-  // Añade más cursos según sea necesario
-
-  // Añade más cursos según sea necesario
 ];
 
-const TablaHorario: React.FC<{ cursos: Curso[] }> = ({ cursos }) => {
+const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
+
+const TablaHorario: React.FC = () => {
+  const [horario, setHorario] = useState<{ [key: string]: string }>({});
+
+  const handleDrop = (e: React.DragEvent<HTMLTableCellElement>, cellId: string) => {
+    e.preventDefault();
+    const cursoNombre = e.dataTransfer.getData("cursoNombre");
+    setHorario((prevHorario) => ({ ...prevHorario, [cellId]: cursoNombre }));
+  };
+
+  const allowDrop = (e: React.DragEvent<HTMLTableCellElement>) => {
+    e.preventDefault();
+  };
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full border border-gray-300">
         <thead>
           <tr className="bg-gray-200">
-            <th className="px-4 py-2 border border-gray-300 font-bold text-center">Curso</th>
-            <th className="px-4 py-2 border border-gray-300 font-bold text-center">Teoría</th>
-            <th className="px-4 py-2 border border-gray-300 font-bold text-center">Práctica</th>
-            <th className="px-4 py-2 border border-gray-300 font-bold text-center">Laboratorio</th>
+            <th className="px-4 py-2 border border-gray-300 font-bold text-center">Hora</th>
+            {dias.map((dia) => (
+              <th key={dia} className="px-4 py-2 border border-gray-300 font-bold text-center">{dia}</th>
+            ))}
           </tr>
         </thead>
         <tbody>
-          {cursos.map((curso, index) => (
-            <tr key={index} className="text-center">
-              <td className="px-4 py-2 border border-gray-300">{curso.nombre}</td>
-              <td className={`px-4 py-2 border border-gray-300 ${curso.horasTeoria > 0 ? 'bg-blue-100' : ''}`}>
-                {curso.horasTeoria > 0 ? `${curso.horasTeoria} horas` : "N/A"}
-              </td>
-              <td className={`px-4 py-2 border border-gray-300 ${curso.horasPractica > 0 ? 'bg-green-100' : ''}`}>
-                {curso.horasPractica > 0 ? `${curso.horasPractica} horas` : "N/A"}
-              </td>
-              <td className={`px-4 py-2 border border-gray-300 ${curso.horasLaboratorio > 0 ? 'bg-red-100' : ''}`}>
-                {curso.horasLaboratorio > 0 ? `${curso.horasLaboratorio} horas (${curso.numLaboratorios} lab)` : "N/A"}
-              </td>
+          {Array.from({ length: 8 }).map((_, hourIndex) => (
+            <tr key={hourIndex} className="text-center">
+              <td className="px-4 py-2 border border-gray-300">{hourIndex + 8} AM</td>
+              {dias.map((dia) => (
+                <td
+                  key={dia}
+                  className="px-4 py-2 border border-gray-300"
+                  onDrop={(e) => handleDrop(e, `${dia}-${hourIndex}`)}
+                  onDragOver={allowDrop}
+                >
+                  {horario[`${dia}-${hourIndex}`] || "Arrastra aquí"}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>
@@ -74,10 +81,32 @@ const TablaHorario: React.FC<{ cursos: Curso[] }> = ({ cursos }) => {
 };
 
 const Horarios: React.FC = () => {
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, cursoNombre: string) => {
+    e.dataTransfer.setData("cursoNombre", cursoNombre);
+  };
+
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-2xl font-bold text-center mb-4">Horario de Cursos</h1>
-      <TablaHorario cursos={cursos} />
+    <div className="flex p-6 bg-gray-100 min-h-screen">
+      {/* Lista de Cursos */}
+      <div className="w-1/4 p-4 bg-white border border-gray-300 rounded shadow-md">
+        <h2 className="text-xl font-bold mb-4">Cursos</h2>
+        {cursos.map((curso) => (
+          <div
+            key={curso.nombre}
+            className="p-2 mb-2 bg-blue-200 rounded cursor-pointer"
+            draggable
+            onDragStart={(e) => handleDragStart(e, curso.nombre)}
+          >
+            {curso.nombre}
+          </div>
+        ))}
+      </div>
+
+      {/* Horario */}
+      <div className="w-3/4 p-4">
+        <h1 className="text-2xl font-bold text-center mb-4">Horario de Cursos</h1>
+        <TablaHorario />
+      </div>
     </div>
   );
 };
