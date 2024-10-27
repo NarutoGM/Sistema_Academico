@@ -324,7 +324,7 @@ const FilteredUnidad: React.FC = () => {
         <table className="w-full table-auto border-collapse">
           <thead className="bg-gray-50">
             <tr className="bg-primary text-left text-white">
-              {['Name'].map((key) => (
+              {['Nombres','Correo','Roles'].map((key) => (
                 <th
                   key={key}
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
@@ -342,7 +342,10 @@ const FilteredUnidad: React.FC = () => {
           <tbody>
             {filteredData.map((item) => (
               <tr key={item.id} className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
-                <td className="border-b border-gray-200 py-4 px-6">{item.name}</td>
+                <td className="border-b border-gray-200 py-4 px-6">{item.lastname + ' ' + item.name}</td>
+
+                <td className="border-b border-gray-200 py-4 px-6">{item.email}</td>
+
                 <td className="border-b border-gray-200 py-4 px-6">
                   <div className="flex items-center space-x-4">
                     {/* Botón Editar */}

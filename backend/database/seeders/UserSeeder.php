@@ -26,6 +26,7 @@ class UserSeeder extends Seeder
             "dni" => "75845214",
             "direccion" => "Direccion1",
             "foto" => "foto",
+            "telefono" => "987456123",
             "email" => "t1053300121@unitru.edu.pe",
             "password" => bcrypt("root")
         ]);

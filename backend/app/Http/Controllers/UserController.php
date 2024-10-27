@@ -16,8 +16,9 @@ class UserController extends Controller
             return [
                 'id' => $user->id,
                 'name' => $user->name,
+                'lastname' => $user->lastname,
+                'telefono' => $user->telefono,
                 'roles' => $user->roles, // Esto incluye toda la info de los roles
-                'telefono' => $user->telefono, // Esto incluye toda la info de los roles
                 'foto' => $user->foto, // Esto incluye toda la info de los roles
                 'direccion' => $user->direccion, // Esto incluye toda la info de los roles
                 'email' => $user->email

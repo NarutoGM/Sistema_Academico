@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\RoleUser;
+use App\Models\Docente;
+use App\Models\DirectorEscuela;
+
 use Illuminate\Support\Facades\Validator;
 
 class RoleUserController extends Controller
@@ -55,18 +58,24 @@ public function guardarRoles(Request $request)
         foreach ($role_ids as $role_id) {
             if (!in_array($role_id, $current_roles)) {
                 $rol = Role::find($role_id);
-                if($rol->name = 'Director de escuela'){
-                    $director = new Director();
-
-                }else{
-                    if ($rol->name = 'Docente'){
-                        $docente = new Docente();
-
-                    }
+        
+                if ($rol->name == 'Director de escuela') {
+                    $director = new DirectorEscuela();
+                    $director->id = $user_id; // Usar el id del usuario correctamente
+                    $director->idEscuela = 1; // Acceder correctamente al id de la escuela
+                    $director->save();
+                } elseif ($rol->name == 'Docente') {
+                    $docente = new Docente();
+                    $docente->id = $user_id; // Usar el id del usuario correctamente
+                    $docente->idEscuela = 1; // Acceder correctamente al id de la escuela
+                    $docente->save();
                 }
+        
+                // Asociar el rol al usuario
                 $user->roles()->attach($role_id);
             }
         }
+        
 
         return response()->json(['message' => 'Roles guardados exitosamente'], 200);
     } catch (\Exception $e) {

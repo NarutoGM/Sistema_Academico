@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\EscuelaController;
+use App\Http\Controllers\FacultadController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -8,7 +10,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RoleUserController;
 use App\Http\Controllers\PermisoController;
 use App\Http\Controllers\RolPermisoController;
-
+use App\Models\Facultad;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -71,6 +73,8 @@ Route::post('/roles/guardar-permisos', [RolPermisoController::class, 'guardarPer
 
 Route::post('/roles/guardar-roles', [RoleUserController::class, 'guardarRoles']);
 
+Route::apiResource('escuelas', EscuelaController::class);
+Route::apiResource('facultades', FacultadController::class);
 
 
 });
