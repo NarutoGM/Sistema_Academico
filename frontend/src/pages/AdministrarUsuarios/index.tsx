@@ -3,7 +3,9 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ChevronUp, ChevronDown, Plus, Edit, Download, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getUsuarios, getRoles, saveRoles , createUsuario } from "@/pages/services/rolesyusuarios.services";
+import { getUsuarios, getRoles, saveRoles, createUsuario } from "@/pages/services/rolesyusuarios.services";
+import { getEscuelas } from "@/pages/services/escuela.services";
+
 import Modal from './Modal';
 import ModalCrear from './ModalCrear';
 import ModalEliminar from './ModalEliminar';
@@ -47,7 +49,7 @@ const FilteredUnidad: React.FC = () => {
     permisos: [],
   });
 
-  
+
 
   const [unidadToDelete, setUnidadToDelete] = useState<null | { id: number; Name: string; AsesorFree: boolean }>(null);
   const [data, setData] = useState<Users[]>([]);
@@ -71,10 +73,10 @@ const FilteredUnidad: React.FC = () => {
 
   const handleSavePersona = (formData: FormData) => {
     console.log('Contenido de formData:');
-  
+
     // Convertir FormData a objeto plano
     const personaData: any = Object.fromEntries(formData.entries());
-    
+
     // Crear un objeto solo con los campos necesarios
     const cleanedData = {
       name: personaData.Nombres,
@@ -84,9 +86,9 @@ const FilteredUnidad: React.FC = () => {
       email: personaData.Email,
       password: personaData.Password,
     };
-  
+
     console.log('Datos de la persona antes de enviar:', cleanedData);
-  
+
     // Crear una nueva instancia de FormData para enviar al servidor
     const newFormData = new FormData();
     for (const key in cleanedData) {
@@ -95,7 +97,7 @@ const FilteredUnidad: React.FC = () => {
         newFormData.append(key, cleanedData[key]);
       }
     }
-  
+
     // Llamar a createUsuario con el nuevo FormData
     createUsuario(newFormData)
       .then(result => {
@@ -104,16 +106,17 @@ const FilteredUnidad: React.FC = () => {
       .catch(error => {
         console.error('Error al crear usuario:', error);
       });
-  
+
     // Cerrar el modal de persona
     closePersonaModal();
   };
-  
-  
-  
-  
 
-  
+
+
+
+
+
+  const [escuelas, setEscuelas] = useState([]);
 
 
 
@@ -140,6 +143,10 @@ const FilteredUnidad: React.FC = () => {
         estado: rol.estado,
       }));
       setBoxBActivities(updatedActivities);
+
+      const escuelasData = await getEscuelas(); // Obtener las escuelas
+      setEscuelas(escuelasData); // Almacenar en el estado
+      console.log(escuelasData);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -188,25 +195,7 @@ const FilteredUnidad: React.FC = () => {
     return matchesName;
   });
 
-  // Exportar a CSV
-  const exportToCSV = () => {
-    const headers = ['Rol'];
-    const csvContent = [
-      headers.join(','),
-      ...data.map((item) => [item.name].join(',')),
-    ].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', 'tabla_filtrada.csv');
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
+
 
   // Función para manejar la asignación de permisos a un rol
   const handleSave = async (selectedActivities: Activity[]) => {
@@ -300,9 +289,9 @@ const FilteredUnidad: React.FC = () => {
       <div className="w-full max-w-full rounded-lg shadow-lg bg-white p-6 dark:bg-boxdark">
         {/* Botón Agregar */}
         <button
-        
-        onClick={openPersonaModal} // Abrir PersonaModal
-        className="flex items-center bg-primary text-white font-bold py-2 px-4 rounded hover:bg-blue-600 mb-4"
+
+          onClick={openPersonaModal} // Abrir PersonaModal
+          className="flex items-center bg-primary text-white font-bold py-2 px-4 rounded hover:bg-blue-600 mb-4"
         >
           <Plus className="w-5 h-5 text-white mr-2" />
           Agregar
@@ -312,11 +301,11 @@ const FilteredUnidad: React.FC = () => {
         <div className="p-4 flex justify-between items-center">
           <h3 className="text-lg font-semibold">Resultados</h3>
           <button
-            onClick={exportToCSV}
+            // onClick={exportToCSV}
             className="inline-flex items-center justify-center gap-2.5 rounded-md bg-primary py-4 px-10 text-center font-medium text-white hover:bg-opacity-90 lg:px-8 xl:px-10"
           >
             <Download size={18} className="mr-2" />
-            Exportar a CSV
+            Exportar en excel
           </button>
         </div>
 
@@ -324,7 +313,7 @@ const FilteredUnidad: React.FC = () => {
         <table className="w-full table-auto border-collapse">
           <thead className="bg-gray-50">
             <tr className="bg-primary text-left text-white">
-              {['Nombres','Correo','Roles'].map((key) => (
+              {['Nombres', 'Correo', 'Roles'].map((key) => (
                 <th
                   key={key}
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
@@ -368,13 +357,19 @@ const FilteredUnidad: React.FC = () => {
 
       {/* Otros Modales */}
       <DndProvider backend={HTML5Backend}>
+
+
         <Modal
           isModalOpen={isModalOpen}
           closeModal={() => setIsModalOpen(false)}
           originalBoxBActivities={boxBActivities}
-          handleSave={handleSave} // Asegúrate de que esto esté pasando correctamente
+          handleSave={handleSave}
           initialFormData={formData}
+          escuelas={escuelas} // Pasar la lista de escuelas
         />
+
+
+
       </DndProvider>
       <ModalEliminar
         isDeleteModalOpen={isDeleteModalOpen}
@@ -382,16 +377,16 @@ const FilteredUnidad: React.FC = () => {
         handleDelete={handleDelete}
       />
 
-       <ModalCrear
+      <ModalCrear
         isOpen={isPersonaModalOpen}
         onClose={closePersonaModal}
         onSave={handleSavePersona}
-      /> 
-      
-      
-      
-      
-      
+      />
+
+
+
+
+
     </div>
   );
 };

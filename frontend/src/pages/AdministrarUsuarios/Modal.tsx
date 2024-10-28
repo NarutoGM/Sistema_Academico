@@ -7,12 +7,20 @@ interface Activity {
   name: string;
 }
 
+interface Escuela {
+  idEscuela: number;
+  name: string;
+  idFacultad: number;
+
+}
+
 interface ModalProps {
   isModalOpen: boolean;
   closeModal: () => void;
   originalBoxBActivities: Activity[];
   handleSave: (selectedActivities: Activity[]) => void;
   initialFormData: any;
+  escuelas: Escuela[];
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -21,25 +29,27 @@ const Modal: React.FC<ModalProps> = ({
   originalBoxBActivities = [],
   handleSave,
   initialFormData,
+  escuelas,
 }) => {
   const [formData, setFormData] = useState(initialFormData);
   const [selectedPermisosAsActivities, setSelectedPermisosAsActivities] = useState<Activity[]>([]);
   const [availableActivities, setAvailableActivities] = useState<Activity[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>(''); // Estado para el término de búsqueda
+  const [searchTermMain, setSearchTermMain] = useState<string>(''); // Search term for main modal
+  const [isBuscarEscuelaModalOpen, setIsBuscarEscuelaModalOpen] = useState(false);
+  const [escuelaSeleccionada, setEscuelaSeleccionada] = useState<null | Escuela>(null);
+  const [searchTermEscuela, setSearchTermEscuela] = useState<string>(''); // Search term for school selection modal
 
   useEffect(() => {
     if (isModalOpen) {
       setFormData(initialFormData);
-      setSearchTerm(''); // Resetear el término de búsqueda a vacío al abrir el modal
+      setSearchTermMain('');
 
-      // Inicializar permisos seleccionados desde initialFormData
       const selected = (initialFormData.roles || []).map((rol: any) => ({
         id: rol.id,
         name: rol.name,
       }));
       setSelectedPermisosAsActivities(selected);
 
-      // Inicializar actividades disponibles filtrando las seleccionadas
       const available = originalBoxBActivities.filter(
         (activity) => !selected.some((sel) => sel.id === activity.id)
       );
@@ -72,12 +82,10 @@ const Modal: React.FC<ModalProps> = ({
     }
   };
 
-  // Filtrar las actividades disponibles según el término de búsqueda
   const filteredAvailableActivities = availableActivities.filter((activity) =>
-    activity.name.toLowerCase().includes(searchTerm.toLowerCase())
+    activity.name.toLowerCase().includes(searchTermMain.toLowerCase())
   );
 
-  // Componente para actividades arrastrables
   const DraggableActivity: React.FC<{ activity: Activity; moveActivity: (activity: Activity) => void; showRemoveButton?: boolean }> = ({
     activity,
     moveActivity,
@@ -95,22 +103,20 @@ const Modal: React.FC<ModalProps> = ({
       <div
         ref={drag}
         className={`p-2 border rounded flex items-center mb-2 ${isDragging ? 'opacity-50' : 'opacity-100'} bg-blue-500`}
-        >
+      >
         <span className='text-md text-white'>{activity.name}</span>
         {showRemoveButton && (
           <button
-  onClick={() => moveActivity(activity)}
-  className="ml-auto bg-green-500 text-white hover:bg-green-600 py-1 px-4 rounded"
->
-  Mover
-</button>
-
+            onClick={() => setIsBuscarEscuelaModalOpen(true)} // Abre el modal de búsqueda de escuelas
+            className="ml-auto bg-green-500 text-white hover:bg-green-600 py-1 px-4 rounded"
+          >
+            Asignar Escuela
+          </button>
         )}
       </div>
     );
   };
 
-  // Componente para áreas de soltado
   const DroppableArea: React.FC<{ children: React.ReactNode; moveActivity: (activity: Activity) => void; areaType: 'selected' | 'available' }> = ({ children, moveActivity, areaType }) => {
     const [{ isOver }, drop] = useDrop({
       accept: 'activity',
@@ -136,6 +142,15 @@ const Modal: React.FC<ModalProps> = ({
     );
   };
 
+  const handleSelectEscuela = (escuela: Escuela) => {
+    setEscuelaSeleccionada(escuela);
+  };
+
+  const closeModalBuscarEscuela = () => {
+    setIsBuscarEscuelaModalOpen(false);
+    setSearchTermEscuela(''); // Limpiar el término de búsqueda cuando se cierra el modal
+  };
+
   return (
     <div
       className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
@@ -149,62 +164,57 @@ const Modal: React.FC<ModalProps> = ({
           ✕
         </button>
 
-        <h3 className="text-xl font-semibold mb-6">Administrar Roles</h3> 
+        <h3 className="text-xl font-semibold mb-6">Administrar Roles</h3>
         <h4 className="text-lg font-medium mb-3">{formData.name || 'Nombre no disponible'}</h4>
 
-        {/* Campo de búsqueda */}
+        {/* Campo de búsqueda para el modal principal */}
         <input
           type="text"
           placeholder="Buscar roles disponibles..."
           className="mb-4 border p-2 rounded w-full"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          value={searchTermMain}
+          onChange={(e) => setSearchTermMain(e.target.value || '')}
         />
 
-<DndProvider backend={HTML5Backend}>
-  <div className="flex flex-col md:flex-row justify-between space-y-4 md:space-y-0 md:space-x-4">
-    
-    {/* BoxA: Permisos seleccionados */}
-    <DroppableArea areaType="selected" moveActivity={handleMoveToSelected}>
-      {selectedPermisosAsActivities.length === 0 && (
-        <p className="text-red-500">No hay roles seleccionados.</p>
-      )}
-      
-      {/* Aquí añadimos el contenedor desplazable */}
-      <div className="max-h-64 overflow-y-scroll">
-        {selectedPermisosAsActivities.map((activity) => (
-          <DraggableActivity
-            key={`selected-${activity.id}`}
-            activity={activity}
-            moveActivity={handleMoveToAvailable}
-            showRemoveButton={true}
-          />
-        ))}
-      </div>
-    </DroppableArea>
+        <DndProvider backend={HTML5Backend}>
+          <div className="flex flex-col md:flex-row justify-between space-y-4 md:space-y-0 md:space-x-4">
+            <DroppableArea areaType="selected" moveActivity={handleMoveToSelected}>
+              {selectedPermisosAsActivities.length === 0 && (
+                <p className="text-red-500">No hay roles seleccionados.</p>
+              )}
+              <div className="max-h-64 overflow-y-scroll">
+                {selectedPermisosAsActivities.map((activity) => (
+                  <DraggableActivity
+                    key={`selected-${activity.id}`}
+                    activity={activity}
+                    moveActivity={handleMoveToAvailable}
+                    showRemoveButton={true}
+                  />
+                ))}
+              </div>
+            </DroppableArea>
 
-    {/* BoxB: Permisos disponibles */}
-    <DroppableArea areaType="available" moveActivity={handleMoveToAvailable}>
-      <h4 className="text-lg font-medium mb-3">Roles disponibles</h4>
-      {filteredAvailableActivities.length === 0 && (
-        <p className="text-red-500">No hay roles disponibles.</p>
-      )}
-      
-      {/* Aquí añadimos el contenedor desplazable */}
-      <div className="max-h-64 overflow-y-scroll">
-        {filteredAvailableActivities.map((activity) => (
-          <DraggableActivity
-            key={`available-${activity.id}`}
-            activity={activity}
-            moveActivity={handleMoveToSelected}
-          />
-        ))}
-      </div>
-    </DroppableArea>
-    
-  </div>
-</DndProvider>
+            <DroppableArea areaType="available" moveActivity={handleMoveToAvailable}>
+              <h4 className="text-lg font-medium mb-3">Roles disponibles</h4>
+              {filteredAvailableActivities.length === 0 && (
+                <p className="text-red-500">No hay roles disponibles.</p>
+              )}
+              <div className="max-h-64 overflow-y-scroll">
+                {filteredAvailableActivities.map((activity) => (
+                  <DraggableActivity
+                    key={`available-${activity.id}`}
+                    activity={activity}
+                    moveActivity={handleMoveToSelected}
+                  />
+                ))}
+              </div>
+            </DroppableArea>
+          </div>
+        </DndProvider>
 
+        {escuelaSeleccionada && (
+          <p className="mt-2 text-gray-700">Escuela seleccionada: {escuelaSeleccionada.nombre}</p>
+        )}
 
         <button
           onClick={handleSaveClick}
@@ -212,6 +222,51 @@ const Modal: React.FC<ModalProps> = ({
         >
           Guardar Cambios
         </button>
+
+        {/* Modal de Búsqueda de Escuela */}
+        {isBuscarEscuelaModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div className="bg-white p-8 rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/3 relative">
+              <button
+                onClick={closeModalBuscarEscuela}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+              <h3 className="text-xl font-semibold mb-4">Seleccionar Escuela</h3>
+
+              {/* Campo de búsqueda específico para el modal de búsqueda de escuelas */}
+              <input
+                type="text"
+                placeholder="Buscar escuela..."
+                className="border p-2 mb-4 w-full rounded"
+                value={searchTermEscuela}
+                onChange={(e) => setSearchTermEscuela(e.target.value || '')}
+              />
+
+              <ul className="max-h-64 overflow-y-scroll">
+                {escuelas
+                  .filter((escuela) => escuela.name && escuela.name.toLowerCase().includes(searchTermEscuela.toLowerCase()))
+                  .map((escuela) => (
+                    <li
+                      key={escuela.idEscuela}
+                      className="p-2 cursor-pointer hover:bg-gray-200"
+                      onClick={() => handleSelectEscuela(escuela)}
+                    >
+                      {escuela.name}
+                    </li>
+                  ))}
+              </ul>
+              
+              <button
+                onClick={closeModalBuscarEscuela}
+                className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 w-full"
+              >
+                Guardar y Cerrar
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

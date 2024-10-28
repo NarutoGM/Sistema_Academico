@@ -18,7 +18,6 @@ export interface Escuela {
 // Función para obtener todas las escuelas
 export const getEscuelas = async (): Promise<Escuela[]> => {
   const authData = isAuthenticated(); // Verificar autenticación
-  console.log(authData);
 
   if (!authData || !authData.token) {
     throw new Error('User is not authenticated or token is missing');
@@ -44,7 +43,6 @@ export const createEscuela = async (
   escuelaData: Omit<Escuela, 'idEscuela'>,
 ): Promise<Escuela> => {
   const authData = isAuthenticated(); // Verificar autenticación
-  console.log(authData);
 
   if (!authData || !authData.token) {
     throw new Error('User is not authenticated or token is missing');
@@ -74,7 +72,6 @@ export const updateEscuela = async (
   escuelaData: Omit<Escuela, 'idEscuela'>,
 ): Promise<Escuela> => {
   const authData = isAuthenticated(); // Verificar autenticación
-  console.log(authData);
 
   if (!authData || !authData.token) {
     throw new Error('User is not authenticated or token is missing');
@@ -98,7 +95,6 @@ export const updateEscuela = async (
 // Función para eliminar una escuela
 export const deleteEscuela = async (id: number): Promise<void> => {
   const authData = isAuthenticated(); // Verificar autenticación
-  console.log(authData);
 
   if (!authData || !authData.token) {
     console.error('User is not authenticated or token is missing');

@@ -15,6 +15,11 @@ return new class extends Migration
             $table->id('idCurso');
             $table->string('name');
             $table->integer('creditos');
+            $table->string('hTeoricas');
+            $table->string('hPracticas');
+            $table->string('hLaboratorio');
+            $table->integer('nGrupos');
+
             $table->foreignId('idTipoCurso')->constrained('tipocurso', 'idTipoCurso')->onDelete('cascade'); // Especifica la columna primaria
             $table->timestamps(4);
         });

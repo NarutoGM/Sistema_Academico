@@ -12,9 +12,10 @@ class EscuelaController extends Controller
      */
     public function index()
     {
-        $escuelas = Escuela::with('facultad')->get();
+        $escuelas = Escuela::with('facultad:idFacultad,nomFacultad')->get(['idEscuela', 'name', 'idFacultad']);
         return response()->json($escuelas);
     }
+    
 
     /**
      * Guarda una nueva escuela en la base de datos.
