@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('hPracticas');
             $table->string('hLaboratorio');
             $table->integer('nGrupos');
+            $table->foreignId('idDepartamento')->constrained('departamentoacademico', 'idDepartamento')->onDelete('cascade'); // Clave foránea
 
             $table->foreignId('idTipoCurso')->constrained('tipocurso', 'idTipoCurso')->onDelete('cascade'); // Especifica la columna primaria
             $table->timestamps(4);

@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('periodo'); // I O II
             $table->string('ciclo');  // I - X
             $table->boolean('estado');  
-            $table->foreignId('idDepartamento')->constrained('departamentoacademico', 'idDepartamento')->onDelete('cascade'); // Clave foránea
             $table->foreign('idMalla')->references('idMalla')->on('malla') ;
             $table->foreign('idCurso')->references('idCurso')->on('curso') ;
             $table->foreign('idEscuela')->references('idEscuela')->on('escuela') ;
