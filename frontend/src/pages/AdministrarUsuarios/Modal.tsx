@@ -11,7 +11,6 @@ interface Escuela {
   idEscuela: number;
   name: string;
   idFacultad: number;
-
 }
 
 interface ModalProps {
@@ -34,10 +33,10 @@ const Modal: React.FC<ModalProps> = ({
   const [formData, setFormData] = useState(initialFormData);
   const [selectedPermisosAsActivities, setSelectedPermisosAsActivities] = useState<Activity[]>([]);
   const [availableActivities, setAvailableActivities] = useState<Activity[]>([]);
-  const [searchTermMain, setSearchTermMain] = useState<string>(''); // Search term for main modal
+  const [searchTermMain, setSearchTermMain] = useState<string>('');
   const [isBuscarEscuelaModalOpen, setIsBuscarEscuelaModalOpen] = useState(false);
   const [escuelaSeleccionada, setEscuelaSeleccionada] = useState<null | Escuela>(null);
-  const [searchTermEscuela, setSearchTermEscuela] = useState<string>(''); // Search term for school selection modal
+  const [searchTermEscuela, setSearchTermEscuela] = useState<string>('');
 
   useEffect(() => {
     if (isModalOpen) {
@@ -99,15 +98,17 @@ const Modal: React.FC<ModalProps> = ({
       }),
     });
 
+    const canAssignEscuela = ['Docente', 'Director de escuela'].includes(activity.name);
+
     return (
       <div
         ref={drag}
         className={`p-2 border rounded flex items-center mb-2 ${isDragging ? 'opacity-50' : 'opacity-100'} bg-blue-500`}
       >
         <span className='text-md text-white'>{activity.name}</span>
-        {showRemoveButton && (
+        {showRemoveButton && canAssignEscuela && (
           <button
-            onClick={() => setIsBuscarEscuelaModalOpen(true)} // Abre el modal de búsqueda de escuelas
+            onClick={() => setIsBuscarEscuelaModalOpen(true)}
             className="ml-auto bg-green-500 text-white hover:bg-green-600 py-1 px-4 rounded"
           >
             Asignar Escuela
@@ -148,7 +149,7 @@ const Modal: React.FC<ModalProps> = ({
 
   const closeModalBuscarEscuela = () => {
     setIsBuscarEscuelaModalOpen(false);
-    setSearchTermEscuela(''); // Limpiar el término de búsqueda cuando se cierra el modal
+    setSearchTermEscuela('');
   };
 
   return (
@@ -167,7 +168,6 @@ const Modal: React.FC<ModalProps> = ({
         <h3 className="text-xl font-semibold mb-6">Administrar Roles</h3>
         <h4 className="text-lg font-medium mb-3">{formData.name || 'Nombre no disponible'}</h4>
 
-        {/* Campo de búsqueda para el modal principal */}
         <input
           type="text"
           placeholder="Buscar roles disponibles..."
@@ -213,7 +213,7 @@ const Modal: React.FC<ModalProps> = ({
         </DndProvider>
 
         {escuelaSeleccionada && (
-          <p className="mt-2 text-gray-700">Escuela seleccionada: {escuelaSeleccionada.nombre}</p>
+          <p className="mt-2 text-gray-700">Escuela seleccionada: {escuelaSeleccionada.name}</p>
         )}
 
         <button
@@ -223,7 +223,6 @@ const Modal: React.FC<ModalProps> = ({
           Guardar Cambios
         </button>
 
-        {/* Modal de Búsqueda de Escuela */}
         {isBuscarEscuelaModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
             <div className="bg-white p-8 rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/3 relative">
@@ -235,7 +234,6 @@ const Modal: React.FC<ModalProps> = ({
               </button>
               <h3 className="text-xl font-semibold mb-4">Seleccionar Escuela</h3>
 
-              {/* Campo de búsqueda específico para el modal de búsqueda de escuelas */}
               <input
                 type="text"
                 placeholder="Buscar escuela..."
