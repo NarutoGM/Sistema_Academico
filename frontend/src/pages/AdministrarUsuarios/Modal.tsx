@@ -37,6 +37,7 @@ const Modal: React.FC<ModalProps> = ({
   const [isBuscarEscuelaModalOpen, setIsBuscarEscuelaModalOpen] = useState(false);
   const [escuelaSeleccionada, setEscuelaSeleccionada] = useState<null | Escuela>(null);
   const [searchTermEscuela, setSearchTermEscuela] = useState<string>('');
+  const [currentRole, setCurrentRole] = useState<string>('');
 
   useEffect(() => {
     if (isModalOpen) {
@@ -108,7 +109,10 @@ const Modal: React.FC<ModalProps> = ({
         <span className='text-md text-white'>{activity.name}</span>
         {showRemoveButton && canAssignEscuela && (
           <button
-            onClick={() => setIsBuscarEscuelaModalOpen(true)}
+            onClick={() => {
+              setCurrentRole(activity.name);
+              setIsBuscarEscuelaModalOpen(true);
+            }}
             className="ml-auto bg-green-500 text-white hover:bg-green-600 py-1 px-4 rounded"
           >
             Asignar Escuela
@@ -223,7 +227,7 @@ const Modal: React.FC<ModalProps> = ({
           Guardar Cambios
         </button>
 
-        {isBuscarEscuelaModalOpen && (
+        {isBuscarEscuelaModalOpen && currentRole === 'Director de escuela' && (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
             <div className="bg-white p-8 rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/3 relative">
               <button
@@ -244,7 +248,7 @@ const Modal: React.FC<ModalProps> = ({
 
               <ul className="max-h-64 overflow-y-scroll">
                 {escuelas
-                  .filter((escuela) => escuela.name && escuela.name.toLowerCase().includes(searchTermEscuela.toLowerCase()))
+                  .filter((escuela) => escuela.name.toLowerCase().includes(searchTermEscuela.toLowerCase()))
                   .map((escuela) => (
                     <li
                       key={escuela.idEscuela}
@@ -256,6 +260,32 @@ const Modal: React.FC<ModalProps> = ({
                   ))}
               </ul>
               
+              <button
+                onClick={closeModalBuscarEscuela}
+                className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 w-full"
+              >
+                Guardar y Cerrar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isBuscarEscuelaModalOpen && currentRole === 'Docente' && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div className="bg-white p-8 rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/3 relative">
+              <button
+                onClick={closeModalBuscarEscuela}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+              <h3 className="text-xl font-semibold mb-4">Detalles Adicionales para Docente</h3>
+              {/* Additional fields for Docente */}
+              <input
+                type="text"
+                placeholder="Campo adicional..."
+                className="border p-2 mb-4 w-full rounded"
+              />
               <button
                 onClick={closeModalBuscarEscuela}
                 className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 w-full"

@@ -4,11 +4,15 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ChevronUp, ChevronDown, Plus, Edit, Download, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getUsuarios, getRoles, saveRoles, createUsuario } from "@/pages/services/rolesyusuarios.services";
-import { getEscuelas } from "@/pages/services/escuela.services";
+import { getFiliales } from "@/pages/services/filial.services";
+import { getCategorias } from "@/pages/services/categoria.services";
+import { getCondiciones } from "@/pages/services/condicion.services";
+import { getRegimenes } from "@/pages/services/regimen.services";
 
 import Modal from './Modal';
 import ModalCrear from './ModalCrear';
 import ModalEliminar from './ModalEliminar';
+import { getEscuelas } from '../services/escuela.services';
 
 // Interfaces para tipado
 interface Users {
@@ -117,6 +121,10 @@ const FilteredUnidad: React.FC = () => {
 
 
   const [escuelas, setEscuelas] = useState([]);
+  const [categoria, setCategoria] = useState([]);
+  const [condicion, setCondicion] = useState([]);
+  const [regimen, setRegimen] = useState([]);
+  const [filial, setFilial] = useState([]);
 
 
 
@@ -146,7 +154,25 @@ const FilteredUnidad: React.FC = () => {
 
       const escuelasData = await getEscuelas(); // Obtener las escuelas
       setEscuelas(escuelasData); // Almacenar en el estado
+
+
+      const categoriasData = await getCategorias(); // Obtener las escuelas
+      setCategoria(categoriasData); // Almacenar en el estado
+
+      const condicionesData = await getCondiciones(); // Obtener las escuelas
+      setCondicion(condicionesData); // Almacenar en el estado
+
+      const filialesData = await getFiliales(); // Obtener las escuelas
+      setFilial(filialesData); // Almacenar en el estado
+
+            const regimenData = await getRegimenes(); // Obtener las escuelas
+      setRegimen(regimenData); // Almacenar en el estado
+
       console.log(escuelasData);
+      console.log(categoriasData);
+      console.log(condicionesData);
+      console.log(filialesData);
+      console.log(regimenData);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -366,6 +392,10 @@ const FilteredUnidad: React.FC = () => {
           handleSave={handleSave}
           initialFormData={formData}
           escuelas={escuelas} // Pasar la lista de escuelas
+          regimen={regimen}
+          filial={filial} 
+          condicion={condicion} 
+          categoria={categoria} 
         />
 
 

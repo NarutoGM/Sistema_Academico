@@ -8,21 +8,21 @@ const getToken = (): string | null => {
   return localStorage.getItem('token'); // O sessionStorage, dependiendo de dónde almacenes el token  
 };  
 
-// Definición de la interfaz Condicion  
-export interface Condicion {  
-  idCondicion: number;  
+// Definición de la interfaz Regimen  
+export interface Regimen {  
+  idRegimen: number;  
   name: string; // Puedes agregar otros campos según la estructura de tu API  
 }  
 
-// Función para obtener todas las condiciones  
-export const getCondiciones = async (): Promise<Condicion[]> => {  
+// Función para obtener todos los regímenes  
+export const getRegimenes = async (): Promise<Regimen[]> => {  
   const authData = isAuthenticated(); // Verificar autenticación  
 
   if (!authData || !authData.token) {  
     throw new Error('User is not authenticated or token is missing');  
   }  
 
-  const response = await fetch(`${apiUrl}/condiciones`, {  
+  const response = await fetch(`${apiUrl}/regimenes`, {  
     method: 'GET',  
     headers: {  
       Authorization: `Bearer ${authData.token}`,  
@@ -31,69 +31,69 @@ export const getCondiciones = async (): Promise<Condicion[]> => {
   });  
 
   if (!response.ok) {  
-    throw new Error('Error al obtener condiciones');  
+    throw new Error('Error al obtener regímenes');  
   }  
 
   return response.json();  
 };  
 
-// Función para crear una nueva condición  
-export const createCondicion = async (  
-  condicionData: Omit<Condicion, 'idCondicion'>,  
-): Promise<Condicion> => {  
+// Función para crear un nuevo régimen  
+export const createRegimen = async (  
+  regimenData: Omit<Regimen, 'idRegimen'>,  
+): Promise<Regimen> => {  
   const authData = isAuthenticated(); // Verificar autenticación  
 
   if (!authData || !authData.token) {  
     throw new Error('User is not authenticated or token is missing');  
   }  
 
-  const response = await fetch(`${apiUrl}/condiciones`, {  
+  const response = await fetch(`${apiUrl}/regimenes`, {  
     method: 'POST',  
     headers: {  
       'Content-Type': 'application/json',  
       Authorization: `Bearer ${authData.token}`,  
     },  
-    body: JSON.stringify(condicionData),  
+    body: JSON.stringify(regimenData),  
   });  
 
   if (!response.ok) {  
     const errorText = await response.text(); // Obtener el texto completo  
-    console.error('Error al crear condición:', errorText);  
-    throw new Error(`Error al crear condición: ${response.statusText}`);  
+    console.error('Error al crear régimen:', errorText);  
+    throw new Error(`Error al crear régimen: ${response.statusText}`);  
   }  
 
   return response.json();  
 };  
 
-// Función para actualizar una condición existente  
-export const updateCondicion = async (  
+// Función para actualizar un régimen existente  
+export const updateRegimen = async (  
   id: number,  
-  condicionData: Omit<Condicion, 'idCondicion'>,  
-): Promise<Condicion> => {  
+  regimenData: Omit<Regimen, 'idRegimen'>,  
+): Promise<Regimen> => {  
   const authData = isAuthenticated(); // Verificar autenticación  
 
   if (!authData || !authData.token) {  
     throw new Error('User is not authenticated or token is missing');  
   }  
 
-  const response = await fetch(`${apiUrl}/condiciones/${id}`, {  
+  const response = await fetch(`${apiUrl}/regimenes/${id}`, {  
     method: 'PUT',  
     headers: {  
       'Content-Type': 'application/json',  
       Authorization: `Bearer ${authData.token}`,  
     },  
-    body: JSON.stringify(condicionData),  
+    body: JSON.stringify(regimenData),  
   });  
 
   if (!response.ok) {  
-    throw new Error('Error al actualizar condición');  
+    throw new Error('Error al actualizar régimen');  
   }  
 
   return response.json();  
 };  
 
-// Función para eliminar una condición  
-export const deleteCondicion = async (id: number): Promise<void> => {  
+// Función para eliminar un régimen  
+export const deleteRegimen = async (id: number): Promise<void> => {  
   const authData = isAuthenticated(); // Verificar autenticación  
 
   if (!authData || !authData.token) {  
@@ -101,7 +101,7 @@ export const deleteCondicion = async (id: number): Promise<void> => {
     return; // Salir si no está autenticado  
   }  
 
-  const response = await fetch(`${apiUrl}/condiciones/${id}`, {  
+  const response = await fetch(`${apiUrl}/regimenes/${id}`, {  
     method: 'DELETE',  
     headers: {  
       Authorization: `Bearer ${authData.token}`,  
@@ -109,6 +109,6 @@ export const deleteCondicion = async (id: number): Promise<void> => {
   });  
 
   if (!response.ok) {  
-    throw new Error('Error al eliminar condición');  
+    throw new Error('Error al eliminar régimen');  
   }  
 };
