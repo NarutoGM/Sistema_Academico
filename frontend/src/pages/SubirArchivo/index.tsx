@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { gapi } from 'gapi-script';
 
-const CLIENT_ID = '800052948636-rdd7pkmdelt5a7eam550vesb5udke4ib.apps.googleusercontent.com';
-const API_KEY = 'AIzaSyB86OdwKTOTnUpukzh9HYmV7bpOxZLPeTc';
-const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const CLIENT_ID = process.env.VITE_GOOGLE_CLIENT_ID || '';
+const API_KEY = process.env.VITE_GOOGLE_API_KEY || '';
+const SCOPES = process.env.VITE_GOOGLE_SCOPES || '';
 
 const FileUploadComponent: React.FC = () => {
   const [folderTitle, setFolderTitle] = useState<string>('');
