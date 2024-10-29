@@ -19,7 +19,7 @@ class RoleController extends Controller
 
     public function rolesdisponibles()
     {
-        $roles = Role::all();
+        $roles = Role::select('id', 'name')->get();
         return response()->json($roles);
     }
     

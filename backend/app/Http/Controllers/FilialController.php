@@ -7,12 +7,11 @@ use Illuminate\Http\Request;
 
 class FilialController extends Controller  
 {  
-    // Listar todas las filiales  
     public function index()  
     {  
-        $filiales = Filial::all();  
+        $filiales = Filial::select('idFilial', 'name')->get();  
         return response()->json($filiales);  
-    }  
+    }
 
     // Mostrar una filial específica  
     public function show($id)  

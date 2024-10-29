@@ -33,7 +33,10 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 
 
 
-Route::get('/users', [UserController::class, 'index']);         
+Route::get('/users', [UserController::class, 'index']);     
+Route::get('/administrarusuarios', [UserController::class, 'administrarusuarios']); // Obtener todos los permisos con estado 1
+
+
 Route::post('/users', [UserController::class, 'store']);       
 Route::get('/users/{id}', [UserController::class, 'show']);    
 Route::put('/users/{id}', [UserController::class, 'update']);   

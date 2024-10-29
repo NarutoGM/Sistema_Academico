@@ -79,6 +79,29 @@ export const getUsuarios = async (): Promise<Rol[]> => {
 };
 
 
+// Función para obtener todos los usuarios
+export const getInfoAdministrarUsuarios = async (): Promise<Rol[]> => {
+  const authData = isAuthenticated(); // Obtiene los datos de autenticación
+  const token = authData?.token; // Extrae el token
+
+  if (!token) {
+    throw new Error('Token no disponible'); // Lanza un error si no hay token
+  }
+
+  const response = await fetch(`${apiUrl}/administrarusuarios`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`, // Incluye el token en los headers
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Error al obtener usuarios'); // Lanza un error si la respuesta no es ok
+  }
+
+  return response.json(); // Devuelve la respuesta en formato JSON
+};
 
 
 

@@ -15,6 +15,8 @@ class EscuelaController extends Controller
         $escuelas = Escuela::with('facultad:idFacultad,nomFacultad')->get(['idEscuela', 'name', 'idFacultad']);
         return response()->json($escuelas);
     }
+
+    
     
 
     /**

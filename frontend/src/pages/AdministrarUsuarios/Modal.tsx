@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { DndProvider, useDrag, useDrop, DragSourceMonitor } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import DocenteModal from './DocenteModal';
+import DirectorEscuelaModal from './DirectorEscuelaModal';
 
 interface Activity {
   id: number;
@@ -24,9 +26,7 @@ interface ModalProps {
   regimen: Array<{ idRegimen: number; nombreRegimen: string }>;
   categoria: Array<{ idCategoria: number; nombreCategoria: string }>;
   filial: Array<{ idFilial: number; name: string }>;
-
 }
-
 
 const Modal: React.FC<ModalProps> = ({
   isModalOpen,
@@ -35,10 +35,10 @@ const Modal: React.FC<ModalProps> = ({
   handleSave,
   initialFormData,
   escuelas,
-  condicion, // Agrega este prop
-  regimen, // Agrega este prop
-  categoria, // Agrega este prop
-  filial, // Agrega este prop
+  condicion,
+  regimen,
+  categoria,
+  filial,
 }) => {
   const [formData, setFormData] = useState(initialFormData);
   const [selectedPermisosAsActivities, setSelectedPermisosAsActivities] = useState<Activity[]>([]);
@@ -238,121 +238,25 @@ const Modal: React.FC<ModalProps> = ({
         </button>
 
         {isBuscarEscuelaModalOpen && currentRole === 'Director de escuela' && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-            <div className="bg-white p-8 rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/3 relative">
-              <button
-                onClick={closeModalBuscarEscuela}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-              <h3 className="text-xl font-semibold mb-4">Seleccionar Escuela</h3>
-
-              <input
-                type="text"
-                placeholder="Buscar escuela..."
-                className="border p-2 mb-4 w-full rounded"
-                value={searchTermEscuela}
-                onChange={(e) => setSearchTermEscuela(e.target.value || '')}
-              />
-
-              <ul className="max-h-64 overflow-y-scroll">
-                {escuelas
-                  .filter((escuela) => escuela.name.toLowerCase().includes(searchTermEscuela.toLowerCase()))
-                  .map((escuela) => (
-                    <li
-                      key={escuela.idEscuela}
-                      className="p-2 cursor-pointer hover:bg-gray-200"
-                      onClick={() => handleSelectEscuela(escuela)}
-                    >
-                      {escuela.name}
-                    </li>
-                  ))}
-              </ul>
-
-              <button
-                onClick={closeModalBuscarEscuela}
-                className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 w-full"
-              >
-                Guardar y Cerrar
-              </button>
-            </div>
-          </div>
+          <DirectorEscuelaModal
+            escuelas={escuelas}
+            closeModal={closeModalBuscarEscuela}
+            handleSelectEscuela={handleSelectEscuela}
+            searchTermEscuela={searchTermEscuela}
+            setSearchTermEscuela={setSearchTermEscuela}
+          />
         )}
 
         {isBuscarEscuelaModalOpen && currentRole === 'Docente' && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-            <div className="bg-white p-8 rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/3 relative">
-              <button
-                onClick={() => setIsBuscarEscuelaModalOpen(false)}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-              <h3 className="text-xl font-semibold mb-4">Detalles Adicionales para Docente</h3>
-
-              {/* Campo de Escuela */}
-              <select className="border p-2 mb-4 w-full rounded" defaultValue="">
-                <option value="" disabled>Seleccione una Escuela</option>
-                {escuelas.map((escuela) => (
-                  <option key={escuela.idEscuela} value={escuela.idEscuela}>
-                    {escuela.name} - {escuela.facultad.nomFacultad}
-                  </option>
-                ))}
-              </select>
-
-              {/* Campo de Condición */}
-              <select className="border p-2 mb-4 w-full rounded" defaultValue="">
-                <option value="" disabled>Seleccione una Condición</option>
-                {condicion.map((cond) => (
-                  <option key={cond.idCondicion} value={cond.idCondicion}>
-                    {cond.nombreCondicion}
-                  </option>
-                ))}
-              </select>
-
-              {/* Campo de Régimen */}
-              <select className="border p-2 mb-4 w-full rounded" defaultValue="">
-                <option value="" disabled>Seleccione un Régimen</option>
-                {regimen.map((reg) => (
-                  <option key={reg.idRegimen} value={reg.idRegimen}>
-                    {reg.nombreRegimen}
-                  </option>
-                ))}
-              </select>
-
-              {/* Campo de Categoría */}
-              <select className="border p-2 mb-4 w-full rounded" defaultValue="">
-                <option value="" disabled>Seleccione una Categoría</option>
-                {categoria.map((cat) => (
-                  <option key={cat.idCategoria} value={cat.idCategoria}>
-                    {cat.nombreCategoria}
-                  </option>
-                ))}
-              </select>
-
-              {/* Campo de Filial */}
-              <select className="border p-2 mb-4 w-full rounded" defaultValue="">
-                <option value="" disabled>Seleccione la sede</option>
-                {filial.map((cat) => (
-                  <option key={cat.idFilial} value={cat.idFilial}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-
-              <button
-                onClick={() => setIsBuscarEscuelaModalOpen(false)}
-                className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 w-full"
-              >
-                Guardar y Cerrar
-              </button>
-            </div>
-          </div>
+          <DocenteModal
+            escuelas={escuelas}
+            condicion={condicion}
+            regimen={regimen}
+            categoria={categoria}
+            filial={filial}
+            closeModal={closeModalBuscarEscuela}
+          />
         )}
-
-
-
       </div>
     </div>
   );

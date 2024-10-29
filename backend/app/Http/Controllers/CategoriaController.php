@@ -10,9 +10,9 @@ class CategoriaController extends Controller
     // Listar todas las categorías  
     public function index()  
     {  
-        $categorias = Categoria::all();  
+        $categorias = Categoria::select('idCategoria', 'nombreCategoria')->get();  
         return response()->json($categorias);  
-    }  
+    }
 
     // Mostrar una categoría específica  
     public function show($id)  

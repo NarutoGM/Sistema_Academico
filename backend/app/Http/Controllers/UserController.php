@@ -2,6 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categoria;
+use App\Models\Condicion;
+use App\Models\Escuela;
+use App\Models\Filial;
+use App\Models\Regimen;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -25,10 +31,42 @@ class UserController extends Controller
 
             ];
         });
-    
+
         return response()->json($users);
     }
+    // GET /api/users - Obtener todos los usuarios
+    public function administrarusuarios()
+    {
+        $users = User::with('roles')->get()->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'lastname' => $user->lastname,
+                'telefono' => $user->telefono,
+                'roles' => $user->roles, // Incluye toda la info de los roles
+                'foto' => $user->foto,
+                'direccion' => $user->direccion,
+                'email' => $user->email,
+            ];
+        });
 
+        $roles = Role::select('id', 'name')->get();
+        $condiciones = Condicion::select('idCondicion', 'nombreCondicion')->get();
+        $regimenes = Regimen::select('idRegimen', 'nombreRegimen')->get();
+        $categorias = Categoria::select('idCategoria', 'nombreCategoria')->get();
+        $filiales = Filial::select('idFilial', 'name')->get();
+        $escuelas = Escuela::select('idEscuela', 'name')->get();
+
+        return response()->json([
+            'users' => $users,
+            'roles' => $roles,
+            'condiciones' => $condiciones,
+            'regimenes' => $regimenes,
+            'categorias' => $categorias,
+            'filiales' => $filiales,
+            'escuelas' => $escuelas,
+        ]);
+    }
 
     // POST /api/users - Crear un nuevo usuario
     public function store(Request $request)
@@ -43,7 +81,7 @@ class UserController extends Controller
                 'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 'password' => 'required|string|min:8',
             ]);
-    
+
             // Manejar la subida de la foto, si existe
             $fotoUrl = null; // Inicializar la variable para la URL de la foto
             if ($request->hasFile('foto')) {
@@ -51,7 +89,7 @@ class UserController extends Controller
                 $fotoPath = $request->file('foto')->store('fotos', 'public'); // Cambiado
                 $fotoUrl = \Storage::url($fotoPath); // Obtener la URL de la imagen guardada
             }
-    
+
             // Crear la persona con los datos validados
             $user = new User();
             $user->name = $validatedData['name'];
@@ -60,14 +98,13 @@ class UserController extends Controller
             $user->email = $validatedData['email'];
             $user->foto = $fotoUrl; // Cambiar a 'foto' y guardar la URL de la foto
             $user->password = bcrypt($validatedData['password']);
-    
+
             $user->save(); // Guardar la persona en la base de datos
-    
+
             return response()->json([
                 'message' => 'Persona creada exitosamente',
                 'persona' => $user,
             ], 201);
-    
         } catch (\Exception $e) {
             // Si ocurre un error, devuelve una respuesta en JSON
             return response()->json([
@@ -76,10 +113,10 @@ class UserController extends Controller
             ], 500);
         }
     }
-    
-    
-    
-    
+
+
+
+
     // GET /api/users/{id} - Obtener un usuario por ID
     public function show($id)
     {

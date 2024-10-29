@@ -10,9 +10,9 @@ class CondicionController extends Controller
     // Listar todas las condiciones  
     public function index()  
     {  
-        $condiciones = Condicion::all();  
+        $condiciones = Condicion::select('idCondicion', 'nombreCondicion')->get();  
         return response()->json($condiciones);  
-    }  
+    } 
 
     // Mostrar un condición específico  
     public function show($id)  

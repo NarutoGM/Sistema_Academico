@@ -10,9 +10,9 @@ class RegimenController extends Controller
     // Listar todos los regimenes  
     public function index()  
     {  
-        $regimenes = Regimen::all();  
+        $regimenes = Regimen::select('idRegimen', 'nombreRegimen')->get();  
         return response()->json($regimenes);  
-    }  
+    }
 
     // Mostrar un régimen específico  
     public function show($id)  
