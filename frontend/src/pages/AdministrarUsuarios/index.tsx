@@ -3,7 +3,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ChevronUp, ChevronDown, Plus, Edit, Download, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getUsuarios, getRoles, saveRoles, createUsuario, getInfoAdministrarUsuarios } from "@/pages/services/rolesyusuarios.services";
+import { getUsuarios, getRoles, saveRoles, createUsuario,getInfoAdministrarUsuarios } from "@/pages/services/rolesyusuarios.services";
 import { getFiliales } from "@/pages/services/filial.services";
 import { getCategorias } from "@/pages/services/categoria.services";
 import { getCondiciones } from "@/pages/services/condicion.services";
@@ -137,43 +137,40 @@ const FilteredUnidad: React.FC = () => {
   const fetchData = async () => {
     setLoading(true); // Comienza la carga
     try {
-      // Llama a la API que devuelve toda la información
-      const response = await getInfoAdministrarUsuarios();
-      const { users, roles, condiciones, regimenes, categorias, filiales,escuelas } = response;
+        const data = await getInfoAdministrarUsuarios(); // Llamada optimizada
+        console.log('Datos obtenidos:', data); // Ver los datos en la consola
 
-      console.log('Usuarios obtenidos:', users);
-      setData(users); // Almacena los usuarios en el estado
-
-      console.log('Roles obtenidos:', roles);
-      setOriginalBoxBActivities(roles);
-      const updatedActivities = roles.map((rol) => ({
-        id: rol.id,
-        name: rol.name,
-        estado: rol.estado,
-      }));
-      setBoxBActivities(updatedActivities);
-
-      console.log('Escuelas obtenidas:', escuelas);
-      setEscuelas(escuelas); // Almacena las escuelas en el estado
-
-      console.log('Categorías obtenidas:', categorias);
-      setCategoria(categorias); // Almacena las categorías en el estado
-
-      console.log('Condiciones obtenidas:', condiciones);
-      setCondicion(condiciones); // Almacena las condiciones en el estado
-
-      console.log('Filiales obtenidas:', filiales);
-      setFilial(filiales); // Almacena las filiales en el estado
-
-      console.log('Regímenes obtenidos:', regimenes);
-      setRegimen(regimenes); // Almacena los regímenes en el estado
-
+        // Almacena los datos en el estado
+        setData(data.users);
+        setOriginalBoxBActivities(data.roles);
+        
+        const updatedActivities = data.roles.map((rol) => ({
+            id: rol.id,
+            name: rol.name,
+            estado: rol.estado,
+        }));
+        setBoxBActivities(updatedActivities);
+        
+        // Almacena las otras entidades en el estado
+        setEscuelas(data.escuelas);
+        setCategoria(data.categorias);
+        setCondicion(data.condiciones);
+        setFilial(data.filiales);
+        setRegimen(data.regimenes);
+        
+        // Registra los datos en la consola
+        console.log(data.escuelas);
+        console.log(data.categorias);
+        console.log(data.condiciones);
+        console.log(data.filiales);
+        console.log(data.regimenes);
     } catch (error) {
-      console.error('Error fetching data:', error);
+        console.error('Error fetching data:', error);
     } finally {
-      setLoading(false); // Termina la carga
+        setLoading(false); // Termina la carga
     }
-  };
+};
+
 
 
   useEffect(() => {
@@ -387,9 +384,9 @@ const FilteredUnidad: React.FC = () => {
           initialFormData={formData}
           escuelas={escuelas} // Pasar la lista de escuelas
           regimen={regimen}
-          filial={filial}
-          condicion={condicion}
-          categoria={categoria}
+          filial={filial} 
+          condicion={condicion} 
+          categoria={categoria} 
         />
 
 

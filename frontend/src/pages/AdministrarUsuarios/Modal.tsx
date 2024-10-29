@@ -48,6 +48,7 @@ const Modal: React.FC<ModalProps> = ({
   const [escuelaSeleccionada, setEscuelaSeleccionada] = useState<null | Escuela>(null);
   const [searchTermEscuela, setSearchTermEscuela] = useState<string>('');
   const [currentRole, setCurrentRole] = useState<string>('');
+  const [docenteData, setDocenteData] = useState<any>(null); // Estado para guardar datos del docente
 
   useEffect(() => {
     if (isModalOpen) {
@@ -82,6 +83,11 @@ const Modal: React.FC<ModalProps> = ({
   if (!isModalOpen) return null;
 
   const handleSaveClick = () => {
+    // Aquí puedes incluir la lógica para guardar los datos del docente
+    if (currentRole === 'Docente' && docenteData) {
+      console.log('Datos del docente:', docenteData); // Asegúrate de guardar estos datos donde los necesites
+    }
+
     handleSave(selectedPermisosAsActivities);
     closeModal();
   };
@@ -125,7 +131,7 @@ const Modal: React.FC<ModalProps> = ({
             }}
             className="ml-auto bg-green-500 text-white hover:bg-green-600 py-1 px-4 rounded"
           >
-            Asignar Escuela
+            Asignar información
           </button>
         )}
       </div>
@@ -227,7 +233,11 @@ const Modal: React.FC<ModalProps> = ({
         </DndProvider>
 
         {escuelaSeleccionada && (
-          <p className="mt-2 text-gray-700">Escuela seleccionada: {escuelaSeleccionada.name}</p>
+          <p className="mt-2 text-gray-700">DirectorEscuela: {escuelaSeleccionada.name}</p>
+        )}
+
+        {docenteData && (
+          <p className="mt-2 text-gray-700">Docente: {JSON.stringify(docenteData)}</p>
         )}
 
         <button
@@ -255,6 +265,7 @@ const Modal: React.FC<ModalProps> = ({
             categoria={categoria}
             filial={filial}
             closeModal={closeModalBuscarEscuela}
+            handleSaveDocenteData={(data) => setDocenteData(data)} // Guardar datos del docente
           />
         )}
       </div>
