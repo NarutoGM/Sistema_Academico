@@ -21,13 +21,13 @@ class UserSeeder extends Seeder
             *  ]);
         */
         $user = User::create([
-            "name" => "Luis Fernando",
-            "lastname" => "Avila Reyes",
-            "dni" => "71328707",
+            "name" => "Guliana",
+            "lastname" => "Lulichac",
+            "dni" => "77777777",
             "direccion" => "Direccion1",
             "foto" => "foto",
-            "telefono" => "987456123",
-            "email" => "t1013300721@unitru.edu.pe",
+            "telefono" => "938578576",
+            "email" => "t033300220@unitru.edu.pe",
             "password" => bcrypt("root")
         ]);
     }
