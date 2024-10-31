@@ -36,6 +36,13 @@ class RoleUserController extends Controller
             $roles = $request->input('roles', []);
             $docenteData = $request->input('additional_data.docente', []);
             $directorData = $request->input('additional_data.escuela', []);
+            $filiales = $request->input('additional_data.docente.filiales', []);
+            $idCondicion = $request->input('additional_data.docente.condicion', []);
+            $idCategoria = $request->input('additional_data.docente.categoria', []);
+            $idRegimen = $request->input('additional_data.docente.regimen', []);
+
+
+
 
             // Buscar el usuario
             $user = User::find($user_id);
@@ -61,54 +68,87 @@ class RoleUserController extends Controller
             if ($existingDirector) {
                 $existingDirector->estado = false;
                 $existingDirector->save();
-                
-                return response()->json($existingDirector);
             }
-            
-            
-            
 
 
-   
+
+
             foreach ($role_ids as $role_id) {
 
-                    
-                    $rol = Role::find($role_id);
+                $rol = Role::find($role_id);
 
-                    if ($rol->name == 'Director de Escuela') {
-                        // Verifica si ya existe un director con el mismo id de usuario
-                        $existingDirector = DirectorEscuela::where('id', $user_id)->first();
-                        if (!$existingDirector) {
-                        
-                            $director = new DirectorEscuela();
-                            $director->id = $user_id;
-                            $director->estado = true; // Forzar el valor booleano explícito
-                            $director->idEscuela = $directorData['id'] ?? null;
-                            $director->save();
+                if ($rol->name == 'Director de Escuela') {
+                    // Verifica si ya existe un director con el mismo id de usuario
+                    $existingDirector = DirectorEscuela::where('id', $user_id)->first();
+                    if (!$existingDirector) {
 
-                        } else {
-                            $existingDirector->idEscuela = $directorData['id'];
-                            $existingDirector->estado = true; // Forzar el valor booleano explícito
-                            $existingDirector->save();
+                        $director = new DirectorEscuela();
+                        $director->id = $user_id;
+                        $director->estado = true; // Forzar el valor booleano explícito
+                        $director->idEscuela = $directorData['id'] ?? null;
+                        $director->save();
+                    } else {
+                        $existingDirector->idEscuela = $directorData['id'];
+                        $existingDirector->estado = true; // Forzar el valor booleano explícito
+                        $existingDirector->save();
+                    }
+                } elseif ($rol->name == 'Docente') {
+                    $existingDocente = Docente::where('id', $user_id)->first();
+                    if (!$existingDocente) {
+                        $docente = new Docente();
+                        $docente->id = $user_id;
+                        $docente->idEscuela = $docenteData['escuela'] ?? null;
+                        $docente->save();
+
+
+                        foreach ($filiales as $filialId) {
+
+                            // Si no existe, crea la relación
+                            DocenteFilial::create([
+                                'idDocente' => $existingDocente->idDocente,
+                                'idFilial' => $filialId,
+                                'estado' => true
+                            ]);
                         }
-                        
-                    } elseif ($rol->name == 'Docente') {
-                        $existingDocente = Docente::where('id', $user_id)->first();
-                        if (!$existingDocente) {
-                            $docente = new Docente();
-                            $docente->id = $user_id;
-                            $docente->idEscuela = $docenteData['escuela'] ?? null;
-                            $docente->save();
-                        }else{
-                            $existingDocente->idEscuela=$docenteData['escuela'];
-                            $existingDocente->save();
+                    } else {
+                        $existingDocente->idEscuela = $docenteData['escuela'];
+                        $existingDocente->save();
+
+
+
+                        // Obtiene todas las filiales asociadas al docente
+                        DocenteFilial::where('idDocente', $existingDocente->idDocente)->update(['estado' => false]);
+
+                        foreach ($filiales as $filialId) {
+                            // Verifica si ya existe la relación del docente con la filial
+                            $docenteFilial = DocenteFilial::where('idDocente', $existingDocente->idDocente)
+                                ->where('idFilial', $filialId)
+                                ->first();
+
+                            // Si no existe, crea la relación
+                            if (!$docenteFilial) {
+
+                                DocenteFilial::create([
+                                    'idDocente' => $existingDocente->idDocente,
+                                    'idFilial' => $filialId,
+                                    'idRegimen' => $idRegimen,
+                                    'idCondicion' => $idCondicion,
+                                    'idCategoria' => $idCategoria,
+                                    'estado' => true
+                                ]);
+                            } else {
+                                // Actualizar utilizando el query builder en lugar de `save`
+                                DocenteFilial::where('idDocente', $existingDocente->idDocente)
+                                    ->where('idFilial', $filialId)
+                                    ->update(['estado' => true]);
+                            }
                         }
                     }
-                    
-                    if (!$user->roles()->where('role_id', $role_id)->exists()) {
-                        $user->roles()->attach($role_id);
-                    }
-                                    
+                }
+
+                if (!$user->roles()->where('role_id', $role_id)->exists()) {
+                    $user->roles()->attach($role_id);
+                }
             }
 
             return response()->json(['message' => 'Roles guardados exitosamente'], 200);
@@ -119,26 +159,6 @@ class RoleUserController extends Controller
             ], 500);
         }
     }
-
-// Procesar filiales si existen
-            //        if (isset($docenteData['filiales']) && is_array($docenteData['filiales'])) {
-            //            foreach ($docenteData['filiales'] as $filial) {
-              //              $docentefilial = new DocenteFilial();
-                    
-                            // Asigna los valores correspondientes
-                //            $docentefilial->idDocente = $user_id;
-                //            $docentefilial->idFilial = $filial; // Asigna el id de filial actual
-                //            $docentefilial->idCondicion = $docenteData['condicion'] ?? null;
-                //            $docentefilial->idRegimen = $docenteData['regimen'] ?? null;
-                //            $docentefilial->idCategoria = $docenteData['categoria'] ?? null;
-                //            $docentefilial->estado = true;
-                            // Guarda el registro en la base de datos
-                //            $docentefilial->save();
-                //        }
-               //     }              
-
-                    // Asociar el rol al usuario
-
 
 
     public function store(Request $request)

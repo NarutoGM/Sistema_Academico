@@ -134,7 +134,7 @@ const FilteredUnidad: React.FC = () => {
     setLoading(true); // Comienza la carga
     try {
       const data = await getInfoAdministrarUsuarios(); // Llamada optimizada
-      console.log('Datos obtenidos:', data); // Ver los datos en la consola
+     // console.log('Datos obtenidos:', data); // Ver los datos en la consola
 
       // Almacena los datos en el estado
       setData(data.users);
@@ -155,11 +155,11 @@ const FilteredUnidad: React.FC = () => {
       setRegimen(data.regimenes);
 
       // Registra los datos en la consola
-      console.log(data.escuelas);
-      console.log(data.categorias);
-      console.log(data.condiciones);
-      console.log(data.filiales);
-      console.log(data.regimenes);
+   //   console.log(data.escuelas);
+    //  console.log(data.categorias);
+    //  console.log(data.condiciones);
+   //   console.log(data.filiales);
+   //   console.log(data.regimenes);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -218,24 +218,24 @@ const FilteredUnidad: React.FC = () => {
 ) => {
     try {
         const rolId = formData.id;
-        console.log('Rol ID:', rolId);
+     //   console.log('Rol ID:', rolId);
 
         // Mapea las actividades seleccionadas para crear un array de roles a guardar
         const rolesToSave = selectedActivities.map((rol) => ({
             id: rol.id,
         }));
-        console.log('Roles a guardar:', rolesToSave);
+      //  console.log('Roles a guardar:', rolesToSave);
 
         // Agregar campos adicionales (ej. escuelaSeleccionada, docenteData)
         const additionalData = {
             escuela: escuelaSeleccionada ? { id: escuelaSeleccionada.idEscuela, name: escuelaSeleccionada.name } : null,
             docente: docenteData ? { ...docenteData } : null,
         };
-        console.log('Datos adicionales:', additionalData);
+     //   console.log('Datos adicionales:', additionalData);
 
         // Aquí ejecuta la lógica de guardado si es necesario
          const result = await saveRoles(rolId, rolesToSave, additionalData);
-         console.log('Roles guardados:', result);
+      //   console.log('Roles guardados:', result);
 
          await fetchData(); // Actualiza la lista después de guardar
          setBoxBActivities(originalBoxBActivities); // Resetea las actividades

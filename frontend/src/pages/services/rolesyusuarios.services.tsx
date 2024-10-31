@@ -152,7 +152,6 @@ export const saveRoles = async (
   };
 
   // Verifica qué datos se están enviando
-  console.log("Additional Data:", additionalData);
   console.log("Body to Send:", bodyToSend);
 
   const response = await fetch(`${apiUrl}/roles/guardar-roles`, {

@@ -23,6 +23,7 @@ class DocenteFilial extends Model
         'idCondicion',
         'idRegimen',
         'idCategoria',
+        'estado'
     ];
 
     // Relaciones con otros modelos
