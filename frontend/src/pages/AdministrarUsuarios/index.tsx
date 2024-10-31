@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { ChevronUp, ChevronDown, Plus, Edit, Download, Trash2 } from 'lucide-react';
+import { ChevronUp, ChevronDown, Plus, Edit, Download,Eye, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getUsuarios, getRoles, saveRoles, createUsuario,getInfoAdministrarUsuarios } from "@/pages/services/rolesyusuarios.services";
-import { getFiliales } from "@/pages/services/filial.services";
-import { getCategorias } from "@/pages/services/categoria.services";
-import { getCondiciones } from "@/pages/services/condicion.services";
-import { getRegimenes } from "@/pages/services/regimen.services";
+import { saveRoles, createUsuario, getInfoAdministrarUsuarios } from "@/pages/services/rolesyusuarios.services";
 
 import Modal from './Modal';
 import ModalCrear from './ModalCrear';
@@ -137,39 +133,39 @@ const FilteredUnidad: React.FC = () => {
   const fetchData = async () => {
     setLoading(true); // Comienza la carga
     try {
-        const data = await getInfoAdministrarUsuarios(); // Llamada optimizada
-        console.log('Datos obtenidos:', data); // Ver los datos en la consola
+      const data = await getInfoAdministrarUsuarios(); // Llamada optimizada
+      console.log('Datos obtenidos:', data); // Ver los datos en la consola
 
-        // Almacena los datos en el estado
-        setData(data.users);
-        setOriginalBoxBActivities(data.roles);
-        
-        const updatedActivities = data.roles.map((rol) => ({
-            id: rol.id,
-            name: rol.name,
-            estado: rol.estado,
-        }));
-        setBoxBActivities(updatedActivities);
-        
-        // Almacena las otras entidades en el estado
-        setEscuelas(data.escuelas);
-        setCategoria(data.categorias);
-        setCondicion(data.condiciones);
-        setFilial(data.filiales);
-        setRegimen(data.regimenes);
-        
-        // Registra los datos en la consola
-        console.log(data.escuelas);
-        console.log(data.categorias);
-        console.log(data.condiciones);
-        console.log(data.filiales);
-        console.log(data.regimenes);
+      // Almacena los datos en el estado
+      setData(data.users);
+      setOriginalBoxBActivities(data.roles);
+
+      const updatedActivities = data.roles.map((rol) => ({
+        id: rol.id,
+        name: rol.name,
+        estado: rol.estado,
+      }));
+      setBoxBActivities(updatedActivities);
+
+      // Almacena las otras entidades en el estado
+      setEscuelas(data.escuelas);
+      setCategoria(data.categorias);
+      setCondicion(data.condiciones);
+      setFilial(data.filiales);
+      setRegimen(data.regimenes);
+
+      // Registra los datos en la consola
+      console.log(data.escuelas);
+      console.log(data.categorias);
+      console.log(data.condiciones);
+      console.log(data.filiales);
+      console.log(data.regimenes);
     } catch (error) {
-        console.error('Error fetching data:', error);
+      console.error('Error fetching data:', error);
     } finally {
-        setLoading(false); // Termina la carga
+      setLoading(false); // Termina la carga
     }
-};
+  };
 
 
 
@@ -215,28 +211,40 @@ const FilteredUnidad: React.FC = () => {
 
 
   // Función para manejar la asignación de permisos a un rol
-  const handleSave = async (selectedActivities: Activity[]) => {
+  const handleSave = async (
+    selectedActivities: Activity[],
+    escuelaSeleccionada: Escuela | null,
+    docenteData: any | null
+) => {
     try {
+        const rolId = formData.id;
+        console.log('Rol ID:', rolId);
 
-      const rolId = formData.id;
-      console.log('Rol ID:', rolId); // Ver el ID del rol
+        // Mapea las actividades seleccionadas para crear un array de roles a guardar
+        const rolesToSave = selectedActivities.map((rol) => ({
+            id: rol.id,
+        }));
+        console.log('Roles a guardar:', rolesToSave);
 
-      // Mapea las actividades seleccionadas para crear un array de roles a guardar
-      const rolesToSave = selectedActivities.map((rol) => ({
-        id: rol.id,
-      }));
-      console.log('Roles a guardar:', rolesToSave); // Ver los roles que se van a guardar
+        // Agregar campos adicionales (ej. escuelaSeleccionada, docenteData)
+        const additionalData = {
+            escuela: escuelaSeleccionada ? { id: escuelaSeleccionada.idEscuela, name: escuelaSeleccionada.name } : null,
+            docente: docenteData ? { ...docenteData } : null,
+        };
+        console.log('Datos adicionales:', additionalData);
 
-      const result = await saveRoles(rolId, rolesToSave);
-      console.log('Roles guardados:', result); // Ver el resultado de la operación
+        // Aquí ejecuta la lógica de guardado si es necesario
+         const result = await saveRoles(rolId, rolesToSave, additionalData);
+         console.log('Roles guardados:', result);
 
-      await fetchData(); // Actualiza la lista después de guardar
-      setBoxBActivities(originalBoxBActivities); // Resetea las actividades
-      closeModalCrear(); // Cierra el modal
+         await fetchData(); // Actualiza la lista después de guardar
+         setBoxBActivities(originalBoxBActivities); // Resetea las actividades
+        closeModalCrear(); // Cierra el modal
     } catch (error: any) {
-      console.error('Error guardando permisos:', error.message);
+        console.error('Error guardando permisos:', error.message);
     }
-  };
+};
+
 
 
   // Funciones para editar Users (no modificar)
@@ -355,7 +363,7 @@ const FilteredUnidad: React.FC = () => {
                 <td className="border-b border-gray-200 py-4 px-6">
                   <div className="flex items-center space-x-4">
                     {/* Botón Editar */}
-                    <Edit
+                    <Eye
                       className="w-5 h-5 text-gray-600 hover:text-blue-600 cursor-pointer"
                       onClick={() => openModal(item)} // Abrir modal de edición
                     />
@@ -384,9 +392,9 @@ const FilteredUnidad: React.FC = () => {
           initialFormData={formData}
           escuelas={escuelas} // Pasar la lista de escuelas
           regimen={regimen}
-          filial={filial} 
-          condicion={condicion} 
-          categoria={categoria} 
+          filial={filial}
+          condicion={condicion}
+          categoria={categoria}
         />
 
 
@@ -403,11 +411,6 @@ const FilteredUnidad: React.FC = () => {
         onClose={closePersonaModal}
         onSave={handleSavePersona}
       />
-
-
-
-
-
     </div>
   );
 };

@@ -22,6 +22,12 @@ class DirectorEscuela extends Model
     protected $fillable = [
         'id',
         'idEscuela',
+        'estado', // Añade estado como fillable
+    ];
+
+    // Casts para definir tipos
+    protected $casts = [
+        'estado' => 'boolean', // Asegura que estado sea tratado como booleano
     ];
 
     /**

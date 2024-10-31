@@ -85,15 +85,21 @@ return [
         
 'pgsql' => [
     'driver' => 'pgsql',
-    'host' => env('DB_HOST', 'localhost'),
+    'host' => env('DB_HOST', 'your-supabase-host.supabase.co'),
     'port' => env('DB_PORT', '5432'),
-    'database' => env('DB_DATABASE', 'forge'),
-    'username' => env('DB_USERNAME', 'forge'),
-    'password' => env('DB_PASSWORD', ''),
+    'database' => env('DB_DATABASE', 'your_database_name'),
+    'username' => env('DB_USERNAME', 'your_username'),
+    'password' => env('DB_PASSWORD', 'your_password'),
     'charset' => 'utf8',
     'prefix' => '',
     'schema' => 'public',
+    'sslmode' => 'prefer', // Sigue usando prefer en local
+    'options' => extension_loaded('pdo_pgsql') ? [
+        PDO::ATTR_EMULATE_PREPARES => false, // Mejor manejo de tipos
+    ] : [],
 ],
+
+
 
 
         'sqlsrv' => [

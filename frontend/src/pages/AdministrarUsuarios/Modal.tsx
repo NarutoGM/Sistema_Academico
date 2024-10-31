@@ -48,7 +48,7 @@ const Modal: React.FC<ModalProps> = ({
   const [escuelaSeleccionada, setEscuelaSeleccionada] = useState<null | Escuela>(null);
   const [searchTermEscuela, setSearchTermEscuela] = useState<string>('');
   const [currentRole, setCurrentRole] = useState<string>('');
-  const [docenteData, setDocenteData] = useState<any>(null); // Estado para guardar datos del docente
+  const [docenteData, setDocenteData] = useState<any>(null);
 
   useEffect(() => {
     if (isModalOpen) {
@@ -83,14 +83,14 @@ const Modal: React.FC<ModalProps> = ({
   if (!isModalOpen) return null;
 
   const handleSaveClick = () => {
-    // Aquí puedes incluir la lógica para guardar los datos del docente
     if (currentRole === 'Docente' && docenteData) {
-      console.log('Datos del docente:', docenteData); // Asegúrate de guardar estos datos donde los necesites
+        console.log('Datos del docente:', docenteData);
     }
-
-    handleSave(selectedPermisosAsActivities);
+    // Agrega los argumentos de escuelaSeleccionada y docenteData
+    handleSave(selectedPermisosAsActivities, escuelaSeleccionada, docenteData);
     closeModal();
-  };
+};
+
 
   const handleOutsideClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (e.target === e.currentTarget) {
@@ -115,7 +115,7 @@ const Modal: React.FC<ModalProps> = ({
       }),
     });
 
-    const canAssignEscuela = ['Docente', 'Director de escuela'].includes(activity.name);
+    const canAssignEscuela = ['Docente', 'Director de Escuela'].includes(activity.name);
 
     return (
       <div
@@ -165,6 +165,7 @@ const Modal: React.FC<ModalProps> = ({
 
   const handleSelectEscuela = (escuela: Escuela) => {
     setEscuelaSeleccionada(escuela);
+    console.log('Escuela seleccionada:', escuela);
   };
 
   const closeModalBuscarEscuela = () => {
@@ -232,9 +233,13 @@ const Modal: React.FC<ModalProps> = ({
           </div>
         </DndProvider>
 
-        {escuelaSeleccionada && (
-          <p className="mt-2 text-gray-700">DirectorEscuela: {escuelaSeleccionada.name}</p>
-        )}
+        {escuelaSeleccionada ? (
+  <p className="mt-2 text-gray-700">
+    DirectorEscuela: {escuelaSeleccionada.name} (ID: {escuelaSeleccionada?.idEscuela ?? 'ID no disponible'})
+  </p>
+) : (
+  <p className="mt-2 text-gray-700">No se ha seleccionado ninguna escuela</p>
+)}
 
         {docenteData && (
           <p className="mt-2 text-gray-700">Docente: {JSON.stringify(docenteData)}</p>
@@ -247,7 +252,7 @@ const Modal: React.FC<ModalProps> = ({
           Guardar Cambios
         </button>
 
-        {isBuscarEscuelaModalOpen && currentRole === 'Director de escuela' && (
+        {isBuscarEscuelaModalOpen && currentRole === 'Director de Escuela' && (
           <DirectorEscuelaModal
             escuelas={escuelas}
             closeModal={closeModalBuscarEscuela}
@@ -265,7 +270,10 @@ const Modal: React.FC<ModalProps> = ({
             categoria={categoria}
             filial={filial}
             closeModal={closeModalBuscarEscuela}
-            handleSaveDocenteData={(data) => setDocenteData(data)} // Guardar datos del docente
+            handleSaveDocenteData={(data) => {
+              setDocenteData(data);
+              console.log('Datos del docente:', data);
+            }}
           />
         )}
       </div>

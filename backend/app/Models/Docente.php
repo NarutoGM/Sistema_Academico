@@ -14,6 +14,7 @@ class Docente extends Model
 
     // Define la clave primaria de la tabla
     protected $primaryKey = 'idDocente';
+    public $incrementing = true;
 
     // Permitir que Eloquent maneje las marcas de tiempo automáticamente
     public $timestamps = true;

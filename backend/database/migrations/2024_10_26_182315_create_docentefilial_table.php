@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('idCondicion')->constrained('condicion', 'idCondicion')->onDelete('cascade'); // Clave foránea
             $table->foreignId('idRegimen')->constrained('regimen', 'idRegimen')->onDelete('cascade'); // Clave foránea
             $table->foreignId('idCategoria')->constrained('categorias', 'idCategoria')->onDelete('cascade'); // Clave foránea
+            $table->boolean('estado'); 
 
             $table->timestamps(4);
             $table->foreign('idFilial')->references('idFilial')->on('filial') ;

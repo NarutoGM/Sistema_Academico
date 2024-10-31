@@ -8,7 +8,7 @@ interface Escuela {
 interface DirectorEscuelaModalProps {
   escuelas: Escuela[];
   closeModal: () => void;
-  handleSelectEscuela: (escuela: Escuela) => void;
+  handleSelectEscuela: (id: number) => void;
   searchTermEscuela: string;
   setSearchTermEscuela: (term: string) => void;
 }

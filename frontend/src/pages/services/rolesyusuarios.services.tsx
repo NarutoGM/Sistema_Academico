@@ -113,7 +113,6 @@ export const getInfoAdministrarUsuarios = async (): Promise<Rol[]> => {
 export const getRoles = async (): Promise<Permiso[]> => {
   const authData = isAuthenticated(); // Obtiene los datos de autenticación
   const token = authData?.token; // Extrae el token
-
   if (!token) {
     throw new Error('Token no disponible'); // Lanza un error si no hay token
   }
@@ -129,13 +128,17 @@ export const getRoles = async (): Promise<Permiso[]> => {
   if (!response.ok) {
     throw new Error('Error al obtener roles');
   }
-
   return response.json();
 };
 
 // Función para guardar roles a un usuario
-export const saveRoles = async (user_id: number, roles: { id: number }[]) => {
- const authData = isAuthenticated(); // Obtiene los datos de autenticación
+// Función para guardar roles a un usuario, incluyendo datos adicionales
+export const saveRoles = async (
+  user_id: number,
+  roles: { id: number }[],
+  additionalData: any // Tipo de dato que corresponda a los datos adicionales
+) => {
+  const authData = isAuthenticated(); // Obtiene los datos de autenticación
   const token = authData?.token; // Extrae el token
 
   if (!token) {
@@ -145,7 +148,12 @@ export const saveRoles = async (user_id: number, roles: { id: number }[]) => {
   const bodyToSend = {
     user_id: user_id,
     roles: roles,
+    additional_data: additionalData, // Incluye el dato adicional en el cuerpo
   };
+
+  // Verifica qué datos se están enviando
+  console.log("Additional Data:", additionalData);
+  console.log("Body to Send:", bodyToSend);
 
   const response = await fetch(`${apiUrl}/roles/guardar-roles`, {
     method: 'POST',
