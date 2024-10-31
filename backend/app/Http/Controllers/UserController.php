@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Categoria;
 use App\Models\Condicion;
+use App\Models\DirectorEscuela;
+use App\Models\Docente;
+use App\Models\DocenteFilial;
 use App\Models\Escuela;
 use App\Models\Filial;
 use App\Models\Regimen;
@@ -56,6 +59,19 @@ class UserController extends Controller
         $categorias = Categoria::select('idCategoria', 'nombreCategoria')->get();
         $filiales = Filial::select('idFilial', 'name')->get();
         $escuelas = Escuela::select('idEscuela', 'name')->get();
+        $authId = auth()->id();
+   // Obtener el Docente y DirectorEscuela con el id del usuario autenticado
+   $docente = Docente::where('id', $authId)->first(); // Agregar first() para obtener el registro
+   $directorescuela = DirectorEscuela::where('id', $authId)->first(); // Agregar first() para obtener el registro
+
+   $filialId = DocenteFilial::where('idDocente', $docente->idDocente)
+   ->where('estado', true) // Filtra solo cuando estado es true
+   ->pluck('idFilial');
+
+
+        $filialInfo = DocenteFilial::where('idDocente', $docente->idDocente)
+        ->first(['idRegimen', 'idCategoria', 'idCondicion']);
+
 
         return response()->json([
             'users' => $users,
@@ -65,6 +81,11 @@ class UserController extends Controller
             'categorias' => $categorias,
             'filiales' => $filiales,
             'escuelas' => $escuelas,
+            'docente' => $docente,
+            'directorescuela' => $directorescuela,
+            'filialId' => $filialId,
+            'filialInfo' => $filialInfo,
+
         ]);
     }
 

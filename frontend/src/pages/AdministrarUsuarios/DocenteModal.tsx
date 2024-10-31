@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface Escuela {
   idEscuela: number;
@@ -8,6 +8,9 @@ interface Escuela {
 
 interface DocenteModalProps {
   escuelas: Escuela[];
+  docente: { idDocente: number; id: number; idEscuela: number };
+  miidfilial: number[]; // Array de IDs de filiales
+  infofilial: { idRegimen: number; idCategoria: number; idCondicion: number };
   condicion: Array<{ idCondicion: number; nombreCondicion: string }>;
   regimen: Array<{ idRegimen: number; nombreRegimen: string }>;
   categoria: Array<{ idCategoria: number; nombreCategoria: string }>;
@@ -18,6 +21,9 @@ interface DocenteModalProps {
 
 const DocenteModal: React.FC<DocenteModalProps> = ({
   escuelas,
+  docente,
+  miidfilial,
+  infofilial,
   condicion,
   regimen,
   categoria,
@@ -25,30 +31,32 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
   closeModal,
   handleSaveDocenteData,
 }) => {
-  const [tempData, setTempData] = useState({
-    escuela: '',
-    condicion: '',
-    regimen: '',
-    categoria: '',
-    filiales: [] as string[],
-  });
+  // Estado inicial usando valores de las props
+  const [selectedEscuela, setSelectedEscuela] = useState<string>(docente.idEscuela.toString());
+  const [selectedCondicion, setSelectedCondicion] = useState<string>(infofilial.idCondicion.toString());
+  const [selectedRegimen, setSelectedRegimen] = useState<string>(infofilial.idRegimen.toString());
+  const [selectedCategoria, setSelectedCategoria] = useState<string>(infofilial.idCategoria.toString());
+  const [selectedFiliales, setSelectedFiliales] = useState<string[]>(miidfilial.map(id => id.toString()));
 
   const handleFilialChange = (idFilial: string) => {
-    setTempData((prevData) => ({
-      ...prevData,
-      filiales: prevData.filiales.includes(idFilial)
-        ? prevData.filiales.filter((id) => id !== idFilial)
-        : [...prevData.filiales, idFilial],
-    }));
+    setSelectedFiliales((prevSelected) =>
+      prevSelected.includes(idFilial)
+        ? prevSelected.filter((id) => id !== idFilial)
+        : [...prevSelected, idFilial]
+    );
   };
 
   const handleSave = () => {
-    handleSaveDocenteData(tempData);
+    const docenteData = {
+      escuela: selectedEscuela,
+      condicion: selectedCondicion,
+      regimen: selectedRegimen,
+      categoria: selectedCategoria,
+      filiales: selectedFiliales,
+    };
+    handleSaveDocenteData(docenteData);
     closeModal();
   };
-
-  const isSaveDisabled =
-    !tempData.escuela || !tempData.condicion || !tempData.regimen || !tempData.categoria || tempData.filiales.length === 0;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
@@ -58,8 +66,8 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
         
         <select
           className="border p-2 mb-4 w-full rounded"
-          value={tempData.escuela}
-          onChange={(e) => setTempData({ ...tempData, escuela: e.target.value })}
+          value={selectedEscuela}
+          onChange={(e) => setSelectedEscuela(e.target.value)}
         >
           <option value="" disabled>Seleccione una Escuela</option>
           {escuelas.map((escuela) => (
@@ -71,8 +79,8 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
 
         <select
           className="border p-2 mb-4 w-full rounded"
-          value={tempData.condicion}
-          onChange={(e) => setTempData({ ...tempData, condicion: e.target.value })}
+          value={selectedCondicion}
+          onChange={(e) => setSelectedCondicion(e.target.value)}
         >
           <option value="" disabled>Seleccione una Condición</option>
           {condicion.map((cond) => (
@@ -84,8 +92,8 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
 
         <select
           className="border p-2 mb-4 w-full rounded"
-          value={tempData.regimen}
-          onChange={(e) => setTempData({ ...tempData, regimen: e.target.value })}
+          value={selectedRegimen}
+          onChange={(e) => setSelectedRegimen(e.target.value)}
         >
           <option value="" disabled>Seleccione un Régimen</option>
           {regimen.map((reg) => (
@@ -97,8 +105,8 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
 
         <select
           className="border p-2 mb-4 w-full rounded"
-          value={tempData.categoria}
-          onChange={(e) => setTempData({ ...tempData, categoria: e.target.value })}
+          value={selectedCategoria}
+          onChange={(e) => setSelectedCategoria(e.target.value)}
         >
           <option value="" disabled>Seleccione una Categoría</option>
           {categoria.map((cat) => (
@@ -115,7 +123,7 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
               <input
                 type="checkbox"
                 value={fil.idFilial.toString()}
-                checked={tempData.filiales.includes(fil.idFilial.toString())}
+                checked={selectedFiliales.includes(fil.idFilial.toString())}
                 onChange={() => handleFilialChange(fil.idFilial.toString())}
                 className="mr-2"
               />
@@ -124,11 +132,7 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
           ))}
         </div>
 
-        <button
-          onClick={handleSave}
-          disabled={isSaveDisabled}
-          className={`mt-4 py-2 px-4 rounded w-full ${isSaveDisabled ? 'bg-gray-300 text-gray-700' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
-        >
+        <button onClick={handleSave} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 w-full">
           Guardar y Cerrar
         </button>
       </div>

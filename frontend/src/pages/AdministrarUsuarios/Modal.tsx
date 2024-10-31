@@ -14,6 +14,21 @@ interface Escuela {
   name: string;
   idFacultad: number;
 }
+interface Docente {
+  idDocente: number;
+  name: string;
+  id: number;
+  idEscuela: number;
+
+}
+interface Director {
+  idDirector: number;
+  name: string;
+  id: number;
+  idEscuela: number;
+  estado: boolean;
+
+}
 
 interface ModalProps {
   isModalOpen: boolean;
@@ -22,10 +37,20 @@ interface ModalProps {
   handleSave: (selectedActivities: Activity[]) => void;
   initialFormData: any;
   escuelas: Escuela[];
+
   condicion: Array<{ idCondicion: number; nombreCondicion: string }>;
   regimen: Array<{ idRegimen: number; nombreRegimen: string }>;
   categoria: Array<{ idCategoria: number; nombreCategoria: string }>;
   filial: Array<{ idFilial: number; name: string }>;
+
+
+
+
+  docente: Docente[];
+  director: Director[];
+  miidfilial: Array<{ idFilial: number}>;
+  infofilial: Array<{ idCondicion: number;idRegimen: number;idCategoria: number; estado: boolean}>;
+
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -39,6 +64,15 @@ const Modal: React.FC<ModalProps> = ({
   regimen,
   categoria,
   filial,
+
+  docente,
+  director,
+  miidfilial,
+  infofilial,
+
+
+
+  
 }) => {
   const [formData, setFormData] = useState(initialFormData);
   const [selectedPermisosAsActivities, setSelectedPermisosAsActivities] = useState<Activity[]>([]);
@@ -255,6 +289,7 @@ const Modal: React.FC<ModalProps> = ({
         {isBuscarEscuelaModalOpen && currentRole === 'Director de Escuela' && (
           <DirectorEscuelaModal
             escuelas={escuelas}
+            director={director}
             closeModal={closeModalBuscarEscuela}
             handleSelectEscuela={handleSelectEscuela}
             searchTermEscuela={searchTermEscuela}
@@ -262,9 +297,13 @@ const Modal: React.FC<ModalProps> = ({
           />
         )}
 
+
         {isBuscarEscuelaModalOpen && currentRole === 'Docente' && (
           <DocenteModal
             escuelas={escuelas}
+            docente={docente}
+            miidfilial={miidfilial}
+            infofilial={infofilial}
             condicion={condicion}
             regimen={regimen}
             categoria={categoria}

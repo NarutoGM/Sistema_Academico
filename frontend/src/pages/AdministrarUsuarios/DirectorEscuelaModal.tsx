@@ -5,12 +5,17 @@ interface Escuela {
   name: string;
 }
 
+interface Director {
+  idEscuela: number;
+}
+
 interface DirectorEscuelaModalProps {
   escuelas: Escuela[];
   closeModal: () => void;
   handleSelectEscuela: (escuela: Escuela) => void;
   searchTermEscuela: string;
   setSearchTermEscuela: (term: string) => void;
+  director: Director | null;
 }
 
 const DirectorEscuelaModal: React.FC<DirectorEscuelaModalProps> = ({
@@ -19,8 +24,13 @@ const DirectorEscuelaModal: React.FC<DirectorEscuelaModalProps> = ({
   handleSelectEscuela,
   searchTermEscuela,
   setSearchTermEscuela,
+  director,
 }) => {
-  const [escuelaSeleccionada, setEscuelaSeleccionada] = useState<Escuela | null>(null);
+  const [escuelaSeleccionada, setEscuelaSeleccionada] = useState<Escuela | null>(
+    director && director.idEscuela 
+      ? escuelas.find((escuela) => escuela.idEscuela === director.idEscuela) || null 
+      : null
+  );
 
   const guardarYCerrar = () => {
     if (escuelaSeleccionada) {
@@ -49,7 +59,9 @@ const DirectorEscuelaModal: React.FC<DirectorEscuelaModalProps> = ({
             .map((escuela) => (
               <li
                 key={escuela.idEscuela}
-                className={`p-2 cursor-pointer hover:bg-gray-200 ${escuelaSeleccionada?.idEscuela === escuela.idEscuela ? 'bg-gray-300' : ''}`}
+                className={`p-2 cursor-pointer hover:bg-blue-200 ${
+                  escuelaSeleccionada?.idEscuela === escuela.idEscuela ? 'bg-blue-100 font-bold' : ''
+                }`}
                 onClick={() => setEscuelaSeleccionada(escuela)}
               >
                 {escuela.name}
@@ -59,8 +71,10 @@ const DirectorEscuelaModal: React.FC<DirectorEscuelaModalProps> = ({
 
         <button
           onClick={guardarYCerrar}
-          disabled={!escuelaSeleccionada} // Deshabilitar botón si no hay selección
-          className={`mt-4 py-2 px-4 rounded w-full ${escuelaSeleccionada ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+          disabled={!escuelaSeleccionada}
+          className={`mt-4 py-2 px-4 rounded w-full ${
+            escuelaSeleccionada ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
         >
           Guardar y Cerrar
         </button>

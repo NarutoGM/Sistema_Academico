@@ -8,7 +8,6 @@ import { saveRoles, createUsuario, getInfoAdministrarUsuarios } from "@/pages/se
 import Modal from './Modal';
 import ModalCrear from './ModalCrear';
 import ModalEliminar from './ModalEliminar';
-import { getEscuelas } from '../services/escuela.services';
 
 // Interfaces para tipado
 interface Users {
@@ -39,15 +38,6 @@ const FilteredUnidad: React.FC = () => {
     permisos: [],
   });
 
-  const [formData2, setFormData2] = useState<{
-    id: number | '';
-    name: string;
-    permisos: any[];
-  }>({
-    id: '',
-    name: '',
-    permisos: [],
-  });
 
 
 
@@ -122,7 +112,10 @@ const FilteredUnidad: React.FC = () => {
   const [regimen, setRegimen] = useState([]);
   const [filial, setFilial] = useState([]);
 
-
+  const [filialInfo, setFilialInfo] = useState([]);
+  const [docente, setDocente] = useState([]);
+  const [director, setDirector] = useState([]);
+  const [misidfilial, setmisidFilial] = useState([]);
 
   const [boxBActivities, setBoxBActivities] = useState<Activity[]>([]);
   const [originalBoxBActivities, setOriginalBoxBActivities] = useState<Activity[]>([]);
@@ -153,13 +146,20 @@ const FilteredUnidad: React.FC = () => {
       setCondicion(data.condiciones);
       setFilial(data.filiales);
       setRegimen(data.regimenes);
-
+      
+      setFilialInfo(data.filialInfo);
+      setDocente(data.docente);
+      setDirector(data.directorescuela);
+      setmisidFilial(data.filialId);
+    
       // Registra los datos en la consola
    //   console.log(data.escuelas);
-    //  console.log(data.categorias);
-    //  console.log(data.condiciones);
-   //   console.log(data.filiales);
-   //   console.log(data.regimenes);
+      console.log(data.docente);
+      console.log(data.directorescuela);
+      console.log(data.filialId);
+      console.log(data.filialInfo);
+
+
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -395,6 +395,11 @@ const FilteredUnidad: React.FC = () => {
           filial={filial}
           condicion={condicion}
           categoria={categoria}
+          infofilial={filialInfo}
+          docente={docente}
+          director={director}
+          miidfilial={misidfilial}
+
         />
 
 
