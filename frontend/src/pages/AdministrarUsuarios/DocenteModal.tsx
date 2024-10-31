@@ -25,31 +25,30 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
   closeModal,
   handleSaveDocenteData,
 }) => {
-  const [selectedEscuela, setSelectedEscuela] = useState<string>('');
-  const [selectedCondicion, setSelectedCondicion] = useState<string>('');
-  const [selectedRegimen, setSelectedRegimen] = useState<string>('');
-  const [selectedCategoria, setSelectedCategoria] = useState<string>('');
-  const [selectedFiliales, setSelectedFiliales] = useState<string[]>([]);
+  const [tempData, setTempData] = useState({
+    escuela: '',
+    condicion: '',
+    regimen: '',
+    categoria: '',
+    filiales: [] as string[],
+  });
 
   const handleFilialChange = (idFilial: string) => {
-    setSelectedFiliales((prevSelected) =>
-      prevSelected.includes(idFilial)
-        ? prevSelected.filter((id) => id !== idFilial)
-        : [...prevSelected, idFilial]
-    );
+    setTempData((prevData) => ({
+      ...prevData,
+      filiales: prevData.filiales.includes(idFilial)
+        ? prevData.filiales.filter((id) => id !== idFilial)
+        : [...prevData.filiales, idFilial],
+    }));
   };
 
   const handleSave = () => {
-    const docenteData = {
-      escuela: selectedEscuela,
-      condicion: selectedCondicion,
-      regimen: selectedRegimen,
-      categoria: selectedCategoria,
-      filiales: selectedFiliales,
-    };
-    handleSaveDocenteData(docenteData);
+    handleSaveDocenteData(tempData);
     closeModal();
   };
+
+  const isSaveDisabled =
+    !tempData.escuela || !tempData.condicion || !tempData.regimen || !tempData.categoria || tempData.filiales.length === 0;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
@@ -59,8 +58,8 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
         
         <select
           className="border p-2 mb-4 w-full rounded"
-          value={selectedEscuela}
-          onChange={(e) => setSelectedEscuela(e.target.value)}
+          value={tempData.escuela}
+          onChange={(e) => setTempData({ ...tempData, escuela: e.target.value })}
         >
           <option value="" disabled>Seleccione una Escuela</option>
           {escuelas.map((escuela) => (
@@ -72,8 +71,8 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
 
         <select
           className="border p-2 mb-4 w-full rounded"
-          value={selectedCondicion}
-          onChange={(e) => setSelectedCondicion(e.target.value)}
+          value={tempData.condicion}
+          onChange={(e) => setTempData({ ...tempData, condicion: e.target.value })}
         >
           <option value="" disabled>Seleccione una Condición</option>
           {condicion.map((cond) => (
@@ -85,8 +84,8 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
 
         <select
           className="border p-2 mb-4 w-full rounded"
-          value={selectedRegimen}
-          onChange={(e) => setSelectedRegimen(e.target.value)}
+          value={tempData.regimen}
+          onChange={(e) => setTempData({ ...tempData, regimen: e.target.value })}
         >
           <option value="" disabled>Seleccione un Régimen</option>
           {regimen.map((reg) => (
@@ -98,8 +97,8 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
 
         <select
           className="border p-2 mb-4 w-full rounded"
-          value={selectedCategoria}
-          onChange={(e) => setSelectedCategoria(e.target.value)}
+          value={tempData.categoria}
+          onChange={(e) => setTempData({ ...tempData, categoria: e.target.value })}
         >
           <option value="" disabled>Seleccione una Categoría</option>
           {categoria.map((cat) => (
@@ -116,7 +115,7 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
               <input
                 type="checkbox"
                 value={fil.idFilial.toString()}
-                checked={selectedFiliales.includes(fil.idFilial.toString())}
+                checked={tempData.filiales.includes(fil.idFilial.toString())}
                 onChange={() => handleFilialChange(fil.idFilial.toString())}
                 className="mr-2"
               />
@@ -125,7 +124,11 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
           ))}
         </div>
 
-        <button onClick={handleSave} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 w-full">
+        <button
+          onClick={handleSave}
+          disabled={isSaveDisabled}
+          className={`mt-4 py-2 px-4 rounded w-full ${isSaveDisabled ? 'bg-gray-300 text-gray-700' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+        >
           Guardar y Cerrar
         </button>
       </div>
