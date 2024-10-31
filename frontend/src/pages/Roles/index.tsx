@@ -246,7 +246,7 @@ const FilteredUnidad: React.FC = () => {
           <div>
             <input 
               type="text" 
-              name="name"
+              name="name" 
               value={filters.name}
               onChange={handleFilterChange}
               placeholder="Rol" 
