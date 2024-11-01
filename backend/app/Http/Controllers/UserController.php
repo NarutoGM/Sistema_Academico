@@ -40,18 +40,33 @@ class UserController extends Controller
     // GET /api/users - Obtener todos los usuarios
     public function administrarusuarios()
     {
-        $users = User::with('roles')->get()->map(function ($user) {
-            return [
-                'id' => $user->id,
-                'name' => $user->name,
-                'lastname' => $user->lastname,
-                'telefono' => $user->telefono,
-                'roles' => $user->roles, // Incluye toda la info de los roles
-                'foto' => $user->foto,
-                'direccion' => $user->direccion,
-                'email' => $user->email,
-            ];
-        });
+        $authId = auth()->id();
+        // Obtener el Docente y DirectorEscuela con el id del usuario autenticado
+        $docente = Docente::where('id', $authId)->first(); // Agregar first() para obtener el registro
+
+        $filialId = DocenteFilial::where('idDocente', $docente->idDocente)
+            ->where('estado', true) // Filtra solo cuando estado es true
+            ->pluck('idFilial');
+
+
+        $filialInfo = DocenteFilial::where('idDocente', $docente->idDocente)
+            ->first(['idRegimen', 'idCategoria', 'idCondicion']);
+
+
+
+            $users = User::with('roles')->get()->map(function ($user) use ($filialId, $filialInfo) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'lastname' => $user->lastname,
+                    'roles' => $user->roles,
+                    'email' => $user->email,
+                    'docente' => $user->docente,
+                    'directorEscuela' => $user->directorEscuela,
+                    'filialId' => $filialId, // IDs de filiales activas del docente
+                    'filialInfo' => $filialInfo, // Información adicional de DocenteFilial
+                ];
+            });
 
         $roles = Role::select('id', 'name')->get();
         $condiciones = Condicion::select('idCondicion', 'nombreCondicion')->get();
@@ -59,18 +74,7 @@ class UserController extends Controller
         $categorias = Categoria::select('idCategoria', 'nombreCategoria')->get();
         $filiales = Filial::select('idFilial', 'name')->get();
         $escuelas = Escuela::select('idEscuela', 'name')->get();
-        $authId = auth()->id();
-   // Obtener el Docente y DirectorEscuela con el id del usuario autenticado
-   $docente = Docente::where('id', $authId)->first(); // Agregar first() para obtener el registro
-   $directorescuela = DirectorEscuela::where('id', $authId)->first(); // Agregar first() para obtener el registro
 
-   $filialId = DocenteFilial::where('idDocente', $docente->idDocente)
-   ->where('estado', true) // Filtra solo cuando estado es true
-   ->pluck('idFilial');
-
-
-        $filialInfo = DocenteFilial::where('idDocente', $docente->idDocente)
-        ->first(['idRegimen', 'idCategoria', 'idCondicion']);
 
 
         return response()->json([
@@ -81,11 +85,6 @@ class UserController extends Controller
             'categorias' => $categorias,
             'filiales' => $filiales,
             'escuelas' => $escuelas,
-            'docente' => $docente,
-            'directorescuela' => $directorescuela,
-            'filialId' => $filialId,
-            'filialInfo' => $filialInfo,
-
         ]);
     }
 

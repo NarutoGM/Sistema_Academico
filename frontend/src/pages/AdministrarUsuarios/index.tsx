@@ -128,6 +128,7 @@ const FilteredUnidad: React.FC = () => {
     try {
       const data = await getInfoAdministrarUsuarios(); // Llamada optimizada
      // console.log('Datos obtenidos:', data); // Ver los datos en la consola
+      console.log(data);
 
       // Almacena los datos en el estado
       setData(data.users);
@@ -147,17 +148,7 @@ const FilteredUnidad: React.FC = () => {
       setFilial(data.filiales);
       setRegimen(data.regimenes);
       
-      setFilialInfo(data.filialInfo);
-      setDocente(data.docente);
-      setDirector(data.directorescuela);
-      setmisidFilial(data.filialId);
-    
-      // Registra los datos en la consola
-   //   console.log(data.escuelas);
-      console.log(data.docente);
-      console.log(data.directorescuela);
-      console.log(data.filialId);
-      console.log(data.filialInfo);
+
 
 
     } catch (error) {
@@ -218,24 +209,18 @@ const FilteredUnidad: React.FC = () => {
 ) => {
     try {
         const rolId = formData.id;
-     //   console.log('Rol ID:', rolId);
 
-        // Mapea las actividades seleccionadas para crear un array de roles a guardar
         const rolesToSave = selectedActivities.map((rol) => ({
             id: rol.id,
         }));
-      //  console.log('Roles a guardar:', rolesToSave);
 
         // Agregar campos adicionales (ej. escuelaSeleccionada, docenteData)
         const additionalData = {
             escuela: escuelaSeleccionada ? { id: escuelaSeleccionada.idEscuela, name: escuelaSeleccionada.name } : null,
             docente: docenteData ? { ...docenteData } : null,
         };
-     //   console.log('Datos adicionales:', additionalData);
 
-        // Aquí ejecuta la lógica de guardado si es necesario
          const result = await saveRoles(rolId, rolesToSave, additionalData);
-      //   console.log('Roles guardados:', result);
 
          await fetchData(); // Actualiza la lista después de guardar
          setBoxBActivities(originalBoxBActivities); // Resetea las actividades
@@ -249,18 +234,27 @@ const FilteredUnidad: React.FC = () => {
 
   // Funciones para editar Users (no modificar)
   const openModal = (data: Users | null = null) => {
+
+
+    
     if (!loading) { // Solo abrir si no está cargando
-      if (data) { // Modal de edición
+      if (data) {
+        
+        setFilialInfo(data.filialInfo);
+        setDocente(data.docente);
+        setDirector(data.directorEscuela);
+        setmisidFilial(data.filialId);
+      
+         console.log(data.docente);
+         console.log(data.directorEscuela);
+         console.log(data.filialId);
+         console.log(data.filialInfo);
+
+        // Modal de edición
         setFormData({
           id: data.id,
           name: data.name,
           roles: data.roles || [],
-        });
-      } else { // Modal de creación
-        setFormData({
-          id: '',
-          name: '',
-          roles: [],
         });
       }
       setSelectedPermisosAsActivities([]); // Reiniciar permisos seleccionados

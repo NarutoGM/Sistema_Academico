@@ -14,4 +14,13 @@ class Filial extends Model
     protected $primaryKey = 'idFilial'; // Clave primaria  
 
     protected $fillable = ['name']; // Campos que se pueden llenar  
+
+    // app/Models/Filial.php
+public function docentes()
+{
+    return $this->belongsToMany(Docente::class, 'docentefilial', 'idFilial', 'idDocente')
+                ->withPivot('idCondicion', 'idRegimen', 'idCategoria', 'estado') // Campos adicionales
+                ->withTimestamps();
+}
+
 }

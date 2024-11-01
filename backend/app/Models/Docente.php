@@ -40,4 +40,12 @@ class Docente extends Model
     {
         return $this->belongsTo(Escuela::class, 'idEscuela', 'idEscuela');
     }
+
+    // app/Models/Docente.php
+    public function filiales()
+    {
+        return $this->belongsToMany(Filial::class, 'docentefilial', 'idDocente', 'idFilial')
+            ->withPivot('idCondicion', 'idRegimen', 'idCategoria', 'estado') // Campos adicionales
+            ->withTimestamps();
+    }
 }

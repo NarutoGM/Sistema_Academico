@@ -52,4 +52,5 @@ class DocenteFilial extends Model
     {
         return $this->belongsTo(Categoria::class, 'idCategoria');
     }
+    
 }

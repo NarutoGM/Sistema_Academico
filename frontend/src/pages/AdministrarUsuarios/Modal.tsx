@@ -14,43 +14,37 @@ interface Escuela {
   name: string;
   idFacultad: number;
 }
+
 interface Docente {
   idDocente: number;
   name: string;
   id: number;
   idEscuela: number;
-
 }
+
 interface Director {
   idDirector: number;
   name: string;
   id: number;
   idEscuela: number;
   estado: boolean;
-
 }
 
 interface ModalProps {
   isModalOpen: boolean;
   closeModal: () => void;
   originalBoxBActivities: Activity[];
-  handleSave: (selectedActivities: Activity[]) => void;
+  handleSave: (selectedActivities: Activity[], escuelaSeleccionada: Escuela | null, docenteData: any) => void;
   initialFormData: any;
   escuelas: Escuela[];
-
   condicion: Array<{ idCondicion: number; nombreCondicion: string }>;
   regimen: Array<{ idRegimen: number; nombreRegimen: string }>;
   categoria: Array<{ idCategoria: number; nombreCategoria: string }>;
   filial: Array<{ idFilial: number; name: string }>;
-
-
-
-
   docente: Docente[];
   director: Director[];
-  miidfilial: Array<{ idFilial: number}>;
-  infofilial: Array<{ idCondicion: number;idRegimen: number;idCategoria: number; estado: boolean}>;
-
+  miidfilial: Array<{ idFilial: number }>;
+  infofilial: Array<{ idCondicion: number; idRegimen: number; idCategoria: number; estado: boolean }>;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -64,15 +58,10 @@ const Modal: React.FC<ModalProps> = ({
   regimen,
   categoria,
   filial,
-
   docente,
   director,
   miidfilial,
   infofilial,
-
-
-
-  
 }) => {
   const [formData, setFormData] = useState(initialFormData);
   const [selectedPermisosAsActivities, setSelectedPermisosAsActivities] = useState<Activity[]>([]);
@@ -80,32 +69,29 @@ const Modal: React.FC<ModalProps> = ({
   const [searchTermMain, setSearchTermMain] = useState<string>('');
   const [isBuscarEscuelaModalOpen, setIsBuscarEscuelaModalOpen] = useState(false);
   const [escuelaSeleccionada, setEscuelaSeleccionada] = useState<null | Escuela>(null);
-
-
-  
   const [searchTermEscuela, setSearchTermEscuela] = useState<string>('');
   const [currentRole, setCurrentRole] = useState<string>('');
   const [docenteData, setDocenteData] = useState<any>(null);
 
   useEffect(() => {
     if (isModalOpen) {
+      setFormData((prev) => ({ ...prev, ...initialFormData }));
 
-
-      setEscuelaSeleccionada({
+      setEscuelaSeleccionada((prev) => ({
         idEscuela: director.idEscuela,
-        name: "null",
-        idFacultad: 102
-      }); 
-      setDocenteData({
+        name: prev?.name || "null",
+        idFacultad: prev?.idFacultad || 102,
+      }));
+
+      setDocenteData((prev) => ({
+        ...prev,
         escuela: docente.idEscuela,
         condicion: infofilial.idCondicion,
         regimen: infofilial.idRegimen,
         categoria: infofilial.idCategoria,
-        filiales: miidfilial.map(String) // Convierte cada elemento en `miidfilial` a cadena
-      });  
-      
+        filiales: miidfilial.map(String),
+      }));
 
-      setFormData(initialFormData);
       setSearchTermMain('');
 
       const selected = (initialFormData.roles || []).map((rol: any) => ({
@@ -119,7 +105,7 @@ const Modal: React.FC<ModalProps> = ({
       );
       setAvailableActivities(available);
     }
-  }, [isModalOpen, initialFormData, originalBoxBActivities]);
+  }, [isModalOpen, initialFormData, originalBoxBActivities, director, docente, infofilial, miidfilial]);
 
   const handleMoveToSelected = (activity: Activity) => {
     setSelectedPermisosAsActivities((prev) => [...prev, activity]);
@@ -137,13 +123,11 @@ const Modal: React.FC<ModalProps> = ({
 
   const handleSaveClick = () => {
     if (currentRole === 'Docente' && docenteData) {
-        console.log('Datos del docente:', docenteData);
+      console.log('Datos del docente:', docenteData);
     }
-    // Agrega los argumentos de escuelaSeleccionada y docenteData
     handleSave(selectedPermisosAsActivities, escuelaSeleccionada, docenteData);
     closeModal();
-};
-
+  };
 
   const handleOutsideClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (e.target === e.currentTarget) {
@@ -287,13 +271,12 @@ const Modal: React.FC<ModalProps> = ({
         </DndProvider>
 
         <p className="mt-2 text-gray-700">
-  {escuelaSeleccionada ? (
-    <>DirectorEscuela // id Escuela: (ID: {escuelaSeleccionada.idEscuela})</>
-  ) : (
-    <>DirectorEscuela: Información no disponible</>
-  )}
-</p>
-
+          {escuelaSeleccionada ? (
+            <>DirectorEscuela // id Escuela: (ID: {escuelaSeleccionada.idEscuela})</>
+          ) : (
+            <>DirectorEscuela: Información no disponible</>
+          )}
+        </p>
 
         {docenteData && (
           <p className="mt-2 text-gray-700">Docente: {JSON.stringify(docenteData)}</p>
@@ -316,7 +299,6 @@ const Modal: React.FC<ModalProps> = ({
             setSearchTermEscuela={setSearchTermEscuela}
           />
         )}
-
 
         {isBuscarEscuelaModalOpen && currentRole === 'Docente' && (
           <DocenteModal

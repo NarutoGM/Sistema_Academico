@@ -47,16 +47,26 @@ class User extends Authenticatable
         ];
     }
 
-        // Relación muchos a muchos con Role 
-        public function roles()
-        {
-            return $this->belongsToMany(Role::class, 'RoleUser', 'user_id', 'role_id');
-        }
+    // Relación muchos a muchos con Role 
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'RoleUser', 'user_id', 'role_id');
+    }
 
-        public function permisos()
-        {
-            return $this->belongsToMany(Permiso::class, 'RolPermiso', 'idRol', 'idPermiso'); // Asegúrate de que los nombres de columnas sean correctos
-        }
+    public function permisos()
+    {
+        return $this->belongsToMany(Permiso::class, 'RolPermiso', 'idRol', 'idPermiso'); // Asegúrate de que los nombres de columnas sean correctos
+    }
+
+    // app/Models/User.php
+    public function docente()
+    {
+        return $this->hasOne(Docente::class, 'id', 'id');
+    }
+
+    // app/Models/User.php
+    public function directorEscuela()
+    {
+        return $this->hasOne(DirectorEscuela::class, 'id', 'id');
+    }
 }
-
-

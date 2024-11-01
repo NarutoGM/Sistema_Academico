@@ -45,4 +45,6 @@ class DirectorEscuela extends Model
     {
         return $this->belongsTo(Escuela::class, 'idEscuela', 'idEscuela');
     }
+
+    
 }
