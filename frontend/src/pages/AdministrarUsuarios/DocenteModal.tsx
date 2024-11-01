@@ -8,9 +8,13 @@ interface Escuela {
 
 interface DocenteModalProps {
   escuelas: Escuela[];
-  docente: { idDocente: number; id: number; idEscuela: number };
-  miidfilial: number[]; // Array de IDs de filiales
-  infofilial: { idRegimen: number; idCategoria: number; idCondicion: number };
+  docenteData: {
+    escuela: string;
+    condicion: string;
+    regimen: string;
+    categoria: string;
+    filiales: string[];
+  };
   condicion: Array<{ idCondicion: number; nombreCondicion: string }>;
   regimen: Array<{ idRegimen: number; nombreRegimen: string }>;
   categoria: Array<{ idCategoria: number; nombreCategoria: string }>;
@@ -21,9 +25,7 @@ interface DocenteModalProps {
 
 const DocenteModal: React.FC<DocenteModalProps> = ({
   escuelas,
-  docente,
-  miidfilial,
-  infofilial,
+  docenteData,
   condicion,
   regimen,
   categoria,
@@ -31,12 +33,28 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
   closeModal,
   handleSaveDocenteData,
 }) => {
-  // Estado inicial usando valores de las props
-  const [selectedEscuela, setSelectedEscuela] = useState<string>(docente.idEscuela.toString());
-  const [selectedCondicion, setSelectedCondicion] = useState<string>(infofilial.idCondicion.toString());
-  const [selectedRegimen, setSelectedRegimen] = useState<string>(infofilial.idRegimen.toString());
-  const [selectedCategoria, setSelectedCategoria] = useState<string>(infofilial.idCategoria.toString());
-  const [selectedFiliales, setSelectedFiliales] = useState<string[]>(miidfilial.map(id => id.toString()));
+  const [selectedEscuela, setSelectedEscuela] = useState<string>(docenteData.escuela);
+  const [selectedCondicion, setSelectedCondicion] = useState<string>(docenteData.condicion);
+  const [selectedRegimen, setSelectedRegimen] = useState<string>(docenteData.regimen);
+  const [selectedCategoria, setSelectedCategoria] = useState<string>(docenteData.categoria);
+  const [selectedFiliales, setSelectedFiliales] = useState<string[]>(docenteData.filiales);
+
+  // Sincroniza los datos iniciales con el estado al cambiar docenteData
+  useEffect(() => {
+    setSelectedEscuela(docenteData.escuela);
+    setSelectedCondicion(docenteData.condicion);
+    setSelectedRegimen(docenteData.regimen);
+    setSelectedCategoria(docenteData.categoria);
+    setSelectedFiliales(docenteData.filiales);
+
+   // console.log("Datos iniciales en DocenteModal:", {
+  //    selectedEscuela: docenteData.escuela,
+   //   selectedCondicion: docenteData.condicion,
+   //   selectedRegimen: docenteData.regimen,
+   //   selectedCategoria: docenteData.categoria,
+   //   selectedFiliales: docenteData.filiales,
+   // });
+  }, [docenteData]);
 
   const handleFilialChange = (idFilial: string) => {
     setSelectedFiliales((prevSelected) =>
@@ -47,14 +65,14 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
   };
 
   const handleSave = () => {
-    const docenteData = {
+    const updatedDocenteData = {
       escuela: selectedEscuela,
       condicion: selectedCondicion,
       regimen: selectedRegimen,
       categoria: selectedCategoria,
       filiales: selectedFiliales,
     };
-    handleSaveDocenteData(docenteData);
+    handleSaveDocenteData(updatedDocenteData);
     closeModal();
   };
 

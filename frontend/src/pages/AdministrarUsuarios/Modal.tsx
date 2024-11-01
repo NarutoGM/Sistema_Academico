@@ -59,38 +59,50 @@ const Modal: React.FC<ModalProps> = ({
   categoria,
   filial,
   docente,
-  director,
+  director: initialDirector,
   miidfilial,
   infofilial,
 }) => {
-  const [formData, setFormData] = useState(initialFormData);
+  const [tempDirector, setTempDirector] = useState<Director | null>(initialDirector);
+  const [tempFormData, setTempFormData] = useState(initialFormData);
   const [selectedPermisosAsActivities, setSelectedPermisosAsActivities] = useState<Activity[]>([]);
   const [availableActivities, setAvailableActivities] = useState<Activity[]>([]);
   const [searchTermMain, setSearchTermMain] = useState<string>('');
+  const [searchTermEscuela, setSearchTermEscuela] = useState<string>('');
+  const [searchTermDocente, setSearchTermDocente] = useState<string>('');
   const [isBuscarEscuelaModalOpen, setIsBuscarEscuelaModalOpen] = useState(false);
   const [escuelaSeleccionada, setEscuelaSeleccionada] = useState<null | Escuela>(null);
-  const [searchTermEscuela, setSearchTermEscuela] = useState<string>('');
   const [currentRole, setCurrentRole] = useState<string>('');
   const [docenteData, setDocenteData] = useState<any>(null);
 
   useEffect(() => {
     if (isModalOpen) {
-      setFormData((prev) => ({ ...prev, ...initialFormData }));
+      setTempFormData(initialFormData);
+      setTempDirector(initialDirector);
 
-      setEscuelaSeleccionada((prev) => ({
-        idEscuela: director.idEscuela,
-        name: prev?.name || "null",
-        idFacultad: prev?.idFacultad || 102,
-      }));
+      if (initialDirector) {
+        setEscuelaSeleccionada({
+          idEscuela: initialDirector.idEscuela,
+          name: '',
+          idFacultad: 102,
+        });
+      }
 
-      setDocenteData((prev) => ({
-        ...prev,
-        escuela: docente.idEscuela,
+      setDocenteData({
+        escuela: initialDirector.idEscuela,
         condicion: infofilial.idCondicion,
         regimen: infofilial.idRegimen,
         categoria: infofilial.idCategoria,
         filiales: miidfilial.map(String),
-      }));
+      });
+
+   //   console.log("Datos enviados a DocenteModal:", {
+  //      escuela: initialDirector.idEscuela,
+  //      condicion: infofilial.idCondicion,
+  //      regimen: infofilial.idRegimen,
+ //       categoria: infofilial.idCategoria,
+ //       filiales: miidfilial.map(String),
+//      });
 
       setSearchTermMain('');
 
@@ -105,7 +117,14 @@ const Modal: React.FC<ModalProps> = ({
       );
       setAvailableActivities(available);
     }
-  }, [isModalOpen, initialFormData, originalBoxBActivities, director, docente, infofilial, miidfilial]);
+  }, [isModalOpen, initialFormData, originalBoxBActivities, initialDirector, infofilial, miidfilial]);
+
+  const handleSaveClick = () => {
+    // Guardamos los datos actuales en `docenteData` antes de cerrar
+    handleSave(selectedPermisosAsActivities, escuelaSeleccionada, docenteData);
+  //  console.log("Datos guardados del docente:", docenteData);
+    closeModal();
+  };
 
   const handleMoveToSelected = (activity: Activity) => {
     setSelectedPermisosAsActivities((prev) => [...prev, activity]);
@@ -114,36 +133,26 @@ const Modal: React.FC<ModalProps> = ({
 
   const handleMoveToAvailable = (activity: Activity) => {
     setAvailableActivities((prev) => [...prev, activity]);
-    setSelectedPermisosAsActivities((prev) =>
-      prev.filter((item) => item.id !== activity.id)
-    );
+    setSelectedPermisosAsActivities((prev) => prev.filter((item) => item.id !== activity.id));
   };
 
   if (!isModalOpen) return null;
 
-  const handleSaveClick = () => {
-    if (currentRole === 'Docente' && docenteData) {
-      console.log('Datos del docente:', docenteData);
-    }
-    handleSave(selectedPermisosAsActivities, escuelaSeleccionada, docenteData);
-    closeModal();
+  const handleSelectEscuela = (escuela: Escuela) => {
+    setEscuelaSeleccionada(escuela);
+    setTempDirector({ ...tempDirector, idEscuela: escuela.idEscuela });
   };
 
-  const handleOutsideClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    if (e.target === e.currentTarget) {
-      closeModal();
-    }
+  const closeModalBuscarEscuela = () => {
+    setIsBuscarEscuelaModalOpen(false);
+    setSearchTermEscuela('');
   };
 
-  const filteredAvailableActivities = availableActivities.filter((activity) =>
-    activity.name.toLowerCase().includes(searchTermMain.toLowerCase())
-  );
-
-  const DraggableActivity: React.FC<{ activity: Activity; moveActivity: (activity: Activity) => void; showRemoveButton?: boolean }> = ({
-    activity,
-    moveActivity,
-    showRemoveButton = false,
-  }) => {
+  const DraggableActivity: React.FC<{
+    activity: Activity;
+    moveActivity: (activity: Activity) => void;
+    showRemoveButton?: boolean;
+  }> = ({ activity, moveActivity, showRemoveButton = false }) => {
     const [{ isDragging }, drag] = useDrag({
       type: 'activity',
       item: { ...activity },
@@ -175,7 +184,11 @@ const Modal: React.FC<ModalProps> = ({
     );
   };
 
-  const DroppableArea: React.FC<{ children: React.ReactNode; moveActivity: (activity: Activity) => void; areaType: 'selected' | 'available' }> = ({ children, moveActivity, areaType }) => {
+  const DroppableArea: React.FC<{
+    children: React.ReactNode;
+    moveActivity: (activity: Activity) => void;
+    areaType: 'selected' | 'available';
+  }> = ({ children, moveActivity, areaType }) => {
     const [{ isOver }, drop] = useDrop({
       accept: 'activity',
       drop: (item: Activity) => {
@@ -200,20 +213,14 @@ const Modal: React.FC<ModalProps> = ({
     );
   };
 
-  const handleSelectEscuela = (escuela: Escuela) => {
-    setEscuelaSeleccionada(escuela);
-    console.log('Escuela seleccionada:', escuela);
-  };
-
-  const closeModalBuscarEscuela = () => {
-    setIsBuscarEscuelaModalOpen(false);
-    setSearchTermEscuela('');
-  };
+  const filteredAvailableActivities = availableActivities.filter((activity) =>
+    activity.name.toLowerCase().includes(searchTermMain.toLowerCase())
+  );
 
   return (
     <div
       className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
-      onClick={handleOutsideClick}
+      onClick={(e) => e.target === e.currentTarget && closeModal()}
     >
       <div className="bg-white p-8 rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/2 relative">
         <button
@@ -224,7 +231,7 @@ const Modal: React.FC<ModalProps> = ({
         </button>
 
         <h3 className="text-xl font-semibold mb-6">Administrar Roles</h3>
-        <h4 className="text-lg font-medium mb-3">{formData.name || 'Nombre no disponible'}</h4>
+        <h4 className="text-lg font-medium mb-3">{tempFormData.name || 'Nombre no disponible'}</h4>
 
         <input
           type="text"
@@ -292,7 +299,7 @@ const Modal: React.FC<ModalProps> = ({
         {isBuscarEscuelaModalOpen && currentRole === 'Director de Escuela' && (
           <DirectorEscuelaModal
             escuelas={escuelas}
-            director={director}
+            director={tempDirector}
             closeModal={closeModalBuscarEscuela}
             handleSelectEscuela={handleSelectEscuela}
             searchTermEscuela={searchTermEscuela}
@@ -303,9 +310,7 @@ const Modal: React.FC<ModalProps> = ({
         {isBuscarEscuelaModalOpen && currentRole === 'Docente' && (
           <DocenteModal
             escuelas={escuelas}
-            docente={docente}
-            miidfilial={miidfilial}
-            infofilial={infofilial}
+            docenteData={docenteData} // Paso directo de docenteData
             condicion={condicion}
             regimen={regimen}
             categoria={categoria}
@@ -313,9 +318,12 @@ const Modal: React.FC<ModalProps> = ({
             closeModal={closeModalBuscarEscuela}
             handleSaveDocenteData={(data) => {
               setDocenteData(data);
-              console.log('Datos del docente:', data);
+          //    console.log('Datos del docente:', data);
             }}
+            searchTermDocente={searchTermDocente}
+            setSearchTermDocente={setSearchTermDocente}
           />
+
         )}
       </div>
     </div>
