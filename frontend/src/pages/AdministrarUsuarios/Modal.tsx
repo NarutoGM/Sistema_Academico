@@ -80,12 +80,31 @@ const Modal: React.FC<ModalProps> = ({
   const [searchTermMain, setSearchTermMain] = useState<string>('');
   const [isBuscarEscuelaModalOpen, setIsBuscarEscuelaModalOpen] = useState(false);
   const [escuelaSeleccionada, setEscuelaSeleccionada] = useState<null | Escuela>(null);
+
+
+  
   const [searchTermEscuela, setSearchTermEscuela] = useState<string>('');
   const [currentRole, setCurrentRole] = useState<string>('');
   const [docenteData, setDocenteData] = useState<any>(null);
 
   useEffect(() => {
     if (isModalOpen) {
+
+
+      setEscuelaSeleccionada({
+        idEscuela: director.idEscuela,
+        name: "null",
+        idFacultad: 102
+      }); 
+      setDocenteData({
+        escuela: docente.idEscuela,
+        condicion: infofilial.idCondicion,
+        regimen: infofilial.idRegimen,
+        categoria: infofilial.idCategoria,
+        filiales: miidfilial.map(String) // Convierte cada elemento en `miidfilial` a cadena
+      });  
+      
+
       setFormData(initialFormData);
       setSearchTermMain('');
 
@@ -267,13 +286,14 @@ const Modal: React.FC<ModalProps> = ({
           </div>
         </DndProvider>
 
-        {escuelaSeleccionada ? (
-  <p className="mt-2 text-gray-700">
-    DirectorEscuela: {escuelaSeleccionada.name} (ID: {escuelaSeleccionada?.idEscuela ?? 'ID no disponible'})
-  </p>
-) : (
-  <p className="mt-2 text-gray-700">No se ha seleccionado ninguna escuela</p>
-)}
+        <p className="mt-2 text-gray-700">
+  {escuelaSeleccionada ? (
+    <>DirectorEscuela // id Escuela: (ID: {escuelaSeleccionada.idEscuela})</>
+  ) : (
+    <>DirectorEscuela: Información no disponible</>
+  )}
+</p>
+
 
         {docenteData && (
           <p className="mt-2 text-gray-700">Docente: {JSON.stringify(docenteData)}</p>
