@@ -127,8 +127,7 @@ const FilteredUnidad: React.FC = () => {
     setLoading(true); // Comienza la carga
     try {
       const data = await getInfoAdministrarUsuarios(); // Llamada optimizada
-     // console.log('Datos obtenidos:', data); // Ver los datos en la consola
-      console.log(data);
+      console.log('Datos obtenidos:', data); // Ver los datos en la consola
 
       // Almacena los datos en el estado
       setData(data.users);

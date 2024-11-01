@@ -40,43 +40,45 @@ class UserController extends Controller
     // GET /api/users - Obtener todos los usuarios
     public function administrarusuarios()
     {
-        $authId = auth()->id();
-        // Obtener el Docente y DirectorEscuela con el id del usuario autenticado
-        $docente = Docente::where('id', $authId)->first(); // Agregar first() para obtener el registro
-
-        $filialId = DocenteFilial::where('idDocente', $docente->idDocente)
-            ->where('estado', true) // Filtra solo cuando estado es true
-            ->pluck('idFilial');
-
-
-        $filialInfo = DocenteFilial::where('idDocente', $docente->idDocente)
-            ->first(['idRegimen', 'idCategoria', 'idCondicion']);
-
-
-
-            $users = User::with('roles')->get()->map(function ($user) use ($filialId, $filialInfo) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'lastname' => $user->lastname,
-                    'roles' => $user->roles,
-                    'email' => $user->email,
-                    'docente' => $user->docente,
-                    'directorEscuela' => $user->directorEscuela,
-                    'filialId' => $filialId, // IDs de filiales activas del docente
-                    'filialInfo' => $filialInfo, // Información adicional de DocenteFilial
-                ];
-            });
-
+        // Obtener todos los usuarios con sus roles y la información adicional requerida.
+        $users = User::with('roles', 'docente', 'directorEscuela')->get()->map(function ($user) {
+            // Inicializar variables para cada usuario.
+            $filialId = '';
+            $filialInfo = '';
+    
+            // Si el usuario tiene un docente asociado, obtener la información correspondiente.
+            if ($user->docente) {
+                $filialId = DocenteFilial::where('idDocente', $user->docente->idDocente)
+                    ->where('estado', true)
+                    ->pluck('idFilial');
+    
+                $filialInfo = DocenteFilial::where('idDocente', $user->docente->idDocente)
+                    ->first(['idRegimen', 'idCategoria', 'idCondicion']);
+            }
+    
+            // Retornar la información del usuario en el formato deseado.
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'lastname' => $user->lastname,
+                'roles' => $user->roles,
+                'email' => $user->email,
+                'docente' => $user->docente,
+                'directorEscuela' => $user->directorEscuela,
+                'filialId' => $filialId,
+                'filialInfo' => $filialInfo,
+            ];
+        });
+    
+        // Obtener los datos adicionales necesarios para la respuesta.
         $roles = Role::select('id', 'name')->get();
         $condiciones = Condicion::select('idCondicion', 'nombreCondicion')->get();
         $regimenes = Regimen::select('idRegimen', 'nombreRegimen')->get();
         $categorias = Categoria::select('idCategoria', 'nombreCategoria')->get();
         $filiales = Filial::select('idFilial', 'name')->get();
         $escuelas = Escuela::select('idEscuela', 'name')->get();
-
-
-
+    
+        // Retornar la respuesta JSON.
         return response()->json([
             'users' => $users,
             'roles' => $roles,
@@ -87,6 +89,7 @@ class UserController extends Controller
             'escuelas' => $escuelas,
         ]);
     }
+    
 
     // POST /api/users - Crear un nuevo usuario
     public function store(Request $request)

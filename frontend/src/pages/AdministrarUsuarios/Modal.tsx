@@ -89,12 +89,13 @@ const Modal: React.FC<ModalProps> = ({
       }
 
       setDocenteData({
-        escuela: initialDirector.idEscuela,
-        condicion: infofilial.idCondicion,
-        regimen: infofilial.idRegimen,
-        categoria: infofilial.idCategoria,
-        filiales: miidfilial.map(String),
+        escuela: initialDirector?.idEscuela || '',
+        condicion: infofilial?.idCondicion || '',
+        regimen: infofilial?.idRegimen || '',
+        categoria: infofilial?.idCategoria || '',
+        filiales: (miidfilial || []).map(String), // Fallback a un array vacío si `miidfilial` es null o undefined
       });
+      
 
    //   console.log("Datos enviados a DocenteModal:", {
   //      escuela: initialDirector.idEscuela,
