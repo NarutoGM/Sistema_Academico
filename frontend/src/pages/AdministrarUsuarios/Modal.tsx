@@ -287,17 +287,23 @@ const Modal: React.FC<ModalProps> = ({
           </div>
         </DndProvider>
 
-        <p className="mt-2 text-gray-700">
-          {escuelaSeleccionada ? (
-            <>DirectorEscuela // id Escuela: (ID: {escuelaSeleccionada.idEscuela})</>
-          ) : (
-            <>DirectorEscuela: Información no disponible</>
-          )}
-        </p>
+        
+        {
+  /* 
+  <p className="mt-2 text-gray-700">
+    {escuelaSeleccionada ? (
+      <>DirectorEscuela // id Escuela: (ID: {escuelaSeleccionada.idEscuela})</>
+    ) : (
+      <>DirectorEscuela: Información no disponible</>
+    )}
+  </p>
 
-        {docenteData && (
-          <p className="mt-2 text-gray-700">Docente: {JSON.stringify(docenteData)}</p>
-        )}
+  {docenteData && (
+    <p className="mt-2 text-gray-700">Docente: {JSON.stringify(docenteData)}</p>
+  )}
+  */
+}
+
 
         <button
           onClick={handleSaveClick}
