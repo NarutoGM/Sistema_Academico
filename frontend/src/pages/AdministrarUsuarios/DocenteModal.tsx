@@ -39,21 +39,12 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
   const [selectedCategoria, setSelectedCategoria] = useState<string>(docenteData.categoria);
   const [selectedFiliales, setSelectedFiliales] = useState<string[]>(docenteData.filiales);
 
-  // Sincroniza los datos iniciales con el estado al cambiar docenteData
   useEffect(() => {
     setSelectedEscuela(docenteData.escuela);
     setSelectedCondicion(docenteData.condicion);
     setSelectedRegimen(docenteData.regimen);
     setSelectedCategoria(docenteData.categoria);
     setSelectedFiliales(docenteData.filiales);
-
-   // console.log("Datos iniciales en DocenteModal:", {
-  //    selectedEscuela: docenteData.escuela,
-   //   selectedCondicion: docenteData.condicion,
-   //   selectedRegimen: docenteData.regimen,
-   //   selectedCategoria: docenteData.categoria,
-   //   selectedFiliales: docenteData.filiales,
-   // });
   }, [docenteData]);
 
   const handleFilialChange = (idFilial: string) => {
@@ -75,6 +66,14 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
     handleSaveDocenteData(updatedDocenteData);
     closeModal();
   };
+
+  const isSaveDisabled = !(
+    selectedEscuela &&
+    selectedCondicion &&
+    selectedRegimen &&
+    selectedCategoria &&
+    selectedFiliales.length > 0
+  );
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
@@ -150,7 +149,11 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
           ))}
         </div>
 
-        <button onClick={handleSave} className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 w-full">
+        <button
+          onClick={handleSave}
+          disabled={isSaveDisabled}
+          className={`mt-4 py-2 px-4 rounded w-full ${isSaveDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+        >
           Guardar y Cerrar
         </button>
       </div>

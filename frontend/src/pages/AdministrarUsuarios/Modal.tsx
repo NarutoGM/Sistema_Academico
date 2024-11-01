@@ -75,6 +75,8 @@ const Modal: React.FC<ModalProps> = ({
   const [currentRole, setCurrentRole] = useState<string>('');
   const [docenteData, setDocenteData] = useState<any>(null);
 
+
+  
   useEffect(() => {
     if (isModalOpen) {
       setTempFormData(initialFormData);

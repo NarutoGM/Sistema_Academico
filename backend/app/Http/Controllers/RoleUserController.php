@@ -34,13 +34,28 @@ class RoleUserController extends Controller
 
             $user_id = $request->input('user_id');
             $roles = $request->input('roles', []);
-            $docenteData = $request->input('additional_data.docente', []);
+
             $directorData = $request->input('additional_data.escuela', []);
+
+            $docenteData = $request->input('additional_data.docente', []);
             $filiales = $request->input('additional_data.docente.filiales', []);
             $idCondicion = $request->input('additional_data.docente.condicion', []);
             $idCategoria = $request->input('additional_data.docente.categoria', []);
             $idRegimen = $request->input('additional_data.docente.regimen', []);
+            $bandera1 = false;
+            $bandera2 = false;
 
+            if (
+                isset($directorData['id']) && !empty($directorData['id'])
+            ) {
+                $bandera1 = true;
+            }
+
+            if (
+                isset($docenteData['escuela']) && !empty($docenteData['escuela'])
+            ) {
+                $bandera2 = true;
+            } 
 
 
 
@@ -65,6 +80,7 @@ class RoleUserController extends Controller
             }
 
             $existingDirector = DirectorEscuela::where('id', $user_id)->first();
+
             if ($existingDirector) {
                 $existingDirector->estado = false;
                 $existingDirector->save();
@@ -80,7 +96,7 @@ class RoleUserController extends Controller
 
                 $rol = Role::find($role_id);
 
-                if ($rol->name == 'Director de Escuela') {
+                if ($rol->name == 'Director de Escuela' && $bandera1) {
                     // Verifica si ya existe un director con el mismo id de usuario
                     if (!$existingDirector) {
 
@@ -94,7 +110,7 @@ class RoleUserController extends Controller
                         $existingDirector->estado = true; // Forzar el valor booleano explícito
                         $existingDirector->save();
                     }
-                } elseif ($rol->name == 'Docente') {
+                } elseif ($rol->name == 'Docente' && $bandera2) {
                     if (!$existingDocente) {
                         $docente = new Docente();
                         $docente->id = $user_id;
