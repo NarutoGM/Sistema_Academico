@@ -63,10 +63,11 @@ class UserController extends Controller
                 'lastname' => $user->lastname,
                 'roles' => $user->roles,
                 'email' => $user->email,
-                'docente' => $user->docente,
-                'directorEscuela' => $user->directorEscuela,
+                'docente' => !$filialId->isEmpty() ? $user->docente : null,
+
+                'directorEscuela' => $user->directorEscuela && $user->directorEscuela->estado === true ? $user->directorEscuela : '',
                 'filialId' => $filialId,
-                'filialInfo' => $filialInfo,
+                'filialInfo' => !$filialId->isEmpty() ? $filialInfo : null,
             ];
         });
     

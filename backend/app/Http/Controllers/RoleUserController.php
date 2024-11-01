@@ -69,7 +69,10 @@ class RoleUserController extends Controller
                 $existingDirector->estado = false;
                 $existingDirector->save();
             }
-
+            $existingDocente = Docente::where('id', $user_id)->first();
+            if ($existingDocente) {
+                 DocenteFilial::where('idDocente', $existingDocente->idDocente)->update(['estado' => false]);
+            }
 
 
 
@@ -79,7 +82,6 @@ class RoleUserController extends Controller
 
                 if ($rol->name == 'Director de Escuela') {
                     // Verifica si ya existe un director con el mismo id de usuario
-                    $existingDirector = DirectorEscuela::where('id', $user_id)->first();
                     if (!$existingDirector) {
 
                         $director = new DirectorEscuela();
@@ -93,7 +95,6 @@ class RoleUserController extends Controller
                         $existingDirector->save();
                     }
                 } elseif ($rol->name == 'Docente') {
-                    $existingDocente = Docente::where('id', $user_id)->first();
                     if (!$existingDocente) {
                         $docente = new Docente();
                         $docente->id = $user_id;
@@ -105,8 +106,12 @@ class RoleUserController extends Controller
 
                             // Si no existe, crea la relación
                             DocenteFilial::create([
-                                'idDocente' => $existingDocente->idDocente,
+                                'idDocente' => $docente->idDocente,
                                 'idFilial' => $filialId,
+                                'idRegimen' => $idCategoria,
+                                'idCondicion' => $idCondicion,
+                                'idCategoria' => $idCategoria,
+
                                 'estado' => true
                             ]);
                         }
@@ -115,9 +120,6 @@ class RoleUserController extends Controller
                         $existingDocente->save();
 
 
-
-                        // Obtiene todas las filiales asociadas al docente
-                        DocenteFilial::where('idDocente', $existingDocente->idDocente)->update(['estado' => false]);
 
                         foreach ($filiales as $filialId) {
                             // Verifica si ya existe la relación del docente con la filial
