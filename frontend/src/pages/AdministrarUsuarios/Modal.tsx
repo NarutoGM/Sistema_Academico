@@ -79,6 +79,7 @@ const Modal: React.FC<ModalProps> = ({
     if (isModalOpen) {
       setTempFormData(initialFormData);
       setTempDirector(initialDirector);
+      console.log(initialDirector);
 
       if (initialDirector) {
         setEscuelaSeleccionada({
@@ -86,10 +87,16 @@ const Modal: React.FC<ModalProps> = ({
           name: '',
           idFacultad: 102,
         });
+      }else{
+        setEscuelaSeleccionada({
+          idEscuela: '',
+          name: '',
+          idFacultad: 102,
+        });
       }
 
       setDocenteData({
-        escuela: initialDirector?.idEscuela || '',
+        escuela: docente?.idEscuela || '',
         condicion: infofilial?.idCondicion || '',
         regimen: infofilial?.idRegimen || '',
         categoria: infofilial?.idCategoria || '',
