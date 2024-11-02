@@ -131,6 +131,28 @@ const FileUploadComponent: React.FC<{ courseInfo?: CourseInfo }> = ({ courseInfo
 
   const setDocContentInDrive = async (docId: string, accessToken: string) => {
     const syllabusContent = `
+      SÍLABO DE LA EXPERIENCIA CURRICULAR
+      
+      ${nombreCurso.toUpperCase()}
+
+    I. DATOS DE IDENTIFICACIÓN
+
+      1.1. Área: Estudios de especialidad
+      1.2. Facultad: INGENIERÍA
+      1.3. Departamento Académico: INGENIERÍA DE SISTEMAS
+      1.4. Programa/carrera profesional: Ingeniería de Sistemas
+      1.5. Sede: ${selectedSede || "No especificada"}
+      1.6. Año y Semestre académico: 2024-0
+      1.7. Ciclo: VIII
+      1.8. Código de la experiencia curricular: 4485
+      1.9. Sección(es)/grupo(s): A
+      1.10. Créditos: 4
+      1.11. Pre requisito: 3447
+      1.12. Inicio – término: 09/09/2024 – 27/12/2024
+      1.13. Tipo: Especialidad
+      1.14. Régimen: Obligatorio
+      1.15. Organización semestral del tiempo (semanas):
+      ---------------------------------------------------------------
       **Sílabo de Curso**
       
       **Curso**: ${nombreCurso}
@@ -145,7 +167,8 @@ const FileUploadComponent: React.FC<{ courseInfo?: CourseInfo }> = ({ courseInfo
       **Cronograma**
       ${cronograma}
     `;
-
+    
+    const imageUrl = 'https://univerperu.com/wp-content/uploads/2023/07/Universidad-Nacional-de-Trujillo-UNT.png'; // Cambia esto por la URL de tu imagen
     const response = await fetch(`https://docs.googleapis.com/v1/documents/${docId}:batchUpdate`, {
       method: 'POST',
       headers: new Headers({
@@ -160,9 +183,107 @@ const FileUploadComponent: React.FC<{ courseInfo?: CourseInfo }> = ({ courseInfo
               text: syllabusContent,
             },
           },
+          {
+            updateTextStyle: {
+              range: {
+                startIndex: 1,
+                endIndex: syllabusContent.indexOf('\n', 1) + 1, // Fin del título
+              },
+              textStyle: {
+                bold: true,
+                fontSize: {
+                  magnitude: 14,
+                  unit: 'PT',
+                },
+              },
+              fields: 'bold,fontSize',
+            },
+          },
+          {
+            updateParagraphStyle: {
+              range: {
+                startIndex: 1,
+                endIndex: syllabusContent.indexOf('\n', 1) + 1, // Fin del título
+              },
+              paragraphStyle: {
+                alignment: 'CENTER',
+              },
+              fields: 'alignment',
+            },
+          },
+          {
+            updateTextStyle: {
+              range: {
+                startIndex: syllabusContent.indexOf('\n', syllabusContent.indexOf('\n', 1) + 1) + 1, // Inicio del nombre del curso (4ta línea)
+                endIndex: syllabusContent.indexOf('\n', syllabusContent.indexOf('\n', syllabusContent.indexOf('\n', 1) + 1) + 1) + 1, // Fin del nombre del curso
+              },
+              textStyle: {
+                fontSize: {
+                  magnitude: 12,
+                  unit: 'PT',
+                },
+              },
+              fields: 'fontSize',
+            },
+          },
+          {
+            updateParagraphStyle: {
+              range: {
+                startIndex: syllabusContent.indexOf('\n', syllabusContent.indexOf('\n', 1) + 1) + 1, // Inicio del nombre del curso (4ta línea)
+            endIndex: syllabusContent.indexOf('\n', syllabusContent.indexOf('\n', syllabusContent.indexOf('\n', 1) + 1) + 1) + 1, // Fin del nombre del curso
+              },
+              paragraphStyle: {
+                alignment: 'CENTER',
+              },
+              fields: 'alignment',
+            },
+          },
+          {
+            updateTextStyle: {
+              range: {
+                startIndex: syllabusContent.indexOf('I. DATOS DE IDENTIFICACIÓN'), // Inicio de la fila "I. DATOS DE IDENTIFICACIÓN"
+                endIndex: syllabusContent.indexOf('\n', syllabusContent.indexOf('I. DATOS DE IDENTIFICACIÓN')) + 1, // Fin de la fila
+              },
+              textStyle: {
+                bold: true,
+              },
+              fields: 'bold',
+            },
+          },
+          // Solicitud para insertar la tabla
+          {
+            insertTable: {
+              rows: 5, // Número de filas
+              columns: 3, // Número de columnas
+              location: {
+                index: syllabusContent.indexOf('\n', syllabusContent.indexOf('1.15. Organización semestral del tiempo (semanas):')) + 2, // Insertar justo después de la fila "I. DATOS DE IDENTIFICACIÓN"
+              },
+            },
+          },
+          {
+            insertInlineImage: {
+              location: {
+                index: 1, // Cambia este índice al lugar donde deseas insertar la imagen
+              },
+              uri: imageUrl,
+              objectSize: {
+                height: {
+                  magnitude: 50, // Ajusta la altura según sea necesario
+                  unit: 'PT',
+                },
+                width: {
+                  magnitude: 50, // Ajusta el ancho según sea necesario
+                  unit: 'PT',
+                },
+              },
+            },
+          },
+        
         ],
       }),
     });
+    
+    
     if (response.ok) {
       console.log("Contenido del sílabo establecido exitosamente.");
     } else {
