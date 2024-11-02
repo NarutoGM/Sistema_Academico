@@ -17,7 +17,6 @@ return new class extends Migration
             $table->primary('idMalla','idEscuela');
             $table->string('año');
             $table->boolean('estado');
-            $table->timestamps(4);
             $table->foreign('idEscuela')->references('idEscuela')->on('escuela');
         });
     }

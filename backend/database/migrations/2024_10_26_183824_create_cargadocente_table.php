@@ -11,22 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cargalectiva', function (Blueprint $table) {
-            $table->id('idCargaLectiva')->unique();
+        Schema::create('cargadocente', function (Blueprint $table) {
+            $table->id('idCargaDocente')->unique();
             $table->unsignedBigInteger('idFilial');
             $table->unsignedBigInteger('idDocente');
-            $table->primary(['idCargaLectiva','idFilial', 'idDocente']);
-            $table->dateTime('fAsignacion'); 
-            $table->boolean('estado'); 
-
+            $table->primary(['idCargaDocente','idFilial', 'idDocente']);
+            $table->dateTime('fAsignacion')->nullable(); 
+            $table->boolean('estado')->nullable(); 
+            $table->string('grupo')->nullable(); // A - B
             $table->foreignId('idSemestreAcademico')->constrained('semestreacademico', 'idSemestreAcademico')->onDelete('cascade'); // Clave foránea
             $table->foreignId('idMalla')->constrained('malla', 'idMalla')->onDelete('cascade'); // Clave foránea
             $table->foreignId('idCurso')->constrained('curso', 'idCurso')->onDelete('cascade'); // Clave foránea
             $table->foreignId('idEscuela')->constrained('escuela', 'idEscuela')->onDelete('cascade'); // Clave foránea
-
-            $table->timestamps(4);
             $table->foreign('idFilial')->references('idFilial')->on('filial') ;
             $table->foreign('idDocente')->references('idDocente')->on('docente') ;
+            $table->foreignId('idDirector')->nullable()->constrained('directorescuela', 'idDirector')->onDelete('cascade'); // Clave foránea
 
         });
     }
@@ -36,6 +35,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cargalectiva');
+        Schema::dropIfExists('cargadocente');
     }
 };

@@ -16,15 +16,12 @@ return new class extends Migration
             $table->unsignedBigInteger('idFilial');
             $table->unsignedBigInteger('idDocente');
             $table->primary(['idFilial', 'idDocente']);
-            $table->foreignId('idCondicion')->constrained('condicion', 'idCondicion')->onDelete('cascade'); // Clave foránea
-            $table->foreignId('idRegimen')->constrained('regimen', 'idRegimen')->onDelete('cascade'); // Clave foránea
-            $table->foreignId('idCategoria')->constrained('categorias', 'idCategoria')->onDelete('cascade'); // Clave foránea
-            $table->boolean('estado'); 
-
-            $table->timestamps(4);
+            $table->foreignId('idCondicion')->nullable()->constrained('condicion', 'idCondicion')->onDelete('cascade'); // Clave foránea
+            $table->foreignId('idRegimen')->nullable()->constrained('regimen', 'idRegimen')->onDelete('cascade'); // Clave foránea
+            $table->foreignId('idCategoria')->nullable()->constrained('categorias', 'idCategoria')->onDelete('cascade'); // Clave foránea
+            $table->boolean('estado')->nullable(); 
             $table->foreign('idFilial')->references('idFilial')->on('filial') ;
             $table->foreign('idDocente')->references('idDocente')->on('docente') ;
-
         });
     }
 

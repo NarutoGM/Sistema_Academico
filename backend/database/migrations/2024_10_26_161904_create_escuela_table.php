@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id('idEscuela');
             $table->string('name'); 
             $table->foreignId('idFacultad')->constrained('facultad', 'idFacultad')->onDelete('cascade'); // Clave foránea
-            $table->timestamps(4);
         });        
     }
 

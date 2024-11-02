@@ -23,8 +23,6 @@ return new class extends Migration
             $table->foreign('idMalla')->references('idMalla')->on('malla');
             $table->foreign('idCurso')->references('idCurso')->on('curso');
             $table->foreign('idEscuela')->references('idEscuela')->on('escuela');
-
-            $table->timestamps(4);
         });
     }
 

@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('filial', function (Blueprint $table) {
             $table->id('idFilial');
             $table->string('name');  
-            $table->timestamps(4);
         });
     }
 

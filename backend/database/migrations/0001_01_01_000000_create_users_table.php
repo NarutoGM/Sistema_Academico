@@ -16,15 +16,17 @@ return new class extends Migration
             $table->string('name');
             $table->string('lastname');
             $table->string('dni')->unique();
-            $table->string('direccion');
-            $table->string('telefono');
-            $table->string('foto');
+            $table->string('direccion')->nullable();
+            $table->string('profesion')->nullable();
+            $table->string('telefono')->nullable();
+            $table->string('foto')->nullable();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at', 4)->nullable();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps(4);
         });
+        
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();

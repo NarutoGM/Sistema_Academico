@@ -16,14 +16,12 @@ return new class extends Migration
             $table->unsignedBigInteger('idCurso');
             $table->unsignedBigInteger('idEscuela');
             $table->primary(['idMalla', 'idCurso', 'idEscuela']);
-            $table->string('periodo'); // I O II
+            $table->string('año'); // año
             $table->string('ciclo');  // I - X
             $table->boolean('estado');  
             $table->foreign('idMalla')->references('idMalla')->on('malla') ;
             $table->foreign('idCurso')->references('idCurso')->on('curso') ;
             $table->foreign('idEscuela')->references('idEscuela')->on('escuela') ;
-
-            $table->timestamps(4);
         });
     }
 

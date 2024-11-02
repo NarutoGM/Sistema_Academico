@@ -11,18 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('silabo', function (Blueprint $table) {
+        Schema::create('horario', function (Blueprint $table) {
             $table->unsignedBigInteger('idCargaDocente');
             $table->unsignedBigInteger('idFilial');
-            $table->unsignedBigInteger('idDocente');
-            $table->primary(['idCargaDocente', 'idFilial','idDocente']);
+            $table->unsignedBigInteger('idEscuela');
+            $table->primary(['idCargaDocente', 'idFilial','idEscuela']);
             $table->string('documento')->nullable(); 
             $table->boolean('estado')->nullable(); 
             $table->string('observaciones')->nullable(); 
             $table->foreignId('idDirector')->nullable()->constrained('directorescuela', 'idDirector')->onDelete('cascade'); // Clave foránea
             $table->foreign('idCargaDocente')->references('idCargaDocente')->on('cargadocente');
             $table->foreign('idFilial')->references('idFilial')->on('filial');
-            $table->foreign('idDocente')->references('idDocente')->on('docente');
+            $table->foreign('idEscuela')->references('idEscuela')->on('escuela');
 
         });
     }
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('silabo');
+        Schema::dropIfExists('horario');
     }
 };

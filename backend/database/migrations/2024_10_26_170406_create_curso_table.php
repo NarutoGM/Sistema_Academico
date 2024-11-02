@@ -12,18 +12,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('curso', function (Blueprint $table) {
-            $table->id('idCurso');
+            $table->unsignedBigInteger('idCurso')->primary(); // Definir el campo como clave primaria sin auto-incremento
             $table->string('name');
-            $table->integer('creditos');
-            $table->string('hTeoricas');
-            $table->string('hPracticas');
-            $table->string('hLaboratorio');
-            $table->integer('nGrupos');
-            $table->foreignId('idDepartamento')->constrained('departamentoacademico', 'idDepartamento')->onDelete('cascade'); // Clave foránea
-
-            $table->foreignId('idTipoCurso')->constrained('tipocurso', 'idTipoCurso')->onDelete('cascade'); // Especifica la columna primaria
-            $table->timestamps(4);
+            $table->integer('creditos')->nullable();
+            $table->integer('hTeoricas')->nullable();
+            $table->integer('hPracticas')->nullable();
+            $table->integer('hRetroalimentacion')->nullable();
+            $table->integer('hLaboratorio')->nullable();
+            $table->integer('nGrupos')->nullable();
+            $table->string('prerequisitos')->nullable();
+            $table->foreignId('idDepartamento')->nullable()->constrained('departamentoacademico', 'idDepartamento')->onDelete('cascade');
+            $table->foreignId('idFacultad')->nullable()->constrained('facultad', 'idFacultad')->onDelete('cascade');
+            $table->foreignId('idArea')->nullable()->constrained('area', 'idArea')->onDelete('cascade');
+            $table->foreignId('idRegimenCurso')->nullable()->constrained('regimencurso', 'idRegimenCurso')->onDelete('cascade');
+            $table->foreignId('idTipoCurso')->nullable()->constrained('tipocurso', 'idTipoCurso')->onDelete('cascade');
         });
+        
     }
 
     /**

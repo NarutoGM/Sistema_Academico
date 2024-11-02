@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('docente', function (Blueprint $table) {
-            $table->id('idDocente');
-            $table->foreignId('id')->constrained('users', 'id')->onDelete('cascade'); // Clave foránea
-            $table->foreignId('idEscuela')->constrained('escuela', 'idEscuela')->onDelete('cascade'); // Clave foránea
+        Schema::create('regimencurso', function (Blueprint $table) {
+            $table->id('idRegimenCurso');
+            $table->string('nomRegimen');
         });
     }
 
@@ -23,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('docente');
+        Schema::dropIfExists('regimencurso');
     }
 };

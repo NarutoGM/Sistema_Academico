@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('regimen', function (Blueprint $table) {
             $table->id('idRegimen');
             $table->string('nombreRegimen'); 
-            $table->timestamps(4);
         });
     }
 

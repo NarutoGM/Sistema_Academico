@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('numSemestre');  
             $table->dateTime('fInicio');  
             $table->dateTime('fTermino');  
-            $table->timestamps(4);
         });
     }
 

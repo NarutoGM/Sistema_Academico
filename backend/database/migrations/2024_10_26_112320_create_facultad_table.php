@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('facultad', function (Blueprint $table) {
             $table->id('idFacultad'); 
             $table->string('nomFacultad'); 
-            $table->timestamps(4);
         });
         
     }

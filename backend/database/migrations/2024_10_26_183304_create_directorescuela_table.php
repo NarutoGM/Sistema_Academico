@@ -15,9 +15,7 @@ return new class extends Migration
             $table->id('idDirector');
             $table->foreignId('id')->constrained('users', 'id')->onDelete('cascade'); // Clave foránea
             $table->foreignId('idEscuela')->constrained('escuela', 'idEscuela')->onDelete('cascade'); // Clave foránea
-            $table->boolean('estado'); 
-
-            $table->timestamps(4);
+            $table->boolean('estado')->nullable(); 
         });
     }
 
