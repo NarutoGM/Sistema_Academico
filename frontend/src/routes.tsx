@@ -15,6 +15,7 @@ import CargaDocente from './pages/CargaDocente/index';
 
 
 import SubirArchivo from './pages/SubirArchivo/index';
+import Silabo from './pages/Silabo/index';
 
 
 
@@ -232,7 +233,19 @@ const router = createBrowserRouter([
                         <SubirArchivo/>
                     </ProtectedRoute>
                 ),
+            },
+            {
+                path:'/silabos',
+                element: (
+                    <ProtectedRoute>
+                        <PageTitle title="General Alumno | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+                        <Silabo/>
+                    </ProtectedRoute>
+                ),
             }
+
+
+            
         ]
     },
 ]);
