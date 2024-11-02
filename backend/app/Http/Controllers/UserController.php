@@ -43,19 +43,19 @@ class UserController extends Controller
         // Obtener todos los usuarios con sus roles y la información adicional requerida.
         $users = User::with('roles', 'docente', 'directorEscuela')->get()->map(function ($user) {
             // Inicializar variables para cada usuario.
-            $filialId = '';
-            $filialInfo = '';
-    
+            $filialId = collect(); // Inicializar como colección vacía
+            $filialInfo = null;
+        
             // Si el usuario tiene un docente asociado, obtener la información correspondiente.
             if ($user->docente) {
                 $filialId = DocenteFilial::where('idDocente', $user->docente->idDocente)
                     ->where('estado', true)
                     ->pluck('idFilial');
-    
+        
                 $filialInfo = DocenteFilial::where('idDocente', $user->docente->idDocente)
                     ->first(['idRegimen', 'idCategoria', 'idCondicion']);
             }
-    
+        
             // Retornar la información del usuario en el formato deseado.
             return [
                 'id' => $user->id,
@@ -64,8 +64,7 @@ class UserController extends Controller
                 'roles' => $user->roles,
                 'email' => $user->email,
                 'docente' => !$filialId->isEmpty() ? $user->docente : null,
-
-                'directorEscuela' => $user->directorEscuela && $user->directorEscuela->estado === true ? $user->directorEscuela : '',
+                'directorEscuela' => $user->directorEscuela && $user->directorEscuela->estado === true ? $user->directorEscuela : null,
                 'filialId' => $filialId,
                 'filialInfo' => !$filialId->isEmpty() ? $filialInfo : null,
             ];
@@ -90,6 +89,7 @@ class UserController extends Controller
             'escuelas' => $escuelas,
         ]);
     }
+    
     
 
     // POST /api/users - Crear un nuevo usuario
