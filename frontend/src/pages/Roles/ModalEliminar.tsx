@@ -23,7 +23,7 @@ const ModalEliminar: React.FC<ModalEliminarProps> = ({
       >
         <div className="bg-white p-6 rounded shadow-lg max-w-md w-full">
           <h2 className="text-lg font-semibold mb-4">Confirmar Eliminación</h2>
-          <p>¿Estás seguro de que deseas eliminar esta especialidad?</p>
+          <p>¿Estás seguro de que deseas eliminar este rol?</p>
           <div className="flex justify-end space-x-4 mt-4">
             <button
               type="button"
