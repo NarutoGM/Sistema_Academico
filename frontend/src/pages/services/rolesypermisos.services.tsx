@@ -5,11 +5,15 @@ const apiUrl = 'http://127.0.0.1:8000/api'; // Cambia esta URL a la que necesite
 
 // Define una función para obtener el token desde el almacenamiento (por ejemplo, localStorage o sessionStorage)
 
-export interface Rol {
+export interface Roles {
   id: number;
   name: string;
-  guard_name: string;
+  created_at: string;
+  updated_at: string;
+  permisos: Permiso[]; // Array of `Permiso` objects
 }
+
+
 
 export interface Permiso {
   id: number;
@@ -18,7 +22,7 @@ export interface Permiso {
 }
 
 // Función para obtener todos los roles
-export const getRoles = async (): Promise<Rol[]> => {
+export const getRoles = async (): Promise<Roles[]> => {
   const authData = isAuthenticated(); // Verificar autenticación
   console.log(authData);
 

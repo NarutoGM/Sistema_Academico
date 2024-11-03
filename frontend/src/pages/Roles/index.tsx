@@ -16,16 +16,13 @@ import {
   createRol,
   savePermisos,
   deleteRol,
+  Roles,
+  Permiso
 } from '@/pages/services/rolesypermisos.services';
 import Modal from './Modal';
 import ModalCrear from './ModalCrear';
 import ModalEliminar from './ModalEliminar';
 
-// Interfaces para tipado
-interface Roles {
-  id: number;
-  name: string;
-}
 
 interface Activity {
   id: number;
@@ -57,7 +54,6 @@ const FilteredUnidad: React.FC = () => {
     key: keyof Roles | null;
     direction: 'ascending' | 'descending';
   }>({ key: null, direction: 'ascending' });
-  const [token, setToken] = useState<string | null>(null);
   const navigate = useNavigate();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -75,8 +71,12 @@ const FilteredUnidad: React.FC = () => {
   const fetchData = async () => {
     setLoading(true); // Comienza la carga
     try {
-      const roles = await getRoles();
+      const roles = await getRoles(); // Ensure `getRoles` returns `Roles[]` with `permisos`
+      
       setData(roles);
+
+      
+      console.log(roles);
       const permisos = await getPermisos();
       setOriginalBoxBActivities(permisos);
       const updatedActivities = permisos.map((permiso) => ({
@@ -208,12 +208,14 @@ const FilteredUnidad: React.FC = () => {
   const openModal = (data: Roles | null = null) => {
     if (!loading) {
       // Solo abrir si no está cargando
+      console.log("Received data:", data);
+
       if (data) {
         // Modal de edición
         setFormData({
           id: data.id,
           name: data.name,
-          permisos: [], // Assuming 'permisos' should be an empty array if 'permiso' does not exist
+          permisos: data.permisos ? [...data.permisos] : [], // Ensure permisos is an array
         });
       } else {
         // Modal de creación
@@ -223,6 +225,8 @@ const FilteredUnidad: React.FC = () => {
           permisos: [],
         });
       }
+      console.log("Form data after setting:", formData);
+
       setSelectedPermisosAsActivities([]); // Reiniciar permisos seleccionados
       setBoxBActivities([...originalBoxBActivities]); // Copiar permisos originales
       setIsModalOpen(true); // Abrir el modal de edición

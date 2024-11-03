@@ -32,6 +32,8 @@ const Modal: React.FC<ModalProps> = ({
 
   useEffect(() => {
     if (isModalOpen) {
+
+
       setFormData(initialFormData);
       setSearchTerm(''); // Resetear el término de búsqueda a vacío al abrir el modal
 
@@ -41,6 +43,8 @@ const Modal: React.FC<ModalProps> = ({
         descripcion: permiso.descripcion,
       }));
       setSelectedPermisosAsActivities(selected);
+      console.log(originalBoxBActivities);
+      console.log(initialFormData);
 
       // Inicializar actividades disponibles filtrando las seleccionadas
       const available = originalBoxBActivities.filter(
