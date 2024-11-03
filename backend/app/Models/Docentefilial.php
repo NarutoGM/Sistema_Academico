@@ -11,6 +11,7 @@ class DocenteFilial extends Model
 
     // Nombre de la tabla
     protected $table = 'docentefilial';
+    public $timestamps = false;
 
     // Definir la clave primaria compuesta
     protected $primaryKey = ['idFilial', 'idDocente'];

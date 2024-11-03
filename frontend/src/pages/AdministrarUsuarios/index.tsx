@@ -1,25 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { ChevronUp, ChevronDown, Plus, Edit, Download,Eye, Trash2 } from 'lucide-react';
+import { ChevronUp, ChevronDown, Plus, Edit, Download, Eye, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { saveRoles, createUsuario, getInfoAdministrarUsuarios } from "@/pages/services/rolesyusuarios.services";
+import { saveRoles, createUsuario, getInfoAdministrarUsuarios, User,FilialInfo , Docente, DirectorEscuela, Categoria, Condicion, Regimen, Filial, Rol, Escuela } from "@/pages/services/rolesyusuarios.services";
 
 import Modal from './Modal';
 import ModalCrear from './ModalCrear';
-import ModalEliminar from './ModalEliminar';
-
-// Interfaces para tipado
-interface Users {
-  id: number;
-  name: string;
-}
-
-interface Permiso {
-  id: number;
-  name: string;
-  estado: string;
-}
 
 interface Activity {
   id: number;
@@ -27,28 +14,31 @@ interface Activity {
   estado?: string;
 }
 
+
 const FilteredUnidad: React.FC = () => {
   const [formData, setFormData] = useState<{
     id: number | '';
     name: string;
+    roles: Rol[]; // Asegúrate de definir esta propiedad
     permisos: any[];
   }>({
     id: '',
     name: '',
+    roles: [], // Asegúrate de definir esta propiedad
     permisos: [],
   });
 
 
 
 
-  const [unidadToDelete, setUnidadToDelete] = useState<null | { id: number; Name: string; AsesorFree: boolean }>(null);
-  const [data, setData] = useState<Users[]>([]);
+  //const [unidadToDelete, setUnidadToDelete] = useState<null | { id: number; Name: string; AsesorFree: boolean }>(null);
+  const [data, setData] = useState<User[]>([]);
   const [filters, setFilters] = useState({
     name: '',
   });
-  const [sortConfig, setSortConfig] = useState<{ key: keyof Users | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
+  const [sortConfig, setSortConfig] = useState<{ key: keyof User | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
   const navigate = useNavigate();
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  // const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false); // State for PersonaModal
   // Función para abrir PersonaModal
@@ -61,61 +51,59 @@ const FilteredUnidad: React.FC = () => {
     setIsModalCrearOpen(false);
   };
 
-  const handleSavePersona = (formData: FormData) => {
-    console.log('Contenido de formData:');
+ // const handleSavePersona = (formData: FormData) => {
+ //   console.log('Contenido de formData:');
 
     // Convertir FormData a objeto plano
-    const personaData: any = Object.fromEntries(formData.entries());
+ //   const personaData: any = Object.fromEntries(formData.entries());
 
     // Crear un objeto solo con los campos necesarios
-    const cleanedData = {
-      name: personaData.Nombres,
-      telefono: personaData.Celular,
-      direccion: personaData.Direccion,
-      foto: formData.get('Foto'), // Aquí obtenemos el archivo directamente de formData
-      email: personaData.Email,
-      password: personaData.Password,
-    };
+  //  const cleanedData = {
+ //     name: personaData.Nombres,
+ //     telefono: personaData.Celular,
+  //    direccion: personaData.Direccion,
+ //     foto: formData.get('Foto'), // Aquí obtenemos el archivo directamente de formData
+ //     email: personaData.Email,
+  //    password: personaData.Password,
+ //   };
 
-    console.log('Datos de la persona antes de enviar:', cleanedData);
+ //   console.log('Datos de la persona antes de enviar:', cleanedData);
 
     // Crear una nueva instancia de FormData para enviar al servidor
-    const newFormData = new FormData();
-    for (const key in cleanedData) {
-      if (cleanedData.hasOwnProperty(key)) {
+ //   const newFormData = new FormData();
+ //   for (const key in cleanedData) {
+ //     if (cleanedData.hasOwnProperty(key)) {
         // Aquí se añade el archivo como un objeto File
-        newFormData.append(key, cleanedData[key]);
-      }
-    }
+  //      newFormData.append(key, cleanedData[key]);
+  //    }
+   // }
 
     // Llamar a createUsuario con el nuevo FormData
-    createUsuario(newFormData)
-      .then(result => {
-        console.log('Usuario creado:', result);
-      })
-      .catch(error => {
-        console.error('Error al crear usuario:', error);
-      });
+  //  createUsuario(newFormData)
+  //    .then(result => {
+  //      console.log('Usuario creado:', result);
+   //   })
+   //   .catch(error => {
+   //     console.error('Error al crear usuario:', error);
+   //   });
 
     // Cerrar el modal de persona
-    closePersonaModal();
-  };
+  //  closePersonaModal();
+  //};
 
 
 
 
+  const [escuelas, setEscuelas] = useState<Escuela[]>([]);
+  const [categoria, setCategoria] = useState<Categoria[]>([]);
+  const [condicion, setCondicion] = useState<Condicion[]>([]);
+  const [regimen, setRegimen] = useState<Regimen[]>([]);
+  const [filial, setFilial] = useState<Filial[]>([]);
 
-
-  const [escuelas, setEscuelas] = useState([]);
-  const [categoria, setCategoria] = useState([]);
-  const [condicion, setCondicion] = useState([]);
-  const [regimen, setRegimen] = useState([]);
-  const [filial, setFilial] = useState([]);
-
-  const [filialInfo, setFilialInfo] = useState([]);
-  const [docente, setDocente] = useState([]);
-  const [director, setDirector] = useState([]);
-  const [misidfilial, setmisidFilial] = useState([]);
+  const [filialInfo, setFilialInfo] = useState<FilialInfo | null>(null);
+  const [docente, setDocente] = useState<Docente | null>(null);
+  const [director, setDirector] = useState<DirectorEscuela | null>(null);
+  const [misidfilial, setmisidFilial] = useState<number[]>([]);
 
   const [boxBActivities, setBoxBActivities] = useState<Activity[]>([]);
   const [originalBoxBActivities, setOriginalBoxBActivities] = useState<Activity[]>([]);
@@ -126,7 +114,7 @@ const FilteredUnidad: React.FC = () => {
   const fetchData = async () => {
     setLoading(true); // Comienza la carga
     try {
-      const data = await getInfoAdministrarUsuarios(); // Llamada optimizada
+      const data = await getInfoAdministrarUsuarios(); // Llamada a la función para obtener datos
       console.log('Datos obtenidos:', data); // Ver los datos en la consola
 
       // Almacena los datos en el estado
@@ -136,7 +124,6 @@ const FilteredUnidad: React.FC = () => {
       const updatedActivities = data.roles.map((rol) => ({
         id: rol.id,
         name: rol.name,
-        estado: rol.estado,
       }));
       setBoxBActivities(updatedActivities);
 
@@ -146,9 +133,6 @@ const FilteredUnidad: React.FC = () => {
       setCondicion(data.condiciones);
       setFilial(data.filiales);
       setRegimen(data.regimenes);
-      
-
-
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -169,23 +153,11 @@ const FilteredUnidad: React.FC = () => {
     setFilters((prevFilters) => ({ ...prevFilters, [name]: value }));
   };
 
-  // Ordenar datos
-  const sortData = (key: keyof Users) => {
-    let direction: 'ascending' | 'descending' = 'ascending';
-    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
-    }
-    setSortConfig({ key, direction });
-    const sortedData = [...data].sort((a, b) => {
-      if (a[key] < b[key]) return direction === 'ascending' ? -1 : 1;
-      if (a[key] > b[key]) return direction === 'ascending' ? 1 : -1;
-      return 0;
-    });
-    setData(sortedData);
-  };
+
+
 
   // Obtener icono de orden
-  const getSortIcon = (key: keyof Users) => {
+  const getSortIcon = (key: keyof User) => {
     if (sortConfig.key === key) {
       return sortConfig.direction === 'ascending' ? <ChevronUp size={14} /> : <ChevronDown size={14} />;
     }
@@ -205,55 +177,61 @@ const FilteredUnidad: React.FC = () => {
     selectedActivities: Activity[],
     escuelaSeleccionada: Escuela | null,
     docenteData: any | null
-) => {
+  ) => {
     try {
-        const rolId = formData.id;
+      // Asegurarte que formData.id es un número antes de este punto
+      if (typeof formData.id !== 'number') {
+        throw new Error("El ID de formData no es válido. Debe ser un número.");
+      }
 
-        const rolesToSave = selectedActivities.map((rol) => ({
-            id: rol.id,
-        }));
+      const rolesToSave = selectedActivities.map((rol) => ({
+        id: rol.id,
+      }));
 
-        // Agregar campos adicionales (ej. escuelaSeleccionada, docenteData)
-        const additionalData = {
-            escuela: escuelaSeleccionada ? { id: escuelaSeleccionada.idEscuela, name: escuelaSeleccionada.name } : null,
-            docente: docenteData ? { ...docenteData } : null,
-        };
+      // Agregar campos adicionales (ej. escuelaSeleccionada, docenteData)
+      const additionalData = {
+        escuela: escuelaSeleccionada ? { id: escuelaSeleccionada.idEscuela, name: escuelaSeleccionada.name } : null,
+        docente: docenteData ? { ...docenteData } : null,
+      };
 
-         const result = await saveRoles(rolId, rolesToSave, additionalData);
+      // Llamada a saveRoles con formData.id garantizado como número
+      const result = await saveRoles(formData.id, rolesToSave, additionalData);
 
-         await fetchData(); // Actualiza la lista después de guardar
-         setBoxBActivities(originalBoxBActivities); // Resetea las actividades
-        closeModalCrear(); // Cierra el modal
+      await fetchData(); // Actualiza la lista después de guardar
+      setBoxBActivities(originalBoxBActivities); // Resetea las actividades
+      closeModalCrear(); // Cierra el modal
     } catch (error: any) {
-        console.error('Error guardando permisos:', error.message);
+      console.error('Error guardando permisos:', error.message);
     }
-};
+  };
+
 
 
 
   // Funciones para editar Users (no modificar)
-  const openModal = (data: Users | null = null) => {
+  const openModal = (data: User | null = null) => {
 
 
-    
+
     if (!loading) { // Solo abrir si no está cargando
       if (data) {
-        
-        setFilialInfo(data.filialInfo);
-        setDocente(data.docente);
-        setDirector(data.directorEscuela);
-        setmisidFilial(data.filialId);
-      
-         console.log(data.docente);
-         console.log(data.directorEscuela);
-         console.log(data.filialId);
-         console.log(data.filialInfo);
+
+        setFilialInfo(data.filialInfo ?? null);
+        setDocente(data.docente ?? null);
+        setDirector(data.directorEscuela ?? null);
+        setmisidFilial(data.filialId ?? []);
+
+        //    console.log(data.docente);
+        //    console.log(data.directorEscuela);
+        //   console.log(data.filialId);
+        //   console.log(data.filialInfo);
 
         // Modal de edición
         setFormData({
           id: data.id,
           name: data.name,
           roles: data.roles || [],
+          permisos: [], // Ajusta según tu lógica
         });
       }
       setSelectedPermisosAsActivities([]); // Reiniciar permisos seleccionados
@@ -261,26 +239,9 @@ const FilteredUnidad: React.FC = () => {
       setIsModalOpen(true); // Abrir el modal de edición
     }
   };
+
+
   const closeModal = () => setIsModalOpen(false);
-
-  // Funciones para eliminar Users (no modificar)
-  const openDeleteModal = (unidad: Users) => {
-    setUnidadToDelete(unidad);
-    setIsDeleteModalOpen(true);
-  };
-
-  const closeDeleteModal = () => setIsDeleteModalOpen(false);
-
-  const handleDelete = async () => {
-    if (!unidadToDelete) return;
-    try {
-      await deleteRol(unidadToDelete.id);
-      setData((prevData) => prevData.filter((item) => item.id !== unidadToDelete.id));
-      closeDeleteModal();
-    } catch (error) {
-      console.error('Error al eliminar rol:', error);
-    }
-  };
 
 
   return (
@@ -335,11 +296,11 @@ const FilteredUnidad: React.FC = () => {
                 <th
                   key={key}
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => sortData(key as keyof Users)}
+                //   onClick={() => sortData(key as keyof User)}
                 >
                   <div className="flex items-center">
                     {key.charAt(0).toUpperCase() + key.slice(1)}
-                    {getSortIcon(key as keyof Users)}
+                    {getSortIcon(key as keyof User)}
                   </div>
                 </th>
               ))}
@@ -360,11 +321,8 @@ const FilteredUnidad: React.FC = () => {
                       className="w-5 h-5 text-gray-600 hover:text-blue-600 cursor-pointer"
                       onClick={() => openModal(item)} // Abrir modal de edición
                     />
-                    {/* Botón Eliminar */}
-                    <Trash2
-                      className="w-5 h-5 text-gray-600 hover:text-yellow-600 cursor-pointer"
-                      onClick={() => openDeleteModal(item)} // Abrir modal de eliminación
-                    />
+
+
                   </div>
                 </td>
               </tr>
@@ -391,24 +349,21 @@ const FilteredUnidad: React.FC = () => {
           infofilial={filialInfo}
           docente={docente}
           director={director}
-          miidfilial={misidfilial}
+          miidfilial={misidfilial.map(id => ({ idFilial: id }))} // Transformar aquí
 
         />
 
 
 
       </DndProvider>
-      <ModalEliminar
-        isDeleteModalOpen={isDeleteModalOpen}
-        closeDeleteModal={closeDeleteModal}
-        handleDelete={handleDelete}
-      />
 
-      <ModalCrear
+      {/*       <ModalCrear
         isOpen={isPersonaModalOpen}
         onClose={closePersonaModal}
         onSave={handleSavePersona}
-      />
+      /> */}
+
+
     </div>
   );
 };

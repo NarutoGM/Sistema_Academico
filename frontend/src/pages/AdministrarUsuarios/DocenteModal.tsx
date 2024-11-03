@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 interface Escuela {
   idEscuela: number;
   name: string;
-  idFacultad: number;
+  //idFacultad: number;
 }
 
 interface DocenteModalProps {
@@ -22,7 +22,6 @@ interface DocenteModalProps {
   closeModal: () => void;
   handleSaveDocenteData: (data: any) => void;
 }
-
 const DocenteModal: React.FC<DocenteModalProps> = ({
   escuelas,
   docenteData,
@@ -37,14 +36,26 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
   const [selectedCondicion, setSelectedCondicion] = useState<string>(docenteData.condicion);
   const [selectedRegimen, setSelectedRegimen] = useState<string>(docenteData.regimen);
   const [selectedCategoria, setSelectedCategoria] = useState<string>(docenteData.categoria);
-  const [selectedFiliales, setSelectedFiliales] = useState<string[]>(docenteData.filiales);
+  
+  // Transforma `docenteData.filiales` si viene como `{ idFilial: [1, 2, 3, 4] }`
+  const [selectedFiliales, setSelectedFiliales] = useState<string[]>(
+    Array.isArray(docenteData.filiales.idFilial)
+      ? docenteData.filiales.idFilial.map(String) // Convierte a strings para que coincida con los checkboxes
+      : []
+  );
 
   useEffect(() => {
     setSelectedEscuela(docenteData.escuela);
     setSelectedCondicion(docenteData.condicion);
     setSelectedRegimen(docenteData.regimen);
     setSelectedCategoria(docenteData.categoria);
-    setSelectedFiliales(docenteData.filiales);
+
+    // Asegura que `selectedFiliales` se inicialice correctamente
+    setSelectedFiliales(
+      Array.isArray(docenteData.filiales.idFilial)
+        ? docenteData.filiales.idFilial.map(String) // Convierte a strings
+        : []
+    );
   }, [docenteData]);
 
   const handleFilialChange = (idFilial: string) => {
@@ -61,7 +72,7 @@ const DocenteModal: React.FC<DocenteModalProps> = ({
       condicion: selectedCondicion,
       regimen: selectedRegimen,
       categoria: selectedCategoria,
-      filiales: selectedFiliales,
+      filiales: { idFilial: selectedFiliales.map(Number) }, // Convierte de vuelta a números si es necesario
     };
     handleSaveDocenteData(updatedDocenteData);
     closeModal();

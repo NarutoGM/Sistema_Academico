@@ -8,16 +8,90 @@ const getToken = (): string | null => {
   return localStorage.getItem('token'); // O sessionStorage, dependiendo de dónde almacenes el token
 };
 
+// Interfaces para tipado
 export interface Rol {
   id: number;
   name: string;
-  guard_name: string;
+  
+  created_at?: string;
+  updated_at?: string;
+  pivot?: {
+    user_id: number;
+    role_id: number;
+  };
 }
 
-export interface Permiso {
+export interface Docente {
+  idDirector?: number; // Make it optional
+  id?: number;
+  idEscuela: number;
+}
+
+export interface DirectorEscuela {
+  idDirector: number;
+  id?: number; // Make `id` optional
+  idEscuela: number;
+  estado?: boolean;
+}
+
+export interface User {
   id: number;
-  descripcion: string;
-  estado: boolean;
+  name: string;
+  lastname: string;
+  roles: Rol[];
+  email: string;
+  docente: Docente | null;
+  directorEscuela: DirectorEscuela | null;
+  filialId: number[];
+  filialInfo: {
+    idRegimen: number;
+    idCategoria: number;
+    idCondicion: number;
+    estado: boolean;
+
+  } | null;
+}
+
+export interface Categoria {
+  idCategoria: number;
+  nombreCategoria: string;
+}
+
+export interface Condicion {
+  idCondicion: number;
+  nombreCondicion: string;
+}
+
+export interface Regimen {
+  idRegimen: number;
+  nombreRegimen: string;
+}
+
+export interface FilialInfo {
+  idRegimen: number;
+  idCondicion: number;
+  idCategoria:number;
+  estado:boolean,
+}
+
+export interface Filial {
+  idFilial: number;
+  name: string;
+}
+
+export interface Escuela {
+  idEscuela: number;
+  name: string;
+}
+
+export interface ConjuntoDatos {
+  categorias: Categoria[];
+  condiciones: Condicion[];
+  escuelas: Escuela[];
+  filiales: Filial[];
+  regimenes: Regimen[];
+  roles: Rol[];
+  users: User[];
 }
 
 // Función para crear una nueva persona
@@ -80,7 +154,7 @@ export const getUsuarios = async (): Promise<Rol[]> => {
 
 
 // Función para obtener todos los usuarios
-export const getInfoAdministrarUsuarios = async (): Promise<Rol[]> => {
+export const getInfoAdministrarUsuarios = async (): Promise<ConjuntoDatos> => {
   const authData = isAuthenticated(); // Obtiene los datos de autenticación
   const token = authData?.token; // Extrae el token
 
@@ -105,12 +179,7 @@ export const getInfoAdministrarUsuarios = async (): Promise<Rol[]> => {
 
 
 
-
-
-
-
-// Función para obtener todos los permisos
-export const getRoles = async (): Promise<Permiso[]> => {
+export const getRoles = async (): Promise<Rol[]> => {
   const authData = isAuthenticated(); // Obtiene los datos de autenticación
   const token = authData?.token; // Extrae el token
   if (!token) {

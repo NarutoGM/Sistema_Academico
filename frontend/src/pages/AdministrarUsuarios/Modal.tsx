@@ -3,32 +3,14 @@ import { DndProvider, useDrag, useDrop, DragSourceMonitor } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import DocenteModal from './DocenteModal';
 import DirectorEscuelaModal from './DirectorEscuelaModal';
+import {  User,Escuela, Docente, DirectorEscuela,FilialInfo, Categoria,Condicion,Regimen,Filial, Rol } from "@/pages/services/rolesyusuarios.services";
 
 interface Activity {
   id: number;
   name: string;
 }
 
-interface Escuela {
-  idEscuela: number;
-  name: string;
-  idFacultad: number;
-}
 
-interface Docente {
-  idDocente: number;
-  name: string;
-  id: number;
-  idEscuela: number;
-}
-
-interface Director {
-  idDirector: number;
-  name: string;
-  id: number;
-  idEscuela: number;
-  estado: boolean;
-}
 
 interface ModalProps {
   isModalOpen: boolean;
@@ -41,10 +23,11 @@ interface ModalProps {
   regimen: Array<{ idRegimen: number; nombreRegimen: string }>;
   categoria: Array<{ idCategoria: number; nombreCategoria: string }>;
   filial: Array<{ idFilial: number; name: string }>;
-  docente: Docente[];
-  director: Director[];
+  docente: Docente | null; // Permitir null
+  director: DirectorEscuela | null;
   miidfilial: Array<{ idFilial: number }>;
-  infofilial: Array<{ idCondicion: number; idRegimen: number; idCategoria: number; estado: boolean }>;
+  infofilial: FilialInfo | null;
+
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -63,7 +46,7 @@ const Modal: React.FC<ModalProps> = ({
   miidfilial,
   infofilial,
 }) => {
-  const [tempDirector, setTempDirector] = useState<Director | null>(initialDirector);
+  const [tempDirector, setTempDirector] = useState<DirectorEscuela | null>(initialDirector);
   const [tempFormData, setTempFormData] = useState(initialFormData);
   const [selectedPermisosAsActivities, setSelectedPermisosAsActivities] = useState<Activity[]>([]);
   const [availableActivities, setAvailableActivities] = useState<Activity[]>([]);
@@ -87,24 +70,23 @@ const Modal: React.FC<ModalProps> = ({
         setEscuelaSeleccionada({
           idEscuela: initialDirector.idEscuela,
           name: '',
-          idFacultad: 102,
-        });
-      }else{
-        setEscuelaSeleccionada({
-          idEscuela: '',
-          name: '',
-          idFacultad: 102,
         });
       }
+      console.log(miidfilial); // Verifica que miidfilial esté en el formato correcto
+      const transformedFiliales = { idFilial: miidfilial.map(filial => filial.idFilial) };
 
       setDocenteData({
         escuela: docente?.idEscuela || '',
         condicion: infofilial?.idCondicion || '',
         regimen: infofilial?.idRegimen || '',
         categoria: infofilial?.idCategoria || '',
-        filiales: (miidfilial || []).map(String), // Fallback a un array vacío si `miidfilial` es null o undefined
+        filiales: transformedFiliales // Se asegura de usar miidfilial o un array vacío
       });
-      
+
+      console.log(docenteData); // Verifica que miidfilial esté en el formato correcto
+      {docenteData && (
+        <p className="mt-2 text-gray-700">Docente: {JSON.stringify(docenteData)}</p>
+      )}
 
    //   console.log("Datos enviados a DocenteModal:", {
   //      escuela: initialDirector.idEscuela,
@@ -122,9 +104,9 @@ const Modal: React.FC<ModalProps> = ({
       }));
       setSelectedPermisosAsActivities(selected);
 
-      const available = originalBoxBActivities.filter(
-        (activity) => !selected.some((sel) => sel.id === activity.id)
-      );
+const available = originalBoxBActivities.filter(
+  (activity) => !selected.some((sel: { id: number; name: string }) => sel.id === activity.id)
+);
       setAvailableActivities(available);
     }
   }, [isModalOpen, initialFormData, originalBoxBActivities, initialDirector, infofilial, miidfilial]);
@@ -150,7 +132,11 @@ const Modal: React.FC<ModalProps> = ({
 
   const handleSelectEscuela = (escuela: Escuela) => {
     setEscuelaSeleccionada(escuela);
-    setTempDirector({ ...tempDirector, idEscuela: escuela.idEscuela });
+    setTempDirector({
+      ...tempDirector,
+      idEscuela: escuela.idEscuela,
+      idDirector: tempDirector?.idDirector ?? 0, // Default to 0 if null or undefined
+    });
   };
 
   const closeModalBuscarEscuela = () => {
@@ -288,8 +274,8 @@ const Modal: React.FC<ModalProps> = ({
         </DndProvider>
 
         
-        {
-  /* 
+        
+  
   <p className="mt-2 text-gray-700">
     {escuelaSeleccionada ? (
       <>DirectorEscuela // id Escuela: (ID: {escuelaSeleccionada.idEscuela})</>
@@ -301,8 +287,8 @@ const Modal: React.FC<ModalProps> = ({
   {docenteData && (
     <p className="mt-2 text-gray-700">Docente: {JSON.stringify(docenteData)}</p>
   )}
-  */
-}
+  
+
 
 
         <button
