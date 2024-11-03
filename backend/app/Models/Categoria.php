@@ -11,6 +11,6 @@ class Categoria extends Model
 
     protected $table = 'categorias'; // Nombre de la tabla  
     protected $primaryKey = 'idCategoria'; // Clave primaria  
-    public $timestamps = true; // Usar timestamps  
+    public $timestamps = false; // Usar timestamps  
     protected $fillable = ['nombreCategoria']; // Campos asignables  
 }

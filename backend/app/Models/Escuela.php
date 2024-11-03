@@ -16,7 +16,7 @@ class Escuela extends Model
     protected $primaryKey = 'idEscuela';
 
     // Permitir que Eloquent maneje las marcas de tiempo automáticamente
-    public $timestamps = true;
+    public $timestamps = false;
 
     // Definir los campos que son asignables
     protected $fillable = [

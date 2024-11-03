@@ -8,6 +8,7 @@ const App = () => {
     objetivos: "Desarrollar habilidades en cálculos avanzados...",
     temas: ["Álgebra", "Cálculo Diferencial", "Geometría Analítica"],
     cronograma: "Semana 1-4: Álgebra, Semana 5-8: Cálculo...",
+
   };
 
   return (
