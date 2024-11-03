@@ -104,14 +104,33 @@ const FileUploadComponent: React.FC = () => {
     const spreadsheetData = await response.json();
     const sheets = spreadsheetData.sheets;
   
-    // Crear las solicitudes para agregar contenido a cada hoja
-    const requests = sheets.map((sheet: any, index: number) => ({
-      updateCells: {
-        range: { sheetId: sheet.properties.sheetId, startRowIndex: 0, startColumnIndex: 0 },
-        rows: [{ values: [{ userEnteredValue: { stringValue: `Contenido de Hoja ${index + 1}` } }] }],
-        fields: 'userEnteredValue',
-      },
-    }));
+    // Crear las solicitudes para agregar contenido en celdas específicas de cada hoja
+    const requests = sheets.map((sheet: any, index: number) => {
+      const sheetId = sheet.properties.sheetId;
+      return [
+        {
+          updateCells: {
+            range: { sheetId, startRowIndex: 0, startColumnIndex: 0 }, // Celda A1
+            rows: [{ values: [{ userEnteredValue: { stringValue: `Contenido en A1 de Hoja ${index + 1}` } }] }],
+            fields: 'userEnteredValue',
+          },
+        },
+        {
+          updateCells: {
+            range: { sheetId, startRowIndex: 1, startColumnIndex: 1 }, // Celda B2
+            rows: [{ values: [{ userEnteredValue: { stringValue: `Contenido en B2 de Hoja ${index + 1}` } }] }],
+            fields: 'userEnteredValue',
+          },
+        },
+        {
+          updateCells: {
+            range: { sheetId, startRowIndex: 2, startColumnIndex: 2 }, // Celda C3
+            rows: [{ values: [{ userEnteredValue: { stringValue: `Contenido en C3 de Hoja ${index + 1}` } }] }],
+            fields: 'userEnteredValue',
+          },
+        },
+      ];
+    }).flat();
   
     // Enviar la solicitud `batchUpdate` con las referencias correctas de `sheetId`
     const batchUpdateResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
@@ -124,12 +143,13 @@ const FileUploadComponent: React.FC = () => {
     });
   
     if (batchUpdateResponse.ok) {
-      console.log("Contenido agregado a cada hoja correctamente.");
-      alert("Contenido agregado a cada hoja.");
+      console.log("Contenido agregado en celdas específicas de cada hoja correctamente.");
+      alert("Contenido agregado en celdas específicas de cada hoja.");
     } else {
       console.error("Error al agregar contenido a las hojas:", await batchUpdateResponse.json());
     }
   };
+  
   
 
   return (
