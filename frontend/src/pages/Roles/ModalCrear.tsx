@@ -9,27 +9,43 @@ interface ModalCrearProps {
     name: string;
     permisos: any[];
   };
-  setFormData: React.Dispatch<React.SetStateAction<{
-    id: number | '';
-    name: string;
-    permisos: any[];
-  }>>;
+  setFormData: React.Dispatch<
+    React.SetStateAction<{
+      id: number | '';
+      name: string;
+      permisos: any[];
+    }>
+  >;
   handleSubmit: () => void;
 }
 
-const ModalCrear: React.FC<ModalCrearProps> = ({ isModalCrearOpen, closeModalCrear, formData, setFormData, handleSubmit }) => {
+const ModalCrear: React.FC<ModalCrearProps> = ({
+  isModalCrearOpen,
+  closeModalCrear,
+  formData,
+  setFormData,
+  handleSubmit,
+}) => {
   const modalRef = useRef(null);
 
-  const handleClickOutside = (e: MouseEvent) => {
+  const handleClickOutside = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  ) => {
     if (modalRef.current && !(modalRef.current as any).contains(e.target)) {
       closeModalCrear();
     }
   };
 
   React.useEffect(() => {
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener(
+      'mousedown',
+      handleClickOutside as unknown as EventListener,
+    );
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener(
+        'mousedown',
+        handleClickOutside as unknown as EventListener,
+      );
     };
   }, []);
 
@@ -39,20 +55,24 @@ const ModalCrear: React.FC<ModalCrearProps> = ({ isModalCrearOpen, closeModalCre
         className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
         onClick={handleClickOutside}
       >
-        <div ref={modalRef} className="bg-white p-6 rounded shadow-lg max-w-md w-full">
+        <div
+          ref={modalRef}
+          className="bg-white p-6 rounded shadow-lg max-w-md w-full"
+        >
           <h2 className="text-lg font-semibold mb-4">Crear Rol</h2>
           <form>
             <div className="mb-4">
               <label className="block text-gray-700">Rol</label>
               <input
+                required
                 type="text"
                 value={formData.name || ''} // Controlado
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 className="w-full p-2 border rounded-md"
               />
             </div>
-
-           
 
             <div className="flex justify-end space-x-4">
               <button
@@ -66,7 +86,8 @@ const ModalCrear: React.FC<ModalCrearProps> = ({ isModalCrearOpen, closeModalCre
                 type="button"
                 className="px-4 py-2 bg-blue-500 text-white rounded"
                 onClick={handleSubmit}
-              >Crear
+              >
+                Crear
               </button>
             </div>
           </form>

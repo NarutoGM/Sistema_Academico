@@ -16,7 +16,7 @@ class Condicion extends Model
     protected $primaryKey = 'idCondicion';  
 
     // Si no usas timestamps, puedes desactivarlos  
-    public $timestamps = false;  
+    public $timestamps = true;  
 
     // Especifica los campos que son asignables en masa  
     protected $fillable = ['nombreCondicion'];  

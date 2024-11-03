@@ -23,8 +23,11 @@ const Modal: React.FC<ModalProps> = ({
   initialFormData,
 }) => {
   const [formData, setFormData] = useState(initialFormData);
-  const [selectedPermisosAsActivities, setSelectedPermisosAsActivities] = useState<Activity[]>([]);
-  const [availableActivities, setAvailableActivities] = useState<Activity[]>([]);
+  const [selectedPermisosAsActivities, setSelectedPermisosAsActivities] =
+    useState<Activity[]>([]);
+  const [availableActivities, setAvailableActivities] = useState<Activity[]>(
+    [],
+  );
   const [searchTerm, setSearchTerm] = useState<string>(''); // Estado para el término de búsqueda
 
   useEffect(() => {
@@ -41,7 +44,7 @@ const Modal: React.FC<ModalProps> = ({
 
       // Inicializar actividades disponibles filtrando las seleccionadas
       const available = originalBoxBActivities.filter(
-        (activity) => !selected.some((sel) => sel.id === activity.id)
+        (activity) => !selected.some((sel: Activity) => sel.id === activity.id),
       );
       setAvailableActivities(available);
     }
@@ -49,13 +52,15 @@ const Modal: React.FC<ModalProps> = ({
 
   const handleMoveToSelected = (activity: Activity) => {
     setSelectedPermisosAsActivities((prev) => [...prev, activity]);
-    setAvailableActivities((prev) => prev.filter((item) => item.id !== activity.id));
+    setAvailableActivities((prev) =>
+      prev.filter((item) => item.id !== activity.id),
+    );
   };
 
   const handleMoveToAvailable = (activity: Activity) => {
     setAvailableActivities((prev) => [...prev, activity]);
     setSelectedPermisosAsActivities((prev) =>
-      prev.filter((item) => item.id !== activity.id)
+      prev.filter((item) => item.id !== activity.id),
     );
   };
 
@@ -66,7 +71,9 @@ const Modal: React.FC<ModalProps> = ({
     closeModal();
   };
 
-  const handleOutsideClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  const handleOutsideClick = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  ) => {
     if (e.target === e.currentTarget) {
       closeModal();
     }
@@ -74,15 +81,15 @@ const Modal: React.FC<ModalProps> = ({
 
   // Filtrar las actividades disponibles según el término de búsqueda
   const filteredAvailableActivities = availableActivities.filter((activity) =>
-    activity.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+    activity.descripcion.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Componente para actividades arrastrables
-  const DraggableActivity: React.FC<{ activity: Activity; moveActivity: (activity: Activity) => void; showRemoveButton?: boolean }> = ({
-    activity,
-    moveActivity,
-    showRemoveButton = false,
-  }) => {
+  const DraggableActivity: React.FC<{
+    activity: Activity;
+    moveActivity: (activity: Activity) => void;
+    showRemoveButton?: boolean;
+  }> = ({ activity, moveActivity, showRemoveButton = false }) => {
     const [{ isDragging }, drag] = useDrag({
       type: 'activity',
       item: { ...activity },
@@ -95,29 +102,40 @@ const Modal: React.FC<ModalProps> = ({
       <div
         ref={drag}
         className={`p-2 border rounded flex items-center mb-2 ${isDragging ? 'opacity-50' : 'opacity-100'} bg-blue-500`}
-        >
-        <span className='text-md text-white'>{activity.descripcion}</span>
+      >
+        <span className="text-md text-white">{activity.descripcion}</span>
         {showRemoveButton && (
           <button
-  onClick={() => moveActivity(activity)}
-  className="ml-auto bg-green-500 text-white hover:bg-green-600 py-1 px-4 rounded"
->
-  Mover
-</button>
-
+            onClick={() => moveActivity(activity)}
+            className="ml-auto bg-green-500 text-white hover:bg-green-600 py-1 px-4 rounded"
+          >
+            Mover
+          </button>
         )}
       </div>
     );
   };
 
   // Componente para áreas de soltado
-  const DroppableArea: React.FC<{ children: React.ReactNode; moveActivity: (activity: Activity) => void; areaType: 'selected' | 'available' }> = ({ children, moveActivity, areaType }) => {
+  const DroppableArea: React.FC<{
+    children: React.ReactNode;
+    moveActivity: (activity: Activity) => void;
+    areaType: 'selected' | 'available';
+  }> = ({ children, moveActivity, areaType }) => {
     const [{ isOver }, drop] = useDrop({
       accept: 'activity',
       drop: (item: Activity) => {
-        if (areaType === 'selected' && !selectedPermisosAsActivities.some((activity) => activity.id === item.id)) {
+        if (
+          areaType === 'selected' &&
+          !selectedPermisosAsActivities.some(
+            (activity) => activity.id === item.id,
+          )
+        ) {
           moveActivity(item);
-        } else if (areaType === 'available' && !availableActivities.some((activity) => activity.id === item.id)) {
+        } else if (
+          areaType === 'available' &&
+          !availableActivities.some((activity) => activity.id === item.id)
+        ) {
           moveActivity(item);
         }
       },
@@ -149,8 +167,10 @@ const Modal: React.FC<ModalProps> = ({
           ✕
         </button>
 
-        <h3 className="text-xl font-semibold mb-6">Administrar Permisos</h3> 
-        <h4 className="text-lg font-medium mb-3">{formData.name || 'Nombre no disponible'}</h4>
+        <h3 className="text-xl font-semibold mb-6">Administrar Permisos</h3>
+        <h4 className="text-lg font-medium mb-3">
+          {formData.name || 'Nombre no disponible'}
+        </h4>
 
         {/* Campo de búsqueda */}
         <input
@@ -161,50 +181,53 @@ const Modal: React.FC<ModalProps> = ({
           onChange={(e) => setSearchTerm(e.target.value)}
         />
 
-<DndProvider backend={HTML5Backend}>
-  <div className="flex flex-col md:flex-row justify-between space-y-4 md:space-y-0 md:space-x-4">
-    
-    {/* BoxA: Permisos seleccionados */}
-    <DroppableArea areaType="selected" moveActivity={handleMoveToSelected}>
-      {selectedPermisosAsActivities.length === 0 && (
-        <p className="text-red-500">No hay permisos seleccionados.</p>
-      )}
-      
-      {/* Aquí añadimos el contenedor desplazable */}
-      <div className="max-h-64 overflow-y-scroll">
-        {selectedPermisosAsActivities.map((activity) => (
-          <DraggableActivity
-            key={`selected-${activity.id}`}
-            activity={activity}
-            moveActivity={handleMoveToAvailable}
-            showRemoveButton={true}
-          />
-        ))}
-      </div>
-    </DroppableArea>
+        <DndProvider backend={HTML5Backend}>
+          <div className="flex flex-col md:flex-row justify-between space-y-4 md:space-y-0 md:space-x-4">
+            {/* BoxA: Permisos seleccionados */}
+            <DroppableArea
+              areaType="selected"
+              moveActivity={handleMoveToSelected}
+            >
+              {selectedPermisosAsActivities.length === 0 && (
+                <p className="text-red-500">No hay permisos seleccionados.</p>
+              )}
 
-    {/* BoxB: Permisos disponibles */}
-    <DroppableArea areaType="available" moveActivity={handleMoveToAvailable}>
-      <h4 className="text-lg font-medium mb-3">Permisos disponibles</h4>
-      {filteredAvailableActivities.length === 0 && (
-        <p className="text-red-500">No hay permisos disponibles.</p>
-      )}
-      
-      {/* Aquí añadimos el contenedor desplazable */}
-      <div className="max-h-64 overflow-y-scroll">
-        {filteredAvailableActivities.map((activity) => (
-          <DraggableActivity
-            key={`available-${activity.id}`}
-            activity={activity}
-            moveActivity={handleMoveToSelected}
-          />
-        ))}
-      </div>
-    </DroppableArea>
-    
-  </div>
-</DndProvider>
+              {/* Aquí añadimos el contenedor desplazable */}
+              <div className="max-h-64 overflow-y-scroll">
+                {selectedPermisosAsActivities.map((activity) => (
+                  <DraggableActivity
+                    key={`selected-${activity.id}`}
+                    activity={activity}
+                    moveActivity={handleMoveToAvailable}
+                    showRemoveButton={true}
+                  />
+                ))}
+              </div>
+            </DroppableArea>
 
+            {/* BoxB: Permisos disponibles */}
+            <DroppableArea
+              areaType="available"
+              moveActivity={handleMoveToAvailable}
+            >
+              <h4 className="text-lg font-medium mb-3">Permisos disponibles</h4>
+              {filteredAvailableActivities.length === 0 && (
+                <p className="text-red-500">No hay permisos disponibles.</p>
+              )}
+
+              {/* Aquí añadimos el contenedor desplazable */}
+              <div className="max-h-64 overflow-y-scroll">
+                {filteredAvailableActivities.map((activity) => (
+                  <DraggableActivity
+                    key={`available-${activity.id}`}
+                    activity={activity}
+                    moveActivity={handleMoveToSelected}
+                  />
+                ))}
+              </div>
+            </DroppableArea>
+          </div>
+        </DndProvider>
 
         <button
           onClick={handleSaveClick}

@@ -17,7 +17,7 @@ class Docente extends Model
     public $incrementing = true;
 
     // Permitir que Eloquent maneje las marcas de tiempo automáticamente
-    public $timestamps = false;
+    public $timestamps = true;
 
     // Definir los campos que son asignables
     protected $fillable = [

@@ -16,7 +16,7 @@ class DirectorEscuela extends Model
     protected $primaryKey = 'idDirector';
 
     // Permitir que Eloquent maneje las marcas de tiempo automáticamente
-    public $timestamps = false;
+    public $timestamps = true;
 
     // Definir los campos que son asignables
     protected $fillable = [

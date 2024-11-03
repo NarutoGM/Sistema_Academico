@@ -14,14 +14,25 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         
+        // $user = User::create([
+        //     "name" => "Fernando ",
+        //     "lastname" => "Pantoja",
+        //     "dni" => "25252525",
+        //     "direccion" => "Direccion1",
+        //     "foto" => "foto",
+        //     "telefono" => "958745214",
+        //     "email" => "t1053300121@unitru.edu.pe",
+        //     "password" => bcrypt("root")
+        // ]);
+
         $user = User::create([
-            "name" => "Fernando ",
-            "lastname" => "Pantoja",
-            "dni" => "25252525",
-            "direccion" => "Direccion1",
+            "name" => "George",
+            "lastname" => "Castle",
+            "dni" => "87654321",
+            "direccion" => "Direccion2",
             "foto" => "foto",
             "telefono" => "958745214",
-            "email" => "t1053300121@unitru.edu.pe",
+            "email" => "georgeacp@gmail.com",
             "password" => bcrypt("root")
         ]);
     }
