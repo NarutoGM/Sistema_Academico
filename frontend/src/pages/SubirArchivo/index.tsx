@@ -3,14 +3,15 @@ import { gapi } from 'gapi-script';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
-const SCOPES = import.meta.env.VITE_GOOGLE_SCOPES || '';
+const SCOPES = import.meta.env.VITE_GOOGLE_SCOPES || 'https://www.googleapis.com/auth/drive.file';
 
 const FileUploadComponent: React.FC = () => {
   const [folderTitle, setFolderTitle] = useState<string>('');
   const [isFolderCreated, setIsFolderCreated] = useState<boolean>(false);
   const [folderId, setFolderId] = useState<string>('');
-  const [folderLink, setFolderLink] = useState<string>(''); // Nueva variable para guardar el link de la carpeta
+  const [folderLink, setFolderLink] = useState<string>('');
   const [files, setFiles] = useState<File[]>([]);
+  const [isLinkSaved, setIsLinkSaved] = useState<boolean>(false);
 
   useEffect(() => {
     function start() {
@@ -48,7 +49,6 @@ const FileUploadComponent: React.FC = () => {
     }
   };
 
-  // Crear una carpeta en Google Drive y asignar permisos públicos
   const createFolderInDrive = async () => {
     const accessToken = await authenticateUser();
     if (!accessToken) {
@@ -56,7 +56,6 @@ const FileUploadComponent: React.FC = () => {
       return;
     }
 
-    // Crear la carpeta
     const metadata = {
       name: folderTitle,
       mimeType: 'application/vnd.google-apps.folder',
@@ -78,7 +77,6 @@ const FileUploadComponent: React.FC = () => {
       setIsFolderCreated(true);
       alert("Carpeta creada exitosamente en Google Drive.");
 
-      // Asignar permisos públicos de edición a la carpeta
       await fetch(`https://www.googleapis.com/drive/v3/files/${data.id}/permissions`, {
         method: 'POST',
         headers: new Headers({
@@ -126,18 +124,86 @@ const FileUploadComponent: React.FC = () => {
     });
 
     if (response.ok) {
-      console.log('Archivo subido con éxito:', await response.json());
+      const data = await response.json();
+      console.log('Archivo subido con éxito:', data);
+      return data.id;
     } else {
       console.error('Error al subir el archivo:', response.statusText);
     }
   };
 
+  const convertFileToGoogleDocs = async (fileId: string) => {
+    const accessToken = await authenticateUser();
+    if (!accessToken) return;
+
+    const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/copy`, {
+      method: 'POST',
+      headers: new Headers({
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      }),
+      body: JSON.stringify({
+        mimeType: 'application/vnd.google-apps.document',
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.id;
+    } else {
+      console.error('Error al convertir a Google Docs:', response.statusText);
+    }
+  };
+
+  const addContentToGoogleDoc = async (documentId: string, content: string) => {
+    const accessToken = await authenticateUser();
+    if (!accessToken) {
+      console.error("Error: No se pudo obtener el token de acceso.");
+      return;
+    }
+  
+    try {
+      const response = await fetch(`https://docs.googleapis.com/v1/documents/${documentId}:batchUpdate`, {
+        method: 'POST',
+        headers: new Headers({
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        }),
+        body: JSON.stringify({
+          requests: [
+            {
+              insertText: {
+                location: { index: 1 },
+                text: content,
+              },
+            },
+          ],
+        }),
+      });
+  
+      if (response.ok) {
+        console.log("Texto agregado exitosamente al documento.");
+      } else {
+        console.error("Error al agregar texto al documento:", await response.json());
+      }
+    } catch (error) {
+      console.error("Error en la solicitud para agregar texto:", error);
+    }
+  };
+  
   const handleSubmitFiles = async () => {
     if (files.length && folderId) {
       for (const file of files) {
-        await uploadFileToDrive(file);
+        const fileId = await uploadFileToDrive(file);
+        if (fileId) {
+          const docId = await convertFileToGoogleDocs(fileId);
+          if (docId) {
+            const customText = "Este es un texto de prueba agregado automáticamente al inicio del documento.";
+            await addContentToGoogleDoc(docId, customText);
+          }
+        }
       }
-      alert("Archivos subidos a Google Drive.");
+      alert("Archivos subidos y modificados en Google Drive.");
     }
   };
 

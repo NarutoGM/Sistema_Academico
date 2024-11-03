@@ -20,7 +20,6 @@ const FileUploadComponent: React.FC<{ courseInfo?: CourseInfo }> = ({ courseInfo
   const [docLink, setDocLink] = useState<string>('');
   const [selectedSede, setSelectedSede] = useState<string>('');
 
-  // Valores predeterminados para evitar errores si courseInfo es undefined
   const { nombreCurso = "", docente = "", objetivos = "", temas = [], cronograma = "" } = courseInfo || {};
 
   useEffect(() => {
@@ -52,7 +51,9 @@ const FileUploadComponent: React.FC<{ courseInfo?: CourseInfo }> = ({ courseInfo
       if (!authInstance.isSignedIn.get()) {
         await authInstance.signIn();
       }
-      return authInstance.currentUser.get().getAuthResponse().access_token;
+      const token = authInstance.currentUser.get().getAuthResponse().access_token;
+      console.log("Access token:", token);
+      return token;
     } catch (error) {
       console.error("Error de autenticación:", error);
       alert(error.message);
@@ -71,37 +72,41 @@ const FileUploadComponent: React.FC<{ courseInfo?: CourseInfo }> = ({ courseInfo
       mimeType: 'application/vnd.google-apps.folder',
     };
 
-    const response = await fetch('https://www.googleapis.com/drive/v3/files', {
-      method: 'POST',
-      headers: new Headers({
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      }),
-      body: JSON.stringify(metadata),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      setFolderId(data.id);
-      setFolderLink(`https://drive.google.com/drive/folders/${data.id}`);
-      setIsFolderCreated(true);
-      console.log("Carpeta creada exitosamente en Google Drive.");
-
-      await fetch(`https://www.googleapis.com/drive/v3/files/${data.id}/permissions`, {
+    try {
+      const response = await fetch('https://www.googleapis.com/drive/v3/files', {
         method: 'POST',
         headers: new Headers({
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         }),
-        body: JSON.stringify({
-          role: 'writer',
-          type: 'anyone',
-        }),
+        body: JSON.stringify(metadata),
       });
 
-      await createDocInDrive(data.id, accessToken);
-    } else {
-      console.error('Error al crear la carpeta:', response.statusText);
+      if (response.ok) {
+        const data = await response.json();
+        setFolderId(data.id);
+        setFolderLink(`https://drive.google.com/drive/folders/${data.id}`);
+        setIsFolderCreated(true);
+        console.log("Carpeta creada exitosamente en Google Drive:", data);
+
+        await fetch(`https://www.googleapis.com/drive/v3/files/${data.id}/permissions`, {
+          method: 'POST',
+          headers: new Headers({
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          }),
+          body: JSON.stringify({
+            role: 'writer',
+            type: 'anyone',
+          }),
+        });
+
+        await createDocInDrive(data.id, accessToken);
+      } else {
+        console.error('Error al crear la carpeta:', response.statusText, await response.json());
+      }
+    } catch (error) {
+      console.error('Error en la solicitud de creación de carpeta:', error);
     }
   };
 
@@ -122,51 +127,62 @@ const FileUploadComponent: React.FC<{ courseInfo?: CourseInfo }> = ({ courseInfo
     if (response.ok) {
       const data = await response.json();
       setDocLink(`https://docs.google.com/document/d/${data.id}/edit`);
-      console.log("Documento creado exitosamente.");
-      await setDocContentInDrive(data.id, accessToken);
+      console.log("Documento creado exitosamente:", data);
+      await insertTableInDrive(data.id, accessToken);
     } else {
-      console.error('Error al crear el documento:', response.statusText);
+      console.error('Error al crear el documento:', response.statusText, await response.json());
     }
   };
 
-  const setDocContentInDrive = async (docId: string, accessToken: string) => {
-    const syllabusContent = `
-      **Sílabo de Curso**
-      
-      **Curso**: ${nombreCurso}
-      **Docente**: ${docente}
+  const insertTableInDrive = async (docId: string, accessToken: string) => {
+    const requests = [
+      {
+        insertTable: {
+          rows: 3,  // Cambiado a 3 filas para simplificar la prueba
+          columns: 2,
+          location: { index: 1 },
+        },
+      },
+      {
+        insertText: {
+          location: { index: 2 },
+          text: "Curso: " + nombreCurso,
+        },
+      },
+      {
+        insertText: {
+          location: { index: 3 },
+          text: "Docente: " + docente,
+        },
+      },
+      {
+        insertText: {
+          location: { index: 4 },
+          text: "Objetivos: " + objetivos,
+        },
+      },
+    ];
 
-      **Objetivos del Curso**
-      ${objetivos}
+    console.log("Request body for table insertion:", JSON.stringify({ requests }, null, 2));
 
-      **Temas Principales**
-      ${temas.map((tema, index) => `Tema ${index + 1}: ${tema}`).join('\n')}
+    try {
+      const response = await fetch(`https://docs.googleapis.com/v1/documents/${docId}:batchUpdate`, {
+        method: 'POST',
+        headers: new Headers({
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        }),
+        body: JSON.stringify({ requests }),
+      });
 
-      **Cronograma**
-      ${cronograma}
-    `;
-
-    const response = await fetch(`https://docs.googleapis.com/v1/documents/${docId}:batchUpdate`, {
-      method: 'POST',
-      headers: new Headers({
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      }),
-      body: JSON.stringify({
-        requests: [
-          {
-            insertText: {
-              location: { index: 1 },
-              text: syllabusContent,
-            },
-          },
-        ],
-      }),
-    });
-    if (response.ok) {
-      console.log("Contenido del sílabo establecido exitosamente.");
-    } else {
-      console.error('Error al establecer el contenido del sílabo:', response.statusText);
+      if (response.ok) {
+        console.log("Tabla insertada correctamente en el documento.");
+      } else {
+        const errorText = await response.text();
+        console.error('Error al insertar la tabla:', errorText);
+      }
+    } catch (error) {
+      console.error('Error en la solicitud de insertar tabla:', error);
     }
   };
 
