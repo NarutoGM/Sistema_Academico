@@ -1,9 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { ChevronUp, ChevronDown, Plus, Edit, Download, Trash2 } from 'lucide-react';
+import {
+  ChevronUp,
+  ChevronDown,
+  Plus,
+  Edit,
+  Download,
+  Trash2,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getRoles,  getPermisos ,createRol,savePermisos, deleteRol} from "@/pages/services/rolesypermisos.services";
+import {
+  getRoles,
+  getPermisos,
+  createRol,
+  savePermisos,
+  deleteRol,
+} from '@/pages/services/rolesypermisos.services';
 import Modal from './Modal';
 import ModalCrear from './ModalCrear';
 import ModalEliminar from './ModalEliminar';
@@ -14,16 +27,10 @@ interface Roles {
   name: string;
 }
 
-interface Permiso {
-  id: number;
-  descripcion: string;
-  estado: string;
-}
-
 interface Activity {
   id: number;
   descripcion: string;
-  estado?: string;
+  estado?: boolean;
 }
 
 const FilteredUnidad: React.FC = () => {
@@ -36,13 +43,20 @@ const FilteredUnidad: React.FC = () => {
     name: '',
     permisos: [],
   });
-  
-  const [unidadToDelete, setUnidadToDelete] = useState<null | { id: number; Descripcion: string; AsesorFree: boolean }>(null);
+
+  const [unidadToDelete, setUnidadToDelete] = useState<null | {
+    id: number;
+    Descripcion: string;
+    AsesorFree: boolean;
+  }>(null);
   const [data, setData] = useState<Roles[]>([]);
   const [filters, setFilters] = useState({
     name: '',
   });
-  const [sortConfig, setSortConfig] = useState<{ key: keyof Roles | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Roles | null;
+    direction: 'ascending' | 'descending';
+  }>({ key: null, direction: 'ascending' });
   const [token, setToken] = useState<string | null>(null);
   const navigate = useNavigate();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -50,8 +64,11 @@ const FilteredUnidad: React.FC = () => {
   const [isModalCrearOpen, setIsModalCrearOpen] = useState(false);
 
   const [boxBActivities, setBoxBActivities] = useState<Activity[]>([]);
-  const [originalBoxBActivities, setOriginalBoxBActivities] = useState<Activity[]>([]);
-  const [selectedPermisosAsActivities, setSelectedPermisosAsActivities] = useState<Activity[]>([]);
+  const [originalBoxBActivities, setOriginalBoxBActivities] = useState<
+    Activity[]
+  >([]);
+  const [selectedPermisosAsActivities, setSelectedPermisosAsActivities] =
+    useState<Activity[]>([]);
   const [loading, setLoading] = useState(false); // Estado para controlar la carga
 
   // Función para obtener datos al montar el componente
@@ -80,7 +97,9 @@ const FilteredUnidad: React.FC = () => {
   }, []);
 
   // Manejar cambios en los filtros
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     setFilters((prevFilters) => ({ ...prevFilters, [name]: value }));
   };
@@ -103,16 +122,24 @@ const FilteredUnidad: React.FC = () => {
   // Obtener icono de orden
   const getSortIcon = (key: keyof Roles) => {
     if (sortConfig.key === key) {
-      return sortConfig.direction === 'ascending' ? <ChevronUp size={14} /> : <ChevronDown size={14} />;
+      return sortConfig.direction === 'ascending' ? (
+        <ChevronUp size={14} />
+      ) : (
+        <ChevronDown size={14} />
+      );
     }
     return <div className="w-3.5 h-3.5" />;
   };
 
-  // Filtrar datos
-  const filteredData = data.filter((item) => {
-    const matchesName = filters.name === '' || item.name.toLowerCase().includes(filters.name.toLowerCase());
-    return matchesName ;
-  });
+  // Filtrar datos usando useMemo
+  const filteredData = useMemo(() => {
+    return data.filter((item) => {
+      const matchesName =
+        filters.name === '' ||
+        item.name.toLowerCase().includes(filters.name.toLowerCase());
+      return matchesName;
+    });
+  }, [data, filters]);
 
   // Exportar a CSV
   const exportToCSV = () => {
@@ -137,17 +164,14 @@ const FilteredUnidad: React.FC = () => {
   // Función para manejar la asignación de permisos a un rol
   const handleSave = async (selectedActivities: Activity[]) => {
     try {
-
-
-      
       const rolId = formData.id;
 
       const permisosToSave = selectedActivities.map((permiso) => ({
         id: permiso.id,
       }));
 
-      const result = await savePermisos( rolId, permisosToSave);
-      
+      const result = await savePermisos(rolId, permisosToSave);
+
       console.log('Permisos guardados:', result);
       await fetchData(); // Actualiza la lista después de guardar
       setBoxBActivities(originalBoxBActivities); // Resetea las actividades
@@ -161,7 +185,7 @@ const FilteredUnidad: React.FC = () => {
   const handleSaveClick = () => {
     handleSave(selectedPermisosAsActivities); // Pasa los permisos seleccionados
     closeModal(); // Cierra el modal de permisos
-  };  
+  };
 
   // Función para abrir el modal de creación
   const openCreateModal = () => {
@@ -182,14 +206,17 @@ const FilteredUnidad: React.FC = () => {
 
   // Funciones para editar roles (no modificar)
   const openModal = (data: Roles | null = null) => {
-    if (!loading) { // Solo abrir si no está cargando
-      if (data) { // Modal de edición
+    if (!loading) {
+      // Solo abrir si no está cargando
+      if (data) {
+        // Modal de edición
         setFormData({
           id: data.id,
           name: data.name,
-          permisos: data.permisos || [],
+          permisos: [], // Assuming 'permisos' should be an empty array if 'permiso' does not exist
         });
-      } else { // Modal de creación
+      } else {
+        // Modal de creación
         setFormData({
           id: '',
           name: '',
@@ -205,7 +232,11 @@ const FilteredUnidad: React.FC = () => {
 
   // Funciones para eliminar roles (no modificar)
   const openDeleteModal = (unidad: Roles) => {
-    setUnidadToDelete(unidad);
+    setUnidadToDelete({
+      id: unidad.id,
+      Descripcion: unidad.name,
+      AsesorFree: false, // or any default value
+    });
     setIsDeleteModalOpen(true);
   };
 
@@ -215,7 +246,9 @@ const FilteredUnidad: React.FC = () => {
     if (!unidadToDelete) return;
     try {
       await deleteRol(unidadToDelete.id);
-      setData((prevData) => prevData.filter((item) => item.id !== unidadToDelete.id));
+      setData((prevData) =>
+        prevData.filter((item) => item.id !== unidadToDelete.id),
+      );
       closeDeleteModal();
     } catch (error) {
       console.error('Error al eliminar rol:', error);
@@ -225,10 +258,8 @@ const FilteredUnidad: React.FC = () => {
   // Función para crear rol
   const handleSubmit = async () => {
     try {
-
-  
       await createRol(formData); // Llamada a la función del servicio
-  
+
       closeModalCrear();
       fetchData(); // Actualizar la lista de roles
     } catch (error: any) {
@@ -244,23 +275,22 @@ const FilteredUnidad: React.FC = () => {
         <h2 className="text-xl font-semibold mb-4">Filtros</h2>
         <div className="grid grid-cols-5 gap-4">
           <div>
-            <input 
-              type="text" 
-              name="name" 
+            <input
+              type="text"
+              name="name"
               value={filters.name}
               onChange={handleFilterChange}
-              placeholder="Rol" 
-              className="w-full p-2 border rounded-md" 
+              placeholder="Rol"
+              className="w-full p-2 border rounded-md"
             />
           </div>
-
         </div>
       </div>
 
       {/* Tabla y Botones */}
       <div className="w-full max-w-full rounded-lg shadow-lg bg-white p-6 dark:bg-boxdark">
         {/* Botón Agregar */}
-        <button 
+        <button
           onClick={openCreateModal} // Abrir el modal de creación
           className="flex items-center bg-primary text-white font-bold py-2 px-4 rounded hover:bg-blue-600 mb-4"
         >
@@ -271,7 +301,7 @@ const FilteredUnidad: React.FC = () => {
         {/* Título y Botón Exportar */}
         <div className="p-4 flex justify-between items-center">
           <h3 className="text-lg font-semibold">Resultados</h3>
-          <button 
+          <button
             onClick={exportToCSV}
             className="inline-flex items-center justify-center gap-2.5 rounded-md bg-primary py-4 px-10 text-center font-medium text-white hover:bg-opacity-90 lg:px-8 xl:px-10"
           >
@@ -285,7 +315,7 @@ const FilteredUnidad: React.FC = () => {
           <thead className="bg-gray-50">
             <tr className="bg-primary text-left text-white">
               {['Name'].map((key) => (
-                <th 
+                <th
                   key={key}
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                   onClick={() => sortData(key as keyof Roles)}
@@ -296,13 +326,20 @@ const FilteredUnidad: React.FC = () => {
                   </div>
                 </th>
               ))}
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Acción
+              </th>
             </tr>
           </thead>
           <tbody>
             {filteredData.map((item) => (
-              <tr key={item.id} className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
-                <td className="border-b border-gray-200 py-4 px-6">{item.name}</td>
+              <tr
+                key={item.id}
+                className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+              >
+                <td className="border-b border-gray-200 py-4 px-6">
+                  {item.name}
+                </td>
                 <td className="border-b border-gray-200 py-4 px-6">
                   <div className="flex items-center space-x-4">
                     {/* Botón Editar */}
@@ -315,7 +352,6 @@ const FilteredUnidad: React.FC = () => {
                       className="w-5 h-5 text-gray-600 hover:text-yellow-600 cursor-pointer"
                       onClick={() => openDeleteModal(item)} // Abrir modal de eliminación
                     />
-              
                   </div>
                 </td>
               </tr>
@@ -325,14 +361,14 @@ const FilteredUnidad: React.FC = () => {
       </div>
 
       {/* Otros Modales */}
-      <DndProvider backend={HTML5Backend}> 
+      <DndProvider backend={HTML5Backend}>
         <Modal
           isModalOpen={isModalOpen}
           closeModal={() => setIsModalOpen(false)}
           originalBoxBActivities={boxBActivities}
           handleSave={handleSave} // Asegúrate de que esto esté pasando correctamente
           initialFormData={formData}
-        /> 
+        />
       </DndProvider>
       <ModalEliminar
         isDeleteModalOpen={isDeleteModalOpen}
@@ -347,6 +383,7 @@ const FilteredUnidad: React.FC = () => {
         formData={formData}
         setFormData={setFormData}
         handleSubmit={handleSubmit}
+        modalType={isModalCrearOpen ? 1 : 2}
       />
     </div>
   );

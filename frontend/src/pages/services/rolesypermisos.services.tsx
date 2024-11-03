@@ -68,7 +68,7 @@ export const createRol = async (formData: { name: string }) => {
 };
 
 export const savePermisos = async (
-  rolId: number,
+  rolId: number | '',
   permisos: { id: number }[],
 ) => {
   try {
