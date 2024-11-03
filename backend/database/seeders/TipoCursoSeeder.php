@@ -13,9 +13,9 @@ class TipoCursoSeeder extends Seeder
     public function run(): void
     {
         $tiposCurso = [
-            ['descripcion' => 'Especialidad'],
-            ['descripcion' => 'Electivo'],
-            ['descripcion' => 'General'],
+            ['descripcion' => 'Especialidad', 'created_at' => now(), 'updated_at' => now()],
+            ['descripcion' => 'Electivo', 'created_at' => now(), 'updated_at' => now()],
+            ['descripcion' => 'General', 'created_at' => now(), 'updated_at' => now()],
         ];
 
         // Insertar los tipos de curso en la tabla tipocurso

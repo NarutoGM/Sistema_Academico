@@ -15,7 +15,6 @@ class DocenteFilial extends Model
     // Definir la clave primaria compuesta
     protected $primaryKey = ['idFilial', 'idDocente'];
     public $incrementing = false; // Indica que no es autoincremental
-    public $timestamps = false;
 
     // Definir los campos que pueden ser asignados masivamente
     protected $fillable = [
