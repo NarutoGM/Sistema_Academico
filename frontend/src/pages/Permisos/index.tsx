@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronUp, ChevronDown, Plus, Edit, Download, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getPermisos, createPermiso, updatePermiso, deletePermiso } from "@/pages/services/permisos.services";
+import { getPermisos, createPermiso, updatePermiso, deletePermiso , Permiso} from "@/pages/services/permisos.services";
 import ModalUnidad from './ModalUnidad';
 import ModalEliminar from './ModalEliminar';
 
@@ -91,11 +91,7 @@ const FilteredUnidad = () => {
       closeModal();
     } catch (error) {
       console.error('Error al crear/editar permiso:', error);
-      if (error.response && error.response.data) {
-        alert(`Error: ${error.response.data.message || JSON.stringify(error.response.data)}`);
-      } else {
-        alert('Ocurrió un error inesperado. Por favor, intenta nuevamente.');
-      }
+      
     }
   };
 

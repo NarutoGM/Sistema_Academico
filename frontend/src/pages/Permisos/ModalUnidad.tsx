@@ -1,10 +1,27 @@
 import React, { useRef } from 'react';
 
-const ModalUnidad = ({ isModalOpen, closeModal, modalType, formData, setFormData, handleSubmit }) => {
-  const modalRef = useRef(null);
+interface ModalUnidadProps {
+  isModalOpen: boolean;
+  closeModal: () => void;
+  modalType: 1 | 2 | null;
+  formData: {
+    id: number | '';
+    descripcion: string;
+    estado: boolean;
+  };
+  setFormData: React.Dispatch<React.SetStateAction<{
+    id: number | '';
+    descripcion: string;
+    estado: boolean;
+  }>>;
+  handleSubmit: () => void;
+}
 
-  const handleClickOutside = (e) => {
-    if (modalRef.current && !modalRef.current.contains(e.target)) {
+const ModalUnidad: React.FC<ModalUnidadProps> = ({ isModalOpen, closeModal, modalType, formData, setFormData, handleSubmit }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const handleClickOutside = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
       closeModal();
     }
   };
@@ -26,8 +43,8 @@ const ModalUnidad = ({ isModalOpen, closeModal, modalType, formData, setFormData
               <label className="block text-gray-700">Descripción</label>
               <input
                 type="text"
-                value={formData.descripcion}  // Cambiado a 'descripcion'
-                onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}  // Cambiado a 'descripcion'
+                value={formData.descripcion}
+                onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
                 className="w-full p-2 border rounded-md"
               />
             </div>
@@ -36,8 +53,8 @@ const ModalUnidad = ({ isModalOpen, closeModal, modalType, formData, setFormData
               <div className="mb-4">
                 <label className="block text-gray-700">Estado</label>
                 <select
-                  value={formData.estado ? '1' : '0'}  // Asegúrate de que sea un string
-                  onChange={(e) => setFormData({ ...formData, estado: e.target.value === '1' })}  // Actualiza el estado como booleano
+                  value={formData.estado ? '1' : '0'}
+                  onChange={(e) => setFormData({ ...formData, estado: e.target.value === '1' })}
                   className="w-full p-2 border rounded-md"
                 >
                   <option value="">Seleccione Estado</option>

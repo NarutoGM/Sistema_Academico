@@ -1,7 +1,11 @@
 import React from 'react';
-
-const ModalEliminar = ({ isDeleteModalOpen, closeDeleteModal, handleDelete }) => {
-  const handleBackgroundClick = (e) => {
+interface ModalEliminarProps {
+  isDeleteModalOpen: boolean;
+  closeDeleteModal: () => void;
+  handleDelete: () => void;
+}
+const ModalEliminar: React.FC<ModalEliminarProps> = ({ isDeleteModalOpen, closeDeleteModal, handleDelete }) => {
+  const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (e.target === e.currentTarget) {
       closeDeleteModal();
     }
