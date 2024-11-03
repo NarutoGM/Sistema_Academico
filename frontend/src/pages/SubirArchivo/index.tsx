@@ -3,15 +3,11 @@ import { gapi } from 'gapi-script';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
-const SCOPES = import.meta.env.VITE_GOOGLE_SCOPES || 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
+const SCOPES = import.meta.env.VITE_GOOGLE_SCOPES || 'https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file';
 
-const FileUploadComponent: React.FC = () => {
-  const [folderTitle, setFolderTitle] = useState<string>('');
-  const [isFolderCreated, setIsFolderCreated] = useState<boolean>(false);
-  const [folderId, setFolderId] = useState<string>('');
-  const [folderLink, setFolderLink] = useState<string>('');
-  const [isSheetCreated, setIsSheetCreated] = useState<boolean>(false);
-  const [sheetId, setSheetId] = useState<string>('');
+const GoogleDocsTableComponent: React.FC = () => {
+  const [docId, setDocId] = useState<string>('');
+  const [isDocCreated, setIsDocCreated] = useState<boolean>(false);
 
   useEffect(() => {
     function start() {
@@ -49,91 +45,51 @@ const FileUploadComponent: React.FC = () => {
     }
   };
 
-  const createSpreadsheetWithSheets = async () => {
+  const createGoogleDocWithTable = async () => {
     const accessToken = await authenticateUser();
     if (!accessToken) {
       alert("Error: No se pudo obtener el token de acceso.");
       return;
     }
 
-    const sheetMetadata = {
-      properties: { title: folderTitle || 'Documento de Hojas' },
-      sheets: [
-        { properties: { title: 'Hoja 1' } },
-        { properties: { title: 'Hoja 2' } },
-        { properties: { title: 'Hoja 3' } },
-        { properties: { title: 'Hoja 4' } },
-        { properties: { title: 'Hoja 5' } },
-      ],
-    };
-
-    const response = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+    // Crear un nuevo documento
+    const docResponse = await fetch('https://docs.googleapis.com/v1/documents', {
       method: 'POST',
       headers: new Headers({
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       }),
-      body: JSON.stringify(sheetMetadata),
+      body: JSON.stringify({ title: 'Documento con Tabla' }),
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      setSheetId(data.spreadsheetId);
-      setIsSheetCreated(true);
-      alert("Hoja de cálculo creada exitosamente en Google Sheets.");
-      await addContentToSheets(data.spreadsheetId, accessToken);
+    if (docResponse.ok) {
+      const docData = await docResponse.json();
+      setDocId(docData.documentId);
+      setIsDocCreated(true);
+      console.log("Documento creado exitosamente en Google Docs.");
+      await insertTableIntoDoc(docData.documentId, accessToken);
     } else {
-      console.error('Error al crear la hoja de cálculo:', response.statusText);
+      console.error("Error al crear el documento:", docResponse.statusText);
     }
   };
 
-  const addContentToSheets = async (spreadsheetId: string, accessToken: string) => {
-    // Primero obtenemos la estructura del archivo para identificar los `sheetId`
-    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`, {
-      method: 'GET',
-      headers: new Headers({
-        Authorization: `Bearer ${accessToken}`,
-      }),
-    });
-  
-    if (!response.ok) {
-      console.error('Error al obtener la estructura de la hoja de cálculo:', response.statusText);
-      return;
-    }
-  
-    const spreadsheetData = await response.json();
-    const sheets = spreadsheetData.sheets;
-  
-    // Crear las solicitudes para agregar contenido en celdas específicas de cada hoja
-    const requests = sheets.map((sheet: any, index: number) => {
-      const sheetId = sheet.properties.sheetId;
-      return [
-        {
-          updateCells: {
-            range: { sheetId, startRowIndex: 0, startColumnIndex: 0 }, // Celda A1
-            rows: [{ values: [{ userEnteredValue: { stringValue: `Contenido en A1 de Hoja ${index + 1}` } }] }],
-            fields: 'userEnteredValue',
-          },
+  const insertTableIntoDoc = async (documentId: string, accessToken: string) => {
+    // Configuración de la tabla (3 filas, 3 columnas)
+    const tableRows = 3;
+    const tableCols = 3;
+
+    const requests = [
+      {
+        insertTable: {
+          rows: tableRows,
+          columns: tableCols,
+          location: { index: 1 },
         },
-        {
-          updateCells: {
-            range: { sheetId, startRowIndex: 1, startColumnIndex: 1 }, // Celda B2
-            rows: [{ values: [{ userEnteredValue: { stringValue: `Contenido en B2 de Hoja ${index + 1}` } }] }],
-            fields: 'userEnteredValue',
-          },
-        },
-        {
-          updateCells: {
-            range: { sheetId, startRowIndex: 2, startColumnIndex: 2 }, // Celda C3
-            rows: [{ values: [{ userEnteredValue: { stringValue: `Contenido en C3 de Hoja ${index + 1}` } }] }],
-            fields: 'userEnteredValue',
-          },
-        },
-      ];
-    }).flat();
-  
-    // Enviar la solicitud `batchUpdate` con las referencias correctas de `sheetId`
-    const batchUpdateResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+      },
+    ];
+
+    // Insertar tabla en el documento
+    const batchUpdateResponse = await fetch(`https://docs.googleapis.com/v1/documents/${documentId}:batchUpdate`, {
       method: 'POST',
       headers: new Headers({
         Authorization: `Bearer ${accessToken}`,
@@ -141,41 +97,68 @@ const FileUploadComponent: React.FC = () => {
       }),
       body: JSON.stringify({ requests }),
     });
-  
+
     if (batchUpdateResponse.ok) {
-      console.log("Contenido agregado en celdas específicas de cada hoja correctamente.");
-      alert("Contenido agregado en celdas específicas de cada hoja.");
+      console.log("Tabla insertada en el documento.");
+      const tableInfo = await batchUpdateResponse.json();
+      const tableStartIndex = tableInfo.replies[0].insertTable.startIndex;
+      await fillTableCells(documentId, accessToken, tableStartIndex, tableRows, tableCols);
     } else {
-      console.error("Error al agregar contenido a las hojas:", await batchUpdateResponse.json());
+      console.error("Error al insertar la tabla:", await batchUpdateResponse.json());
     }
   };
-  
-  
+
+const fillTableCells = async (documentId: string, accessToken: string, startIndex: number, rows: number, cols: number) => {
+    const cellRequests = [];
+    let cellIndex = startIndex + 1; // Ajuste para el primer índice después de la tabla
+
+    // Crear solicitudes para llenar cada celda con texto
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        cellRequests.push({
+          insertText: {
+            location: { index: cellIndex },
+            text: `Celda ${row + 1}-${col + 1}`,
+          },
+        });
+        cellIndex += 2; // Avanzamos para evitar conflictos con el índice de cada celda
+      }
+    }
+
+    // Enviar las solicitudes `batchUpdate` para llenar las celdas
+    const fillCellsResponse = await fetch(`https://docs.googleapis.com/v1/documents/${documentId}:batchUpdate`, {
+      method: 'POST',
+      headers: new Headers({
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      }),
+      body: JSON.stringify({ requests: cellRequests }),
+    });
+
+    if (fillCellsResponse.ok) {
+      console.log("Contenido agregado a cada celda de la tabla.");
+      alert("Contenido agregado a cada celda de la tabla.");
+    } else {
+      console.error("Error al agregar contenido a las celdas:", await fillCellsResponse.json());
+    }
+  };
+
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white border border-gray-200 rounded-lg shadow-md">
-      <h2 className="text-2xl font-semibold text-gray-700 text-center">Crear Carpeta en Google Drive</h2>
-      
-      <input
-        type="text"
-        value={folderTitle}
-        onChange={(e) => setFolderTitle(e.target.value)}
-        placeholder="Introduce el título de la carpeta"
-        className="w-full mt-4 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        disabled={isFolderCreated}
-      />
-      
+      <h2 className="text-2xl font-semibold text-gray-700 text-center">Crear Documento en Google Docs</h2>
+
       <button
-        onClick={createSpreadsheetWithSheets}
-        className="w-full mt-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 disabled:bg-green-300"
+        onClick={createGoogleDocWithTable}
+        className="w-full mt-4 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600"
       >
-        Crear Hoja de Cálculo con Hojas
+        Crear Documento con Tabla
       </button>
 
-      {isSheetCreated && (
+      {isDocCreated && (
         <p className="text-center mt-4 text-blue-500">
-          <a href={`https://docs.google.com/spreadsheets/d/${sheetId}`} target="_blank" rel="noopener noreferrer">
-            Ver hoja de cálculo en Google Sheets
+          <a href={`https://docs.google.com/document/d/${docId}`} target="_blank" rel="noopener noreferrer">
+            Ver documento en Google Docs
           </a>
         </p>
       )}
@@ -183,4 +166,4 @@ const FileUploadComponent: React.FC = () => {
   );
 };
 
-export default FileUploadComponent;
+export default GoogleDocsTableComponent;
