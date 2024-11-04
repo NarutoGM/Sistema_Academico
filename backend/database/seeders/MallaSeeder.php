@@ -13,20 +13,16 @@ class MallaSeeder extends Seeder
     public function run(): void
     {
         $mallas = [
-            ['idMalla'=>1, 'idEscuela'=>30, 'año'=>'2018', 'estado'=>true],
-            ['idMalla'=>1, 'idEscuela'=>31, 'año'=>'2018', 'estado'=>true],
-            ['idMalla'=>1, 'idEscuela'=>32, 'año'=>'2018', 'estado'=>true],
-            ['idMalla'=>1, 'idEscuela'=>33, 'año'=>'2018', 'estado'=>true],
-            ['idMalla'=>1, 'idEscuela'=>34, 'año'=>'2018', 'estado'=>true],
-            ['idMalla'=>1, 'idEscuela'=>35, 'año'=>'2018', 'estado'=>true],
-            ['idMalla'=>1, 'idEscuela'=>36, 'año'=>'2018', 'estado'=>true],
-            ['idMalla'=>1, 'idEscuela'=>37, 'año'=>'2018', 'estado'=>true],
-            ['idMalla'=>1, 'idEscuela'=>38, 'año'=>'2018', 'estado'=>true],
-            ['idMalla'=>1, 'idEscuela'=>39, 'año'=>'2018', 'estado'=>true],
-            ['idMalla'=>1, 'idEscuela'=>40, 'año'=>'2018', 'estado'=>true],
-            ['idMalla'=>1, 'idEscuela'=>41, 'año'=>'2018', 'estado'=>true],
         ];
 
+        for ($i = 1; $i <= 43; $i++) {
+            $mallas[] = [
+                'idMalla' => $i,
+                'idEscuela' => 0 + $i, // Inicia desde 30 hasta 43
+                'año' => '2018',
+                'estado' => true
+            ];
+        }
         // Insertar registros en la tabla malla
         DB::table('malla')->insert($mallas);
     }

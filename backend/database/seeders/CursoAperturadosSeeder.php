@@ -14,14 +14,25 @@ class CursoAperturadosSeeder extends Seeder
     {
         // solo del semestre 2 registrados ya que es el semestre activo
     $cursosaperturados = [
-        ['idSemestreAcademico'=>2, 'idMalla'=>1, 'idCurso'=>4, 'idEscuela'=>35, 'estado'=>true],
-        ['idSemestreAcademico'=>2, 'idMalla'=>1, 'idCurso'=>5, 'idEscuela'=>35, 'estado'=>true],
-    
-        ['idSemestreAcademico'=>2, 'idMalla'=>1, 'idCurso'=>8, 'idEscuela'=>35, 'estado'=>true],
-        ['idSemestreAcademico'=>2, 'idMalla'=>1, 'idCurso'=>9, 'idEscuela'=>35, 'estado'=>true],
-        ['idSemestreAcademico'=>2, 'idMalla'=>1, 'idCurso'=>10, 'idEscuela'=>35, 'estado'=>true],
+        ['idSemestreAcademico'=>1, 'idMalla'=>35, 'idCurso'=>3316, 'idEscuela'=>35, 'estado'=>false],
+        ['idSemestreAcademico'=>2, 'idMalla'=>35, 'idCurso'=>3314, 'idEscuela'=>35, 'estado'=>false],
+        ['idSemestreAcademico'=>1, 'idMalla'=>35, 'idCurso'=>3315, 'idEscuela'=>35, 'estado'=>false],
 
-        ['idSemestreAcademico'=>2, 'idMalla'=>1, 'idCurso'=>12, 'idEscuela'=>35, 'estado'=>true],
+        ['idSemestreAcademico'=>2, 'idMalla'=>35, 'idCurso'=>2051, 'idEscuela'=>35, 'estado'=>true],
+        ['idSemestreAcademico'=>1, 'idMalla'=>35, 'idCurso'=>1888, 'idEscuela'=>35, 'estado'=>true],
+
+        ['idSemestreAcademico'=>2, 'idMalla'=>35, 'idCurso'=>2142, 'idEscuela'=>35, 'estado'=>false],
+        ['idSemestreAcademico'=>1, 'idMalla'=>35, 'idCurso'=>2145, 'idEscuela'=>35, 'estado'=>false],
+
+        ['idSemestreAcademico'=>2, 'idMalla'=>35, 'idCurso'=>2654, 'idEscuela'=>35, 'estado'=>true],
+        ['idSemestreAcademico'=>1, 'idMalla'=>35, 'idCurso'=>2655, 'idEscuela'=>35, 'estado'=>true],
+        ['idSemestreAcademico'=>2, 'idMalla'=>35, 'idCurso'=>2656, 'idEscuela'=>35, 'estado'=>true],
+
+        ['idSemestreAcademico'=>1, 'idMalla'=>35, 'idCurso'=>2693, 'idEscuela'=>35, 'estado'=>false],
+        ['idSemestreAcademico'=>2, 'idMalla'=>35, 'idCurso'=>3126, 'idEscuela'=>35, 'estado'=>true],
+        ['idSemestreAcademico'=>1, 'idMalla'=>35, 'idCurso'=>3448, 'idEscuela'=>35, 'estado'=>false],
+        
+
     ];
 
             // Insertar registros en la tabla cursosaperturados

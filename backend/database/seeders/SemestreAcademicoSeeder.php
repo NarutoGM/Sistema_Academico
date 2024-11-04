@@ -14,7 +14,8 @@ class SemestreAcademicoSeeder extends Seeder
     {
         $semestresacademicos = [
             ['nomSemestre'=>'2024-I', 'añoAcademico'=>'2024', 'numSemestre'=>'I', 'fInicio'=>'2024-05-06 00:00:0','fTermino'=>'2024-08-30 00:00:00'],
-            ['nomSemestre'=>'2024-II', 'añoAcademico'=>'2024', 'numSemestre'=>'II', 'fInicio'=>'2024-09-09 00:00:0','fTermino'=>'2024-12-27 00:00:00']
+            ['nomSemestre'=>'2024-II', 'añoAcademico'=>'2024', 'numSemestre'=>'II', 'fInicio'=>'2024-09-09 00:00:0','fTermino'=>'2024-12-27 00:00:00'],
+            ['nomSemestre'=>'2025-Verano', 'añoAcademico'=>'2024', 'numSemestre'=>'Verano', 'fInicio'=>'2025-01-09 00:00:0','fTermino'=>'2024-02-27 00:00:00']
         ];
 
         // Insertar registros en la tabla semestreacademico

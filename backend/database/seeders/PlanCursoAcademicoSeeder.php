@@ -13,25 +13,25 @@ class PlanCursoAcademicoSeeder extends Seeder
     public function run(): void
     {
         $planescursosacademicos = [
-            ['idMalla'=>1, 'idCurso'=>1, 'idEscuela'=>35, 'periodo'=>'2024', 'ciclo'=>'I', 'estado'=>true],
-            ['idMalla'=>1, 'idCurso'=>2, 'idEscuela'=>35, 'periodo'=>'2024', 'ciclo'=>'I', 'estado'=>true],
-            ['idMalla'=>1, 'idCurso'=>3, 'idEscuela'=>35, 'periodo'=>'2024', 'ciclo'=>'I', 'estado'=>true],
+            ['idCurso'=>3316, 'idMalla'=>35, 'idEscuela'=>35,  'ciclo'=>'I', 'estado'=>true],
+            ['idCurso'=>3314, 'idMalla'=>35, 'idEscuela'=>35,  'ciclo'=>'I', 'estado'=>true],
+            ['idCurso'=>3315, 'idMalla'=>35, 'idEscuela'=>35,  'ciclo'=>'I', 'estado'=>true],
 
-            ['idMalla'=>1, 'idCurso'=>4, 'idEscuela'=>35, 'periodo'=>'2024', 'ciclo'=>'II', 'estado'=>true],
-            ['idMalla'=>1, 'idCurso'=>5, 'idEscuela'=>35, 'periodo'=>'2024', 'ciclo'=>'II', 'estado'=>true],
+            ['idCurso'=>2051, 'idMalla'=>35, 'idEscuela'=>35,  'ciclo'=>'II', 'estado'=>true],
+            ['idCurso'=>1888, 'idMalla'=>35, 'idEscuela'=>35,  'ciclo'=>'II', 'estado'=>true],
 
-            ['idMalla'=>1, 'idCurso'=>6, 'idEscuela'=>35, 'periodo'=>'2024', 'ciclo'=>'III', 'estado'=>true],
-            ['idMalla'=>1, 'idCurso'=>7, 'idEscuela'=>35, 'periodo'=>'2024', 'ciclo'=>'III', 'estado'=>true],
+            ['idCurso'=>2142, 'idMalla'=>35, 'idEscuela'=>35,  'ciclo'=>'III', 'estado'=>true],
+            ['idCurso'=>2145, 'idMalla'=>35, 'idEscuela'=>35,  'ciclo'=>'III', 'estado'=>true],
 
-            ['idMalla'=>1, 'idCurso'=>8, 'idEscuela'=>35, 'periodo'=>'2024', 'ciclo'=>'IV', 'estado'=>true],
-            ['idMalla'=>1, 'idCurso'=>9, 'idEscuela'=>35, 'periodo'=>'2024', 'ciclo'=>'IV', 'estado'=>true],
-            ['idMalla'=>1, 'idCurso'=>10, 'idEscuela'=>35, 'periodo'=>'2024', 'ciclo'=>'IV', 'estado'=>true],
+            ['idCurso'=>2654, 'idMalla'=>35, 'idEscuela'=>35,  'ciclo'=>'IV', 'estado'=>true],
+            ['idCurso'=>2655, 'idMalla'=>35, 'idEscuela'=>35,  'ciclo'=>'IV', 'estado'=>true],
+            ['idCurso'=>2656, 'idMalla'=>35, 'idEscuela'=>35,  'ciclo'=>'IV', 'estado'=>true],
 
-            ['idMalla'=>1, 'idCurso'=>11, 'idEscuela'=>35, 'periodo'=>'2024', 'ciclo'=>'V', 'estado'=>true],
+            ['idCurso'=>2693, 'idMalla'=>35, 'idEscuela'=>35,  'ciclo'=>'V', 'estado'=>true],
 
-            ['idMalla'=>1, 'idCurso'=>12, 'idEscuela'=>35, 'periodo'=>'2024', 'ciclo'=>'VI', 'estado'=>true],
+            ['idCurso'=>3126, 'idMalla'=>35, 'idEscuela'=>35,  'ciclo'=>'VI', 'estado'=>true],
 
-            ['idMalla'=>1, 'idCurso'=>13, 'idEscuela'=>35, 'periodo'=>'2024', 'ciclo'=>'VII', 'estado'=>true],
+            ['idCurso'=>3448, 'idMalla'=>35, 'idEscuela'=>35,  'ciclo'=>'VII', 'estado'=>true],
         ];
 
         // Insertar registros en la tabla malla

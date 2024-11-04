@@ -274,8 +274,9 @@ const available = originalBoxBActivities.filter(
         </DndProvider>
 
         
-        
-  
+      
+      {/*       
+
   <p className="mt-2 text-gray-700">
     {escuelaSeleccionada ? (
       <>DirectorEscuela // id Escuela: (ID: {escuelaSeleccionada.idEscuela})</>
@@ -287,6 +288,9 @@ const available = originalBoxBActivities.filter(
   {docenteData && (
     <p className="mt-2 text-gray-700">Docente: {JSON.stringify(docenteData)}</p>
   )}
+       */}  
+  
+
   
 
 

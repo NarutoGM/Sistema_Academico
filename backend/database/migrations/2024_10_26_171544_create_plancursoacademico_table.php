@@ -16,7 +16,6 @@ return new class extends Migration
             $table->unsignedBigInteger('idCurso');
             $table->unsignedBigInteger('idEscuela');
             $table->primary(['idMalla', 'idCurso', 'idEscuela']);
-            $table->string('año'); // año
             $table->string('ciclo');  // I - X
             $table->boolean('estado');  
             $table->foreign('idMalla')->references('idMalla')->on('malla') ;
