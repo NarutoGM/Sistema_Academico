@@ -28,6 +28,7 @@ class CursoSeeder extends Seeder
             ['idCurso' => 3448, 'name' => 'Redes y Comunicaciones I', 'creditos' => 3, 'hTeoricas' => 1, 'hPracticas' => 1, 'hLaboratorio' => 3, 'hRetroalimentacion' => 1, 'prerequisitos' => null, 'idTipoCurso' => 1, 'nGrupos' => 3, 'idDepartamento' => 7, 'idFacultad' => 11, 'idArea' => 1, 'idRegimenCurso' => 1]
         ];
         
+        // Arellano,Santos,Zoraida,Tapia,Agreda...
 
         // Insertar registros en la tabla cursos
         DB::table('curso')->insert($cursos);

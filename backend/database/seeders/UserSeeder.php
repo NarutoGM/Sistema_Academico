@@ -25,15 +25,83 @@ class UserSeeder extends Seeder
         //     "password" => bcrypt("root")
         // ]);
 
+      //  $user = User::create([
+      //      "name" => "George",
+      //      "lastname" => "Castle",
+      //      "dni" => "87654321",
+      //      "direccion" => "Direccion2",
+      //      "foto" => "foto",
+      //      "telefono" => "958745214",
+      //      "email" => "georgeacp@gmail.com",
+      //      "password" => bcrypt("root")
+      //  ]);
+
+     //    $user = User::create([
+       //      "name" => "MARCELINO",
+      //       "lastname" => "TORRES VILLANUEVA",
+        //     "dni" => "47584155",
+       //      "direccion" => "Direccion2",
+        //     "foto" => "foto",
+        //     "telefono" => "988457845",
+        //     "email" => "mtorres@unitru.edu.pe",
+       //      "password" => bcrypt("root")
+       //  ]);
+
+
+     //    $user = User::create([
+      //       "name" => "CESAR",
+       //      "lastname" => "ARELLANO SALAZAR",
+       //      "dni" => "74153625",
+       //      "direccion" => "Direccion2",
+       //      "foto" => "foto",
+       //      "telefono" => "988457845",
+       //      "email" => "carellano@unitru.edu.pe",
+       //      "password" => bcrypt("root")
+        // ]);
+ //
+ 
+   //      $user = User::create([
+     //        "name" => "JUAN PEDRO",
+     //        "lastname" => "SANTOS FERNANDEZ",
+      //       "dni" => "47251495",
+      //       "direccion" => "Direccion2",
+      //       "foto" => "foto",
+      //       "telefono" => "988457845",
+      //       "email" => "jsantos@unitru.edu.pe",
+       //      "password" => bcrypt("root")
+       // ]);
+
+     //   $user = User::create([
+     //       "name" => "DAVID",
+     //       "lastname" => "AGREDA",
+     //       "dni" => "41257651",
+     //       "direccion" => "Direccion2",
+     //       "foto" => "foto",
+       //     "telefono" => "988457845",
+      //      "email" => "davidagreda@unitru.edu.pe",
+      //      "password" => bcrypt("root")
+     //   ]);
+      //  $user = User::create([
+     //       "name" => "ZORAIDA",
+      //      "lastname" => "MELGAREJO",
+     //       "dni" => "45124578",
+      //      "direccion" => "Direccion2",
+      //      "foto" => "foto",
+      //      "telefono" => "988457845",
+      //      "email" => "zoraidamergarejo@unitru.edu.pe",
+      //      "password" => bcrypt("root")
+      //  ]);
+
         $user = User::create([
-            "name" => "George",
-            "lastname" => "Castle",
-            "dni" => "87654321",
+            "name" => "CARLOS DANTER",
+            "lastname" => "TAPIA SANCHEZ",
+            "dni" => "25361449",
             "direccion" => "Direccion2",
             "foto" => "foto",
-            "telefono" => "958745214",
-            "email" => "georgeacp@gmail.com",
+            "telefono" => "988457845",
+            "email" => "cdantertapia@unitru.edu.pe",
             "password" => bcrypt("root")
         ]);
+
     }
 }

@@ -313,6 +313,8 @@ const FilteredUnidad: React.FC = () => {
                 <td className="border-b border-gray-200 py-4 px-6">{item.lastname + ' ' + item.name}</td>
 
                 <td className="border-b border-gray-200 py-4 px-6">{item.email}</td>
+                <td className="border-b border-gray-200 py-4 px-6">    {item.roles.map(role => role.name).join(', ')}
+                </td>
 
                 <td className="border-b border-gray-200 py-4 px-6">
                   <div className="flex items-center space-x-4">

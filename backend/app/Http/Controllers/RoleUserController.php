@@ -11,6 +11,7 @@ use App\Models\Docente;
 use App\Models\DirectorEscuela;
 use App\Models\DocenteFilial;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class RoleUserController extends Controller
 {
@@ -38,7 +39,7 @@ class RoleUserController extends Controller
             $directorData = $request->input('additional_data.escuela', []);
 
             $docenteData = $request->input('additional_data.docente', []);
-            $filiales = $request->input('additional_data.docente.filiales', []);
+            $filiales = $request->input('additional_data.docente.filiales.idFilial', []);
             $idCondicion = $request->input('additional_data.docente.condicion', []);
             $idCategoria = $request->input('additional_data.docente.categoria', []);
             $idRegimen = $request->input('additional_data.docente.regimen', []);
@@ -118,6 +119,10 @@ class RoleUserController extends Controller
                         $docente->save();
 
 
+                   //     Log::info('Valor de $filiales:', ['filiales' => $filiales]);
+                        Log::info('Valor de $filiales:', ['filiales' => $filiales]);
+
+
                         foreach ($filiales as $filialId) {
 
                             // Si no existe, crea la relación
@@ -135,9 +140,13 @@ class RoleUserController extends Controller
                         $existingDocente->idEscuela = $docenteData['escuela'];
                         $existingDocente->save();
 
+                        Log::info('Valor de $filiales:', ['filiales' => $filiales]);
 
-
+                
                         foreach ($filiales as $filialId) {
+
+                            Log::info('Procesando filial:', ['filialId' => $filialId]);
+
                             // Verifica si ya existe la relación del docente con la filial
                             $docenteFilial = DocenteFilial::where('idDocente', $existingDocente->idDocente)
                                 ->where('idFilial', $filialId)
