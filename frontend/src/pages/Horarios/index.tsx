@@ -1,182 +1,186 @@
-import React, { useState } from 'react';
-import * as XLSX from 'xlsx';
+import React, { useState, useEffect } from 'react';
+import { gapi } from 'gapi-script';
 
-interface Curso {
-  nombre: string;
-  horasTeoria?: number;
-  horasPractica?: number;
-  horasLaboratorio?: number;
-}
+const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
+const SCOPES = import.meta.env.VITE_GOOGLE_SCOPES || 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 
-const cursosInicial: Curso[] = [
-  { nombre: "Administración General - Teoría", horasTeoria: 2 },
-  { nombre: "Administración General - Práctica", horasPractica: 2 },
-  { nombre: "Estadística Aplicada - Teoría", horasTeoria: 2 },
-  { nombre: "Estadística Aplicada - Práctica", horasPractica: 1 },
-  { nombre: "Estadística Aplicada - Lab 1", horasLaboratorio: 2 },
-  { nombre: "Programación Orientada a Objetos II - Teoría", horasTeoria: 3 },
-  { nombre: "Programación Orientada a Objetos II - Práctica", horasPractica: 2 },
-  { nombre: "Programación Orientada a Objetos II - Lab 1", horasLaboratorio: 2 },
-  { nombre: "Programación Orientada a Objetos II - Lab 2", horasLaboratorio: 2 },
-];
+const FileUploadComponent: React.FC = () => {
+    const [folderTitle, setFolderTitle] = useState<string>('');
+    const [isFolderCreated, setIsFolderCreated] = useState<boolean>(false);
+    const [folderId, setFolderId] = useState<string>('');
+    const [folderLink, setFolderLink] = useState<string>('');
+    const [isSheetCreated, setIsSheetCreated] = useState<boolean>(false);
+    const [sheetId, setSheetId] = useState<string>('');
 
-const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
-
-// Mapa de colores para cada curso (puedes personalizar los colores)
-const cursoColores: { [key: string]: string } = {
-  "Administración General": "#FFDDC1",
-  "Estadística Aplicada": "#C1FFD7",
-  "Programación Orientada a Objetos II": "#C1E1FF",
-};
-
-// Función para obtener el color de fondo basado en el nombre del curso
-const obtenerColorCurso = (nombreCurso: string) => {
-  const cursoBase = nombreCurso.split(" - ")[0]; // Solo obtener el nombre principal del curso
-  return cursoColores[cursoBase] || "#E0E0E0"; // Color por defecto si no está en el mapa
-};
-
-const TablaHorario: React.FC<{ 
-  horario: { [key: string]: string[] };
-  handleDrop: (e: React.DragEvent<HTMLTableCellElement>, cellId: string, horas: number) => void;
-  allowDrop: (e: React.DragEvent<HTMLTableCellElement>) => void;
-}> = ({ horario, handleDrop, allowDrop }) => {
-  return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full border border-gray-300">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="px-4 py-2 border border-gray-300 font-bold text-center">Hora</th>
-            {dias.map((dia) => (
-              <th key={dia} className="px-4 py-2 border border-gray-300 font-bold text-center">{dia}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {Array.from({ length: 8 }).map((_, hourIndex) => (
-            <tr key={hourIndex} className="text-center">
-              <td className="px-4 py-2 border border-gray-300">{hourIndex + 8} AM</td>
-              {dias.map((dia) => {
-                const cellId = `${dia}-${hourIndex}`;
-                return (
-                  <td
-                    key={cellId}
-                    className="px-4 py-2 border border-gray-300"
-                    onDrop={(e) => handleDrop(e, cellId, 1)}
-                    onDragOver={allowDrop}
-                  >
-                    {horario[cellId] ? (
-                      horario[cellId].map((curso, index) => (
-                        <div
-                          key={index}
-                          className="p-1 mb-1 rounded"
-                          style={{ backgroundColor: obtenerColorCurso(curso) }}
-                        >
-                          {curso}
-                        </div>
-                      ))
-                    ) : (
-                      <span>Arrastra aquí</span>
-                    )}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-
-const Horarios: React.FC = () => {
-  const [horario, setHorario] = useState<{ [key: string]: string[] }>({});
-  const [cursosDisponibles, setCursosDisponibles] = useState(cursosInicial);
-
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, cursoNombre: string, horas: number) => {
-    e.dataTransfer.setData("cursoNombre", cursoNombre);
-    e.dataTransfer.setData("horas", horas.toString());
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLTableCellElement>, cellId: string, horas: number) => {
-    e.preventDefault();
-    const cursoNombre = e.dataTransfer.getData("cursoNombre");
-    const horasNecesarias = parseInt(e.dataTransfer.getData("horas"), 10);
-
-    const [dia, hourIndexStr] = cellId.split("-");
-    const hourIndex = parseInt(hourIndexStr, 10);
-
-    const celdasNecesarias = Array.from({ length: horasNecesarias }).map((_, i) => `${dia}-${hourIndex + i}`);
-    const isAvailable = celdasNecesarias.every((celda) => !horario[celda] || horario[celda].length < 2);
-
-    if (isAvailable) {
-      const newHorario = { ...horario };
-      celdasNecesarias.forEach((celda) => {
-        if (!newHorario[celda]) {
-          newHorario[celda] = [];
+    useEffect(() => {
+        function start() {
+            gapi.client
+                .init({
+                    apiKey: API_KEY,
+                    clientId: CLIENT_ID,
+                    scope: SCOPES,
+                })
+                .then(() => {
+                    const authInstance = gapi.auth2.getAuthInstance();
+                    if (authInstance.isSignedIn.get()) {
+                        authInstance.signOut();
+                    }
+                    console.log('Google API initialized and user signed out');
+                })
+                .catch((error) => {
+                    console.error('Error initializing Google API:', error);
+                });
         }
-        newHorario[celda].push(cursoNombre);
-      });
 
-      setHorario(newHorario);
+        gapi.load('client:auth2', start);
+    }, []);
 
-      setCursosDisponibles((prevCursos) => prevCursos.filter((curso) => curso.nombre !== cursoNombre));
-    } else {
-      alert("No hay suficientes horas disponibles para asignar este curso en este bloque.");
-    }
-  };
+    const authenticateUser = async () => {
+        try {
+            const authInstance = gapi.auth2.getAuthInstance();
+            if (!authInstance.isSignedIn.get()) {
+                await authInstance.signIn();
+            }
+            return authInstance.currentUser.get().getAuthResponse().access_token;
+        } catch (error) {
+            console.error("Error de autenticación:", error);
+            alert(error.message);
+        }
+    };
 
-  const allowDrop = (e: React.DragEvent<HTMLTableCellElement>) => {
-    e.preventDefault();
-  };
+    const createSpreadsheetWithSheets = async () => {
+        const accessToken = await authenticateUser();
+        if (!accessToken) {
+            alert("Error: No se pudo obtener el token de acceso.");
+            return;
+        }
 
-  const exportToExcel = () => {
-    const worksheetData = [["Hora", ...dias]];
+        const sheetMetadata = {
+            properties: { title: folderTitle || 'Documento de Hojas' },
+            sheets: [
+                { properties: { title: 'Hoja 1' } },
+                { properties: { title: 'Hoja 2' } },
+                { properties: { title: 'Hoja 3' } },
+                { properties: { title: 'Hoja 4' } },
+                { properties: { title: 'Hoja 5' } },
+            ],
+        };
 
-    Array.from({ length: 8 }).forEach((_, hourIndex) => {
-      const row = [`${hourIndex + 8} AM`];
-      dias.forEach((dia) => {
-        const cellId = `${dia}-${hourIndex}`;
-        row.push(horario[cellId] ? horario[cellId].join(", ") : "");
-      });
-      worksheetData.push(row);
-    });
+        const response = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+            method: 'POST',
+            headers: new Headers({
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            }),
+            body: JSON.stringify(sheetMetadata),
+        });
 
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Horario");
+        if (response.ok) {
+            const data = await response.json();
+            setSheetId(data.spreadsheetId);
+            setIsSheetCreated(true);
+            alert("Hoja de cálculo creada exitosamente en Google Sheets.");
+            await addContentToSheets(data.spreadsheetId, accessToken);
+        } else {
+            console.error('Error al crear la hoja de cálculo:', response.statusText);
+        }
+    };
 
-    XLSX.writeFile(workbook, "Horario_Cursos.xlsx");
-  };
+    const addContentToSheets = async (spreadsheetId: string, accessToken: string) => {
+        // Primero obtenemos la estructura del archivo para identificar los `sheetId`
+        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`, {
+            method: 'GET',
+            headers: new Headers({
+                Authorization: `Bearer ${accessToken}`,
+            }),
+        });
 
-  return (
-    <div className="flex p-6 bg-gray-100 min-h-screen">
-      <div className="w-1/4 p-4 bg-white border border-gray-300 rounded shadow-md">
-        <h2 className="text-xl font-bold mb-4">Cursos</h2>
-        {cursosDisponibles.map((curso) => (
-          <div
-            key={curso.nombre}
-            className="p-2 mb-2 rounded cursor-pointer"
-            style={{ backgroundColor: obtenerColorCurso(curso.nombre) }}
-            draggable
-            onDragStart={(e) => handleDragStart(e, curso.nombre, curso.horasTeoria || curso.horasPractica || curso.horasLaboratorio || 0)}
-          >
-            {curso.nombre} ({curso.horasTeoria || curso.horasPractica || curso.horasLaboratorio || 0}h)
-          </div>
-        ))}
-        <button
-          onClick={exportToExcel}
-          className="mt-4 p-2 bg-green-500 text-white rounded hover:bg-green-600"
-        >
-          Descargar Horario en Excel
-        </button>
-      </div>
+        if (!response.ok) {
+            console.error('Error al obtener la estructura de la hoja de cálculo:', response.statusText);
+            return;
+        }
 
-      <div className="w-3/4 p-4">
-        <h1 className="text-2xl font-bold text-center mb-4">Horario de Cursos</h1>
-        <TablaHorario horario={horario} handleDrop={handleDrop} allowDrop={allowDrop} />
-      </div>
-    </div>
-  );
+        const spreadsheetData = await response.json();
+        const sheets = spreadsheetData.sheets;
+
+        // Crear las solicitudes para agregar contenido en celdas específicas de cada hoja
+        const requests = sheets.map((sheet: any, index: number) => {
+            const sheetId = sheet.properties.sheetId;
+            return [
+                {
+                    updateCells: {
+                        range: { sheetId, startRowIndex: 0, startColumnIndex: 0 }, // Celda A1
+                        rows: [{ values: [{ userEnteredValue: { stringValue: `Contenido en A1 de Hoja ${index + 1}` } }] }],
+                        fields: 'userEnteredValue',
+                    },
+                },
+                {
+                    updateCells: {
+                        range: { sheetId, startRowIndex: 1, startColumnIndex: 1 }, // Celda B2
+                        rows: [{ values: [{ userEnteredValue: { stringValue: `Contenido en B2 de Hoja ${index + 1}` } }] }],
+                        fields: 'userEnteredValue',
+                    },
+                },
+                {
+                    updateCells: {
+                        range: { sheetId, startRowIndex: 2, startColumnIndex: 2 }, // Celda C3
+                        rows: [{ values: [{ userEnteredValue: { stringValue: `Contenido en C3 de Hoja ${index + 1}` } }] }],
+                        fields: 'userEnteredValue',
+                    },
+                },
+            ];
+        }).flat();
+
+        // Enviar la solicitud `batchUpdate` con las referencias correctas de `sheetId`
+        const batchUpdateResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+            method: 'POST',
+            headers: new Headers({
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            }),
+            body: JSON.stringify({ requests }),
+        });
+
+        if (batchUpdateResponse.ok) {
+            console.log("Contenido agregado en celdas específicas de cada hoja correctamente.");
+            alert("Contenido agregado en celdas específicas de cada hoja.");
+        } else {
+            console.error("Error al agregar contenido a las hojas:", await batchUpdateResponse.json());
+        }
+    };
+
+
+
+    return (
+        <div className="max-w-md mx-auto p-6 bg-white border border-gray-200 rounded-lg shadow-md">
+            <h2 className="text-2xl font-semibold text-gray-700 text-center">Crear Carpeta en Google Drive</h2>
+
+            <input
+                type="text"
+                value={folderTitle}
+                onChange={(e) => setFolderTitle(e.target.value)}
+                placeholder="Introduce el título de la carpeta"
+                className="w-full mt-4 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isFolderCreated}
+            />
+
+            <button
+                onClick={createSpreadsheetWithSheets}
+                className="w-full mt-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 disabled:bg-green-300"
+            >
+                Crear Hoja de Cálculo con Hojas
+            </button>
+
+            {isSheetCreated && (
+                <p className="text-center mt-4 text-blue-500">
+                    <a href={`https://docs.google.com/spreadsheets/d/${sheetId}`} target="_blank" rel="noopener noreferrer">
+                        Ver hoja de cálculo en Google Sheets
+                    </a>
+                </p>
+            )}
+        </div>
+    );
 };
 
-export default Horarios;
+export default FileUploadComponent;
