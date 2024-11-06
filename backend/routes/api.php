@@ -14,7 +14,8 @@ use App\Http\Controllers\RolPermisoController;
 use App\Http\Controllers\CondicionController;  
 use App\Http\Controllers\RegimenController;  
 use App\Http\Controllers\CategoriaController; 
-use App\Http\Controllers\FilialController;  
+use App\Http\Controllers\FilialController;
+use App\Http\Controllers\SubirSilaboController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -85,6 +86,7 @@ Route::apiResource('facultades', FacultadController::class);
 
 
  
+Route::get('/miscursos', [SubirSilaboController::class, 'index']); 
 
 Route::apiResource('condiciones', CondicionController::class);  
 Route::apiResource('regimenes', RegimenController::class);  
