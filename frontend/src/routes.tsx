@@ -16,6 +16,7 @@ import CargaDocente from './pages/CargaDocente/index';
 
 import SubirArchivo from './pages/SubirArchivo/index';
 import Silabo from './pages/Silabo/index';
+import MisCursos from './pages/MisCursos/index';
 
 
 
@@ -242,8 +243,16 @@ const router = createBrowserRouter([
                         <Silabo/>
                     </ProtectedRoute>
                 ),
+            },
+            {
+                path:'/MisCursos',
+                element: (
+                    <ProtectedRoute>
+                        <PageTitle title="MisCursos | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+                        <MisCursos/>
+                    </ProtectedRoute>
+                ),
             }
-
 
             
         ]
