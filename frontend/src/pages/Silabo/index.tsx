@@ -1,88 +1,180 @@
-// DownloadDocument.tsx
-import React from 'react';
-import { saveAs } from 'file-saver';
-import { Document, Packer, Paragraph, TextRun } from 'docx';
+import React from "react";
+import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType } from "docx";
+import { saveAs } from "file-saver";
 
+const DocumentComponent: React.FC = () => {
 
-interface DownloadDocumentProps {
-    title: string;
-    content: string;
-    author: string;
-    date: string;
-}
+  const handleDownload = async () => {
+    // Tabla de información inicial
+    const infoTable = new Table({
+      rows: [
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [new Paragraph("Información")],
+            }),
+            new TableCell({
+              children: [new Paragraph("Valor")],
+            }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [new Paragraph("Título")],
+            }),
+            new TableCell({
+              children: [new Paragraph("Mi Documento")],
+            }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [new Paragraph("Autor")],
+            }),
+            new TableCell({
+              children: [new Paragraph("Tu Nombre")],
+            }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [new Paragraph("Fecha")],
+            }),
+            new TableCell({
+              children: [new Paragraph(new Date().toLocaleDateString())],
+            }),
+          ],
+        }),
+      ],
+    });
 
-// Valores predeterminados para las propiedades
-const defaultDocumentProps: DownloadDocumentProps = {
-    title: "Título Predeterminado",
-    content: "Este es el contenido predeterminado del documento. Puedes cambiarlo cuando lo necesites.",
-    author: "Giovani Salcedo",
-    date: "01/01/2024",
+    // Segunda tabla con columna agrupada
+    const columnGroupedTable = new Table({
+      rows: [
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [new Paragraph("Agrupado 1")],
+              rowSpan: 2,
+              width: { size: 5000, type: WidthType.DXA },
+            }),
+            new TableCell({
+              children: [new Paragraph("Columna 1")],
+            }),
+            new TableCell({
+              children: [new Paragraph("Columna 2")],
+            }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [new Paragraph("Valor 1.2")],
+            }),
+            new TableCell({
+              children: [new Paragraph("Valor 2.2")],
+            }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [new Paragraph("Agrupado 2")],
+              rowSpan: 2,
+              width: { size: 5000, type: WidthType.DXA },
+            }),
+            new TableCell({
+              children: [new Paragraph("Columna 1")],
+            }),
+            new TableCell({
+              children: [new Paragraph("Columna 2")],
+            }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [new Paragraph("Valor 3.2")],
+            }),
+            new TableCell({
+              children: [new Paragraph("Valor 4.2")],
+            }),
+          ],
+        }),
+      ],
+    });
+
+    // Tercera tabla con fila agrupada
+    const rowGroupedTable = new Table({
+      rows: [
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [new Paragraph("Fila 1")],
+            }),
+            new TableCell({
+              children: [new Paragraph("Valor 1.1")],
+              columnSpan: 2,
+            }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [new Paragraph("Fila 2")],
+            }),
+            new TableCell({
+              children: [new Paragraph("Valor 2.1")],
+            }),
+            new TableCell({
+              children: [new Paragraph("Valor 2.2")],
+            }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [new Paragraph("Fila 3")],
+            }),
+            new TableCell({
+              children: [new Paragraph("Agrupado")],
+              columnSpan: 2,
+            }),
+          ],
+        }),
+      ],
+    });
+
+    // Crear el documento con las tres tablas
+    const doc = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({ text: "Tabla de Información Inicial", heading: "Heading1" }),
+            infoTable,
+            new Paragraph({ text: "Tabla con Columna Agrupada", heading: "Heading1" }),
+            columnGroupedTable,
+            new Paragraph({ text: "Tabla con Fila Agrupada", heading: "Heading1" }),
+            rowGroupedTable,
+          ],
+        },
+      ],
+    });
+
+    // Generar y descargar el archivo .docx
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, "documento_con_tablas.docx");
+  };
+
+  return (
+    <div>
+      {/* Botón para descargar el archivo modificado */}
+      <button onClick={handleDownload}>Descargar Documento con Tablas</button>
+    </div>
+  );
 };
 
-
-const DownloadDocument: React.FC<Partial<DownloadDocumentProps>> = (props) => {
-    const { title, content, author, date } = { ...defaultDocumentProps, ...props };
-
-    const handleDownload = () => {
-        // Crear el documento Word con el contenido deseado
-        const doc = new Document({
-            sections: [
-                {
-                    children: [
-                        new Paragraph({
-                            children: [
-                                new TextRun({
-                                    text: title,
-                                    bold: true,
-                                    size: 32,
-                                }),
-                            ],
-                            heading: "Title",
-                            spacing: { after: 400 },
-                        }),
-                        new Paragraph({
-                            children: [
-                                new TextRun({
-                                    text: `Por ${author} - ${date}`,
-                                    italics: true,
-                                    size: 24,
-                                }),
-                            ],
-                            spacing: { after: 400 },
-                        }),
-                        new Paragraph({
-                            children: [
-                                new TextRun({
-                                    text: content,
-                                    size: 24,
-                                }),
-                            ],
-                            spacing: { after: 200 },
-                        }),
-                    ],
-                },
-            ],
-        });
-
-        // Generar y descargar el archivo .docx
-        Packer.toBlob(doc).then((blob) => {
-            saveAs(blob, `${title}.docx`);
-        });
-    };
-
-    return (
-        <div className="p-4 border rounded shadow-lg bg-white">
-            <h1 className="text-2xl font-bold mb-2">{title}</h1>
-            <p className="text-sm text-gray-600 mb-4">Por {author} - {date}</p>
-            <div className="text-lg text-gray-800 mb-4">{content}</div>
-            <button
-                onClick={handleDownload}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-                Descargar en Word
-            </button>
-        </div>
-    );
-};
-
-export default DownloadDocument;
+export default DocumentComponent;
