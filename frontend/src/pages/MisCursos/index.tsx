@@ -8,8 +8,12 @@ const Index: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
 
-    const [filial, setFilial] = useState('');
+    // Filtros
+    const [codigoCurso, setCodigoCurso] = useState('');
     const [curso, setCurso] = useState('');
+    const [filial, setFilial] = useState('');
+    const [semestre, setSemestre] = useState('');
+    const [procesoSilabo, setProcesoSilabo] = useState('');
 
     useEffect(() => {
         getMisCursos()
@@ -22,25 +26,23 @@ const Index: React.FC = () => {
             });
     }, []);
 
-    const handleFilter = () => {
+    useEffect(() => {
+        // Filtrado automático cada vez que cambian los valores de filtro
         const filtered = cargaDocente.filter(item => {
+            const estadoSilabo = item.curso?.estado_silabo || "Curso por gestionar";
             return (
-                (filial ? item.idFilial === Number(filial) : true) &&
-                (curso ? item.idCurso === Number(curso) : true)
+                (codigoCurso ? item.idCurso.toString().includes(codigoCurso) : true) &&
+                (curso ? item.curso?.name.toLowerCase().includes(curso.toLowerCase()) : true) &&
+                (filial ? item.filial?.name.toLowerCase().includes(filial.toLowerCase()) : true) &&
+                (semestre ? item.semestre_academico?.nomSemestre.toLowerCase().includes(semestre.toLowerCase()) : true) &&
+                (procesoSilabo ? estadoSilabo.toLowerCase().includes(procesoSilabo.toLowerCase()) : true)
             );
         });
         setFilteredData(filtered);
         setCurrentPage(1); // Reset to the first page after filtering
-    };
+    }, [codigoCurso, curso, filial, semestre, procesoSilabo, cargaDocente]);
 
-    const handleResetFilters = () => {
-        setFilial('');
-        setCurso('');
-        setFilteredData(cargaDocente);
-        setCurrentPage(1);
-    };
-
-    // Get data for the current page
+    // Obtener datos de la página actual
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
@@ -50,73 +52,107 @@ const Index: React.FC = () => {
     return (
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">Listado de Carga Docente</h1>
+            <h1 className="text-xl font-bold mb-4">Filtrar:</h1>
 
             {/* Filters */}
-            <div className="flex gap-4 mb-4">
-                <input
-                    type="text"
-                    placeholder="Filial"
-                    value={filial}
-                    onChange={(e) => setFilial(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded"
-                />
-                <input
-                    type="text"
-                    placeholder="Curso"
-                    value={curso}
-                    onChange={(e) => setCurso(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded"
-                />
-                <button
-                    onClick={handleFilter}
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                    Filtrar
-                </button>
-                <button
-                    onClick={handleResetFilters}
-                    className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                >
-                    Reiniciar
-                </button>
+            <div className="flex flex-wrap gap-4 mb-4">
+                <div className="flex flex-col md:flex-row md:flex-wrap gap-4 mb-4 w-full">
+                    {/* Primera fila con tres elementos */}
+                    <input
+                        type="text"
+                        placeholder="Código de Curso"
+                        value={codigoCurso}
+                        onChange={(e) => setCodigoCurso(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/3"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Curso"
+                        value={curso}
+                        onChange={(e) => setCurso(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Filial"
+                        value={filial}
+                        onChange={(e) => setFilial(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
+                    />
+
+                    {/* Segunda fila con dos elementos */}
+                    <input
+                        type="text"
+                        placeholder="Semestre"
+                        value={semestre}
+                        onChange={(e) => setSemestre(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Proceso Sílabos"
+                        value={procesoSilabo}
+                        onChange={(e) => setProcesoSilabo(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
+                    />
+
+                    <button
+                        onClick={() => {
+                            setCodigoCurso('');
+                            setCurso('');
+                            setFilial('');
+                            setSemestre('');
+                            setProcesoSilabo('');
+                        }}
+                        className="px-4 py-2 bg-gray-500 text-white  rounded bg-green-500"
+                    >
+                        Reiniciar
+                    </button>
+                </div>
+
+
             </div>
+
 
             {/* Table */}
             <div className="overflow-x-auto">
                 <table className="min-w-full bg-white border border-gray-200">
                     <thead>
-                        <tr>
-                            <th className="px-4 py-2 border-b font-medium text-gray-700">Curso</th>
-                            <th className="px-4 py-2 border-b font-medium text-gray-700">Filial</th>
-                            <th className="px-4 py-2 border-b font-medium text-gray-700">Grupo</th>
-                            <th className="px-4 py-2 border-b font-medium text-gray-700">Estado</th>
-                            <th className="px-4 py-2 border-b font-medium text-gray-700">Fecha de Asignación</th>
-                            <th className="px-4 py-2 border-b font-medium text-gray-700">Acciones</th>
+                        <tr className='bg-blue-700'>
+                            <th className="px-4 py-2 border-b font-medium text-white">Código de Curso</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Curso</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Filial</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Semestre</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Proceso Sílabos</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {currentData.map((curso) => (
-                            <tr key={curso.idCargaDocente} className="hover:bg-gray-100">
-                                <td className="px-4 py-2 border-b text-center">{curso.curso?.name}</td>
-                                <td className="px-4 py-2 border-b text-center">{curso.filial?.name}</td>
-                                <td className="px-4 py-2 border-b text-center">{curso.grupo}</td>
+                        {currentData.map((carga) => (
+                            <tr key={carga.idCargaDocente} className="hover:bg-gray-100">
+                                <td className="px-4 py-2 border-b text-center">{carga.idCurso}</td>
+                                <td className="px-4 py-2 border-b text-center">{carga.curso?.name}</td>
+                                <td className="px-4 py-2 border-b text-center">{carga.filial?.name}</td>
+                                <td className="px-4 py-2 border-b text-center">{carga.semestre_academico?.nomSemestre}</td>
                                 <td className="px-4 py-2 border-b text-center">
-                                    {curso.estado ? "Activo" : "Inactivo"}
+                                    {carga.curso?.estado_silabo}
                                 </td>
-                                <td className="px-4 py-2 border-b text-center">{curso.fAsignacion}</td>
                                 <td className="px-4 py-2 border-b text-center">
                                     <button
-                                        // onClick={() => handleGestionarSilabo(curso)}
-                                        className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                                        className={`px-2 py-1 rounded text-white ${carga.curso?.estado_silabo === "Rechazado" ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"}`}
                                     >
-                                        Gestionar Sílabos
+                                        {carga.curso?.estado_silabo === "Aún falta generar esquema" && "Generar Esquema"}
+                                        {carga.curso?.estado_silabo === "En Espera de aprobación" && "Observar Sílabo"}
+                                        {carga.curso?.estado_silabo === "Confirmar envio de silabo" && "Confirmar Envío"}
+                                        {carga.curso?.estado_silabo === "Rechazado" && "Ver y Confirmar Envío"}
+                                        {carga.curso?.estado_silabo === "Aprobado" && "Ver y Descargar"}
                                     </button>
                                 </td>
+
                             </tr>
                         ))}
                     </tbody>
                 </table>
-
             </div>
 
             {/* Pagination */}

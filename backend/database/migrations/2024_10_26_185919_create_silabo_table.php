@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('documento')->nullable(); 
             $table->boolean('estado')->nullable(); 
             $table->string('observaciones')->nullable(); 
+            $table->dateTime('fEnvio')->nullable(); 
             $table->foreignId('idDirector')->nullable()->constrained('directorescuela', 'idDirector')->onDelete('cascade'); // Clave foránea
             $table->foreign('idCargaDocente')->references('idCargaDocente')->on('cargadocente');
             $table->foreign('idFilial')->references('idFilial')->on('filial');

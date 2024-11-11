@@ -9,6 +9,7 @@ use App\Models\CursoAperturado;
 use App\Models\DocenteFilial;
 use App\Models\DirectorEscuela;
 use App\Models\Docente;
+use App\Models\Silabo;
 
 class SubirSilaboController extends Controller
 {
@@ -31,9 +32,32 @@ class SubirSilaboController extends Controller
             $cargadocente = CargaDocente::with(['filial', 'docente', 'semestreAcademico', 'malla', 'curso', 'escuela', 'director'])
             ->where('idDocente', $docente->idDocente)
             ->where('estado', true)
-            ->get();
+            ->get()
+            ->map(function($carga) {
+                // Obtener el sílabo asociado a esta carga docente
+                $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
+                                ->where('idFilial', $carga->idFilial)
+                                ->where('idDocente', $carga->idDocente)
+                                ->first();
+                
+                // Determinar el estado del sílabo
+                if (!$silabo) {
+                    $carga->curso->estado_silabo = "Aún falta generar esquema";
+                } elseif (is_null($silabo->estado) && !is_null($silabo->fEnvio)) {
+                    $carga->curso->estado_silabo = "En Espera de aprobación";
+                } elseif (is_null($silabo->estado)) {
+                    $carga->curso->estado_silabo = "Confirmar envio de silabo";
+                }elseif ($silabo->estado == 0) {
+                    $carga->curso->estado_silabo = "Rechazado";
+                } elseif ($silabo->estado == 1) {
+                    $carga->curso->estado_silabo = "Aprobado";
+                }
+        
+                return $carga;
+            });
         
         
+
 
 
             return response()->json([

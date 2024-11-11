@@ -25,7 +25,8 @@ class Silabo extends Model
         'documento',
         'estado',
         'observaciones',
-        'idDirector'
+        'idDirector',
+        'fEnvio'
     ];
 
     // Relación con el modelo CargaDocente
