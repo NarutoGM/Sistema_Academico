@@ -20,10 +20,10 @@ class Curso extends Model
     public $timestamps = false;
 
     // Definir las relaciones si es necesario
-  //  public function departamento()
-  //  {
-  //      return $this->belongsTo(DepartamentoAcademico::class, 'idDepartamento');
-  //  }
+    public function departamento()
+    {
+        return $this->belongsTo(DepartamentoAcademico::class, 'idDepartamento');
+    }
 
     public function facultad()
     {
@@ -35,13 +35,13 @@ class Curso extends Model
         return $this->belongsTo(Area::class, 'idArea');
     }
 
-   // public function regimenCurso()
-   // {
-   //     return $this->belongsTo(RegimenCurso::class, 'idRegimenCurso');
-  //  }
+    public function regimenCurso()
+    {
+        return $this->belongsTo(RegimenCurso::class, 'idRegimenCurso');
+    }
 
-   // public function tipoCurso()
-  //  {
-   //     return $this->belongsTo(TipoCurso::class, 'idTipoCurso');
-   // }
+    public function tipoCurso()
+    {
+        return $this->belongsTo(TipoCurso::class, 'idTipoCurso');
+    }
 }

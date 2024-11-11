@@ -5,10 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\CargaDocente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use App\Models\CursoAperturado;
-use App\Models\DocenteFilial;
-use App\Models\DirectorEscuela;
+
 use App\Models\Docente;
+use App\Models\PlanCursoAcademico;
 use App\Models\Silabo;
 
 class SubirSilaboController extends Controller
@@ -29,7 +28,17 @@ class SubirSilaboController extends Controller
         // Comprobar si el docente existe
         if ($docente) {
 
-            $cargadocente = CargaDocente::with(['filial', 'docente', 'semestreAcademico', 'malla', 'curso', 'escuela', 'director'])
+            $cargadocente = CargaDocente::with([
+                'filial', 
+                'docente', 
+                'semestreAcademico', 
+                'malla', 
+                'curso' => function($query) {
+                    $query->with(['departamento', 'facultad', 'area', 'regimenCurso', 'tipoCurso']);
+                },
+                'escuela', 
+                'director'
+            ])
             ->where('idDocente', $docente->idDocente)
             ->where('estado', true)
             ->get()
@@ -47,14 +56,31 @@ class SubirSilaboController extends Controller
                     $carga->curso->estado_silabo = "En Espera de aprobación";
                 } elseif (is_null($silabo->estado)) {
                     $carga->curso->estado_silabo = "Confirmar envio de silabo";
-                }elseif ($silabo->estado == 0) {
+                } elseif ($silabo->estado == 0) {
                     $carga->curso->estado_silabo = "Rechazado";
                 } elseif ($silabo->estado == 1) {
                     $carga->curso->estado_silabo = "Aprobado";
                 }
         
                 return $carga;
+            })
+            ->map(function($carga) {
+                // Obtener el PlanCursoAcademico asociado a esta carga docente
+                $plancursoacademico = PlanCursoAcademico::where('idMalla', $carga->idMalla)
+                                    ->where('idCurso', $carga->idCurso)
+                                    ->where('idEscuela', $carga->idEscuela)
+                                    ->first();
+                
+                // Verificar si existe el PlanCursoAcademico y asignar el ciclo
+                if ($plancursoacademico) {
+                    $carga->ciclo = $plancursoacademico->ciclo;
+                } else {
+                    $carga->ciclo = "Ciclo no encontrado";
+                }
+        
+                return $carga;
             });
+        
         
         
 
