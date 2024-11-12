@@ -136,7 +136,7 @@ const Index: React.FC = () => {
                 <table className="min-w-full bg-white border border-gray-200">
                     <thead>
                         <tr className='bg-blue-700'>
-                            <th className="px-4 py-2 border-b font-medium text-white">Código de Curso</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Código</th>
                             <th className="px-4 py-2 border-b font-medium text-white">Curso</th>
                             <th className="px-4 py-2 border-b font-medium text-white">Filial</th>
                             <th className="px-4 py-2 border-b font-medium text-white">Semestre</th>

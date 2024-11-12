@@ -14,7 +14,7 @@ class Curso extends Model
     public $incrementing = false; // Desactivar auto-incremento si no se usa en idCurso
     protected $fillable = [
         'idCurso', 'name', 'creditos', 'hTeoricas', 'hPracticas', 'hRetroalimentacion',
-        'hLaboratorio', 'nGrupos', 'prerequisitos', 'idDepartamento', 'idFacultad',
+        'hLaboratorio', 'nGrupos', 'idDepartamento', 'idFacultad',
         'idArea', 'idRegimenCurso', 'idTipoCurso'
     ];
     public $timestamps = false;

@@ -23,7 +23,8 @@ class PlanCursoAcademico extends Model
         'idCurso',
         'idEscuela',
         'ciclo',
-        'estado'
+        'estado',
+        'prerequisitos'
     ];
 
     // Relación con el modelo Malla

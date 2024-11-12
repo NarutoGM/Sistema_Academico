@@ -30,20 +30,16 @@ class SubirSilaboController extends Controller
 
             $cargadocente = CargaDocente::with([
                 'filial', 
-                'docente', 
-                'semestreAcademico', 
-                'malla', 
+              'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio', // Selecciona solo los campos necesarios
                 'curso' => function($query) {
                     $query->with(['departamento', 'facultad', 'area', 'regimenCurso', 'tipoCurso']);
                 },
-                'escuela', 
-                'director'
+                'escuela:idEscuela,name',
             ])
             ->where('idDocente', $docente->idDocente)
             ->where('estado', true)
             ->get()
             ->map(function($carga) {
-                // Obtener el sílabo asociado a esta carga docente
                 $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
                                 ->where('idFilial', $carga->idFilial)
                                 ->where('idDocente', $carga->idDocente)
@@ -65,7 +61,6 @@ class SubirSilaboController extends Controller
                 return $carga;
             })
             ->map(function($carga) {
-                // Obtener el PlanCursoAcademico asociado a esta carga docente
                 $plancursoacademico = PlanCursoAcademico::where('idMalla', $carga->idMalla)
                                     ->where('idCurso', $carga->idCurso)
                                     ->where('idEscuela', $carga->idEscuela)
@@ -79,8 +74,15 @@ class SubirSilaboController extends Controller
                 }
         
                 return $carga;
-            });
-        
+            })
+            ->map(function($carga) {
+                $user = auth()->user();
+
+                $carga->nomdocente = $user->name;
+                $carga->apedocente = $user->lastname;              
+            
+                return $carga;
+            });        
         
         
 

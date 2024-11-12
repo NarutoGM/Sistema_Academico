@@ -20,7 +20,6 @@ return new class extends Migration
             $table->integer('hRetroalimentacion')->nullable();
             $table->integer('hLaboratorio')->nullable();
             $table->integer('nGrupos')->nullable();
-            $table->string('prerequisitos')->nullable();
             $table->foreignId('idDepartamento')->nullable()->constrained('departamentoacademico', 'idDepartamento')->onDelete('cascade');
             $table->foreignId('idFacultad')->nullable()->constrained('facultad', 'idFacultad')->onDelete('cascade');
             $table->foreignId('idArea')->nullable()->constrained('area', 'idArea')->onDelete('cascade');
