@@ -12,8 +12,43 @@ const getToken = (): string | null => {
 export interface Docente {
     idDocente: number;
     nombre: string;
-    // Otros campos según lo necesario
 }
+
+export interface Curso {
+    idCurso: number;
+    name: string;
+    estado_silabo: string;
+}
+
+export interface Filial {
+    idFilial: number;
+    name: string;
+}
+
+export interface Semestre_academico {
+    idSemestreAcademico: number;
+    nomSemestre: string;
+    // Añade aquí otras propiedades que pueda tener un curso
+}
+
+export interface CargaDocente {
+    idCargaDocente: number;
+    idFilial: number;
+    idDocente: number;
+    fAsignacion: string;
+    estado: boolean;
+    grupo: string;
+    idSemestreAcademico: number;
+    idMalla: number;
+    idCurso: number;
+    idEscuela: number;
+    idDirector: number;
+    curso?: Curso; // Campo opcional que hace referencia a un objeto de tipo Curso
+    filial?: Filial; 
+    semestre_academico?: Semestre_academico; 
+
+}
+
 
 // En silabo.services.ts o en el archivo donde esté definida
 export interface CargaDocente {
