@@ -162,8 +162,9 @@ const Index: React.FC = () => {
                                         {carga.curso?.estado_silabo === "Aún falta generar esquema" && "Generar Esquema"}
                                         {carga.curso?.estado_silabo === "En Espera de aprobación" && "Observar Sílabo"}
                                         {carga.curso?.estado_silabo === "Confirmar envio de silabo" && "Confirmar Envío"}
-                                        {carga.curso?.estado_silabo === "Rechazado" && "Ver y Confirmar Envío"}
                                         {carga.curso?.estado_silabo === "Aprobado" && "Ver y Descargar"}
+                                        {carga.curso?.estado_silabo === "Inactivo" && "Ver y Descargar"}
+
                                     </button>
                                 </td>
                             </tr>
