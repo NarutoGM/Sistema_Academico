@@ -63,6 +63,9 @@ export interface CargaDocente {
     idCurso: number;
     idEscuela: number;
     idDirector: number;
+    nomdocente: string;
+    apedocente: string;
+
 }
 
 
@@ -102,3 +105,26 @@ export const getMisCursos = async (): Promise<MisCursosResponse> => {
 };
 
 
+export const getMisSilabos = async (): Promise<MisSilabosResponse> => {
+    const authData = isAuthenticated();
+
+    if (!authData || !authData.token) {
+        throw new Error('User is not authenticated or token is missing');
+    }
+
+    const response = await fetch(`${apiUrl}/versilabos`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${authData.token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error('Error al obtener los sílabos asignados');
+    }
+
+    const data = await response.json();
+    console.log("Sílabos recibidos:", data);
+    return data;
+};

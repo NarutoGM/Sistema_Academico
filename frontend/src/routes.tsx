@@ -16,6 +16,7 @@ import CargaDocente from './pages/CargaDocente/index';
 import SubirArchivo from './pages/SubirArchivo/index';
 import Silabo from './pages/Silabo/index';
 import MisCursos from './pages/MisCursos/index';
+import Versilabos from './pages/VerSilabos/index';
 
 
 
@@ -60,6 +61,14 @@ const router = createBrowserRouter([
                     <ProtectedRoute >
                         <PageTitle title="eCommerce Dashboard | TailAdmin - Tailwind CSS Admin Dashboard Template" />
                         <ECommerce />
+                    </ProtectedRoute>
+                ),
+            },           {
+                path: '/versilabos',
+                element: (
+                    <ProtectedRoute >
+                        <PageTitle title="versilabos | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+                        <Versilabos />
                     </ProtectedRoute>
                 ),
             },
@@ -244,7 +253,7 @@ const router = createBrowserRouter([
                     </ProtectedRoute>
                 ),
             }
-
+    
             
         ]
     },
