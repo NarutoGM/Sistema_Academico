@@ -69,10 +69,10 @@ class SubirSilaboController extends Controller
                 // Verificar si existe el PlanCursoAcademico y asignar el ciclo
                 if ($plancursoacademico) {
                     $carga->ciclo = $plancursoacademico->ciclo;
-                } else {
-                    $carga->ciclo = "Ciclo no encontrado";
+                    $carga->prerequisitos = $plancursoacademico->prerequisitos;
+
                 }
-        
+                
                 return $carga;
             })
             ->map(function($carga) {
@@ -80,7 +80,8 @@ class SubirSilaboController extends Controller
 
                 $carga->nomdocente = $user->name;
                 $carga->apedocente = $user->lastname;              
-            
+                $carga->email = $user->email;              
+
                 return $carga;
             });        
         
