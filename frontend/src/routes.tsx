@@ -9,7 +9,6 @@ import Permisos from './pages/Permisos/index';
 import Roles from './pages/Roles/index';
 
 import AdministrarUsuarios from './pages/AdministrarUsuarios/index';
-import Escuelas from './pages/Escuelas/index';
 import Horarios from './pages/Horarios/index';
 import CargaDocente from './pages/CargaDocente/index';
 
@@ -17,6 +16,7 @@ import CargaDocente from './pages/CargaDocente/index';
 import SubirArchivo from './pages/SubirArchivo/index';
 import Silabo from './pages/Silabo/index';
 import MisCursos from './pages/MisCursos/index';
+import Versilabos from './pages/VerSilabos/index';
 
 
 
@@ -61,6 +61,14 @@ const router = createBrowserRouter([
                     <ProtectedRoute >
                         <PageTitle title="eCommerce Dashboard | TailAdmin - Tailwind CSS Admin Dashboard Template" />
                         <ECommerce />
+                    </ProtectedRoute>
+                ),
+            },           {
+                path: '/versilabos',
+                element: (
+                    <ProtectedRoute >
+                        <PageTitle title="versilabos | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+                        <Versilabos />
                     </ProtectedRoute>
                 ),
             },
@@ -199,15 +207,7 @@ const router = createBrowserRouter([
                         </ProtectedRoute>
                 ),
             },
-            {
-                path: '/escuelas',
-                element: (
-                    <ProtectedRoute >
-                        <PageTitle title="Administrar usuario | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-                        <Escuelas/>
-                        </ProtectedRoute>
-                ),
-            },
+            
             {
                 path: '/horarios',
                 element: (
@@ -253,7 +253,7 @@ const router = createBrowserRouter([
                     </ProtectedRoute>
                 ),
             }
-
+    
             
         ]
     },

@@ -24,6 +24,8 @@ class Silabo extends Model
         'idDocente',
         'documento',
         'estado',
+        'activo',
+
         'observaciones',
         'idDirector',
         'fEnvio'

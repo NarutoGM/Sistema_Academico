@@ -17,7 +17,8 @@ return new class extends Migration
             $table->unsignedBigInteger('idDocente');
             $table->primary(['idCargaDocente', 'idFilial','idDocente']);
             $table->string('documento')->nullable(); 
-            $table->boolean('estado')->nullable(); 
+            $table->boolean('activo')->nullable(); 
+            $table->integer('estado')->nullable(); 
             $table->string('observaciones')->nullable(); 
             $table->dateTime('fEnvio')->nullable(); 
             $table->foreignId('idDirector')->nullable()->constrained('directorescuela', 'idDirector')->onDelete('cascade'); // Clave foránea

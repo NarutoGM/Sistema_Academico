@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Categoria;
 use App\Models\Condicion;
-use App\Models\DirectorEscuela;
-use App\Models\Docente;
 use App\Models\DocenteFilial;
 use App\Models\Escuela;
 use App\Models\Filial;
@@ -15,6 +13,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -45,17 +44,17 @@ class UserController extends Controller
             // Inicializar variables para cada usuario.
             $filialId = collect(); // Inicializar como colección vacía
             $filialInfo = null;
-        
+
             // Si el usuario tiene un docente asociado, obtener la información correspondiente.
             if ($user->docente) {
                 $filialId = DocenteFilial::where('idDocente', $user->docente->idDocente)
                     ->where('estado', true)
                     ->pluck('idFilial');
-        
+
                 $filialInfo = DocenteFilial::where('idDocente', $user->docente->idDocente)
                     ->first(['idRegimen', 'idCategoria', 'idCondicion']);
             }
-        
+
             // Retornar la información del usuario en el formato deseado.
             return [
                 'id' => $user->id,
@@ -69,7 +68,7 @@ class UserController extends Controller
                 'filialInfo' => !$filialId->isEmpty() ? $filialInfo : null,
             ];
         });
-    
+
         // Obtener los datos adicionales necesarios para la respuesta.
         $roles = Role::select('id', 'name')->get();
         $condiciones = Condicion::select('idCondicion', 'nombreCondicion')->get();
@@ -77,7 +76,7 @@ class UserController extends Controller
         $categorias = Categoria::select('idCategoria', 'nombreCategoria')->get();
         $filiales = Filial::select('idFilial', 'name')->get();
         $escuelas = Escuela::select('idEscuela', 'name')->get();
-    
+
         // Retornar la respuesta JSON.
         return response()->json([
             'users' => $users,
@@ -89,54 +88,42 @@ class UserController extends Controller
             'escuelas' => $escuelas,
         ]);
     }
-    
-    
 
-    // POST /api/users - Crear un nuevo usuario
+
+
     public function store(Request $request)
     {
         try {
-            // Validar los datos de entrada
+            // Validar los datos
             $validatedData = $request->validate([
                 'name' => 'required|string|max:255',
-                'telefono' => 'nullable|string|max:20',
-                'direccion' => 'nullable|string|max:255',
-                'email' => 'required|email|max:255|unique:users,email',
-                'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-                'password' => 'required|string|min:8',
+                'lastname' => 'required|string|max:255',
+                'dni' => 'required|string|max:10|unique:users,dni',
+                'email' => 'required|email|unique:users,email',
+                'password' => 'required|string|min:4',
             ]);
-
-            // Manejar la subida de la foto, si existe
-            $fotoUrl = null; // Inicializar la variable para la URL de la foto
-            if ($request->hasFile('foto')) {
-                // Guardar la foto en el directorio 'fotos'
-                $fotoPath = $request->file('foto')->store('fotos', 'public'); // Cambiado
-                $fotoUrl = \Storage::url($fotoPath); // Obtener la URL de la imagen guardada
-            }
-
-            // Crear la persona con los datos validados
-            $user = new User();
-            $user->name = $validatedData['name'];
-            $user->telefono = $validatedData['telefono'];
-            $user->direccion = $validatedData['direccion'];
-            $user->email = $validatedData['email'];
-            $user->foto = $fotoUrl; // Cambiar a 'foto' y guardar la URL de la foto
-            $user->password = bcrypt($validatedData['password']);
-
-            $user->save(); // Guardar la persona en la base de datos
-
+    
+            // Crear el usuario
+            $user = User::create([
+                'name' => $validatedData['name'],
+                'lastname' => $validatedData['lastname'],
+                'dni' => $validatedData['dni'],
+                'email' => $validatedData['email'],
+                'password' => Hash::make($validatedData['password']),
+            ]);
+    
+            return response()->json(['message' => 'Usuario creado exitosamente'], 201);
+    
+        } catch (ValidationException $e) {
+            // Devuelve un JSON con los errores de validación
             return response()->json([
-                'message' => 'Persona creada exitosamente',
-                'persona' => $user,
-            ], 201);
-        } catch (\Exception $e) {
-            // Si ocurre un error, devuelve una respuesta en JSON
-            return response()->json([
-                'error' => 'Error al crear la persona',
-                'message' => $e->getMessage(),
-            ], 500);
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
         }
     }
+
+
 
 
 

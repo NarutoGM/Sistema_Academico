@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import { getMisCursos, CargaDocente } from '@/pages/services/silabo.services';
+import { getMisSilabos, CargaDocente } from '@/pages/services/silabo.services';
 
 const Index: React.FC = () => {
     const [cargaDocente, setCargaDocente] = useState<CargaDocente[]>([]);
@@ -15,9 +15,10 @@ const Index: React.FC = () => {
     const [filial, setFilial] = useState('');
     const [semestre, setSemestre] = useState('');
     const [procesoSilabo, setProcesoSilabo] = useState('');
+    const [docente, setDocente] = useState('');
 
     useEffect(() => {
-        getMisCursos()
+        getMisSilabos()
             .then((data) => {
                 setCargaDocente(data.cargadocente);
                 setFilteredData(data.cargadocente);
@@ -30,17 +31,19 @@ const Index: React.FC = () => {
     useEffect(() => {
         const filtered = cargaDocente.filter(item => {
             const estadoSilabo = item.curso?.estado_silabo || "Curso por gestionar";
+            const nombreDocente = `${item.nomdocente} ${item.apedocente}`.toLowerCase();
             return (
                 (codigoCurso ? item.idCurso.toString().includes(codigoCurso) : true) &&
                 (curso ? item.curso?.name.toLowerCase().includes(curso.toLowerCase()) : true) &&
                 (filial ? item.filial?.name.toLowerCase().includes(filial.toLowerCase()) : true) &&
                 (semestre ? item.semestre_academico?.nomSemestre.toLowerCase().includes(semestre.toLowerCase()) : true) &&
-                (procesoSilabo ? estadoSilabo.toLowerCase().includes(procesoSilabo.toLowerCase()) : true)
+                (procesoSilabo ? estadoSilabo.toLowerCase().includes(procesoSilabo.toLowerCase()) : true) &&
+                (docente ? nombreDocente.includes(docente.toLowerCase()) : true)
             );
         });
         setFilteredData(filtered);
         setCurrentPage(1);
-    }, [codigoCurso, curso, filial, semestre, procesoSilabo, cargaDocente]);
+    }, [codigoCurso, curso, filial, semestre, procesoSilabo, docente, cargaDocente]);
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -48,27 +51,7 @@ const Index: React.FC = () => {
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-    const handleGenerateScheme = (carga: CargaDocente) => {
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: "¿Deseas generar el esquema del sílabo?",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, generar',
-            cancelButtonText: 'Cancelar',
-        }).then((result) => {
-            if (result.isConfirmed) {
-                submitCarga(carga);
-                Swal.fire(
-                    'Generado!',
-                    'El esquema del sílabo ha sido generado.',
-                    'success'
-                );
-            }
-        });
-    };
+
 
     const submitCarga = (carga: CargaDocente) => {
         console.log('Objeto carga enviado:', carga);
@@ -87,7 +70,7 @@ const Index: React.FC = () => {
                         placeholder="Código de Curso"
                         value={codigoCurso}
                         onChange={(e) => setCodigoCurso(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/3"
+                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
                     />
                     <input
                         type="text"
@@ -117,6 +100,13 @@ const Index: React.FC = () => {
                         onChange={(e) => setProcesoSilabo(e.target.value)}
                         className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
                     />
+                    <input
+                        type="text"
+                        placeholder="Docente"
+                        value={docente}
+                        onChange={(e) => setDocente(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
+                    />
                     <button
                         onClick={() => {
                             setCodigoCurso('');
@@ -124,6 +114,7 @@ const Index: React.FC = () => {
                             setFilial('');
                             setSemestre('');
                             setProcesoSilabo('');
+                            setDocente('');
                         }}
                         className="px-4 py-2 bg-gray-500 text-white rounded bg-green-500"
                     >
@@ -138,6 +129,7 @@ const Index: React.FC = () => {
                         <tr className='bg-blue-700'>
                             <th className="px-4 py-2 border-b font-medium text-white">Código</th>
                             <th className="px-4 py-2 border-b font-medium text-white">Curso</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Docente</th>
                             <th className="px-4 py-2 border-b font-medium text-white">Filial</th>
                             <th className="px-4 py-2 border-b font-medium text-white">Semestre</th>
                             <th className="px-4 py-2 border-b font-medium text-white">Proceso Sílabos</th>
@@ -149,22 +141,28 @@ const Index: React.FC = () => {
                             <tr key={carga.idCargaDocente} className="hover:bg-gray-100">
                                 <td className="px-4 py-2 border-b text-center">{carga.idCurso}</td>
                                 <td className="px-4 py-2 border-b text-center">{carga.curso?.name}</td>
+                                <td className="px-4 py-2 border-b text-center">{`${carga.nomdocente} ${carga.apedocente}`}</td>
                                 <td className="px-4 py-2 border-b text-center">{carga.filial?.name}</td>
                                 <td className="px-4 py-2 border-b text-center">{carga.semestre_academico?.nomSemestre}</td>
-                                <td className="px-4 py-2 border-b text-center">
-                                    {carga.curso?.estado_silabo}
-                                </td>
+                                <td className="px-4 py-2 border-b text-center">{carga.curso?.estado_silabo}</td>
                                 <td className="px-4 py-2 border-b text-center">
                                     <button
-                                        className={`px-2 py-1 rounded text-white ${carga.curso?.estado_silabo === "Rechazado" ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"}`}
-                                        onClick={() => carga.curso?.estado_silabo === "Aún falta generar esquema" && handleGenerateScheme(carga)}
+                                        className={`px-2 py-1 rounded text-white 
+                                            ${carga.curso?.estado_silabo === "Rechazado" ? "bg-red-500 hover:bg-red-600" : ""}
+                                            ${carga.curso?.estado_silabo === "Aprobado" ? "bg-green-500 hover:bg-green-600" : ""}
+                                            ${carga.curso?.estado_silabo === "En espera de aprobación" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`
+                                        }
+                                        onClick={() => {
+                                            if (carga.curso?.estado_silabo === "En espera de aprobación") {
+                                                // Acción para observar el sílabo
+                                            } else if (carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Rechazado") {
+                                                // Acción para ver el sílabo
+                                            }
+                                        }}
                                     >
-                                        {carga.curso?.estado_silabo === "Aún falta generar esquema" && "Generar Esquema"}
-                                        {carga.curso?.estado_silabo === "En Espera de aprobación" && "Observar Sílabo"}
-                                        {carga.curso?.estado_silabo === "Confirmar envio de silabo" && "Confirmar Envío"}
-                                        {carga.curso?.estado_silabo === "Aprobado" && "Ver y Descargar"}
-                                        {carga.curso?.estado_silabo === "Inactivo" && "Ver y Descargar"}
-
+                                        {carga.curso?.estado_silabo === "En espera de aprobación" && "Observar Sílabo"}
+                                        {carga.curso?.estado_silabo === "Aprobado" && "Ver"}
+                                        {carga.curso?.estado_silabo === "Rechazado" && "Ver"}
                                     </button>
                                 </td>
                             </tr>
