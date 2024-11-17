@@ -1,5 +1,6 @@
 // src/CargaDocente/index.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {getFiliales} from '@/pages/services/cargadocente.services';
 import AsignarCursosModal from '@/pages/CargaDocente/AsignarCursosModal';
 
 interface Filial {
@@ -23,11 +24,9 @@ interface Curso {
 
 const CargaDocente: React.FC = () => {
   const [selectedFilial, setSelectedFilial] = useState<number | null>(null);
+  const [filiales, setFiliales] = useState<Filial[]>([]);
   const [searchDocente, setSearchDocente] = useState<string>('');
-  const [filiales] = useState<Filial[]>([
-    { id: 1, name: 'Filial Trujillo' },
-    { id: 2, name: 'Filial Chiclayo' },
-  ]);
+  
 
   const [docentes] = useState<Docente[]>([
     { id: 1, name: 'Profesor A', courseCount: 0, status: 'Sin Iniciar' },
@@ -40,6 +39,23 @@ const CargaDocente: React.FC = () => {
     { id: 2, name: 'Curso 2', ciclo: 'Ciclo 2', escuela: 'Escuela B' },
     { id: 3, name: 'Curso 3', ciclo: 'Ciclo 1', escuela: 'Escuela A' },
   ]);
+
+  useEffect(() => {
+    // Obtener las filiales al montar el componente
+    const fetchFiliales = async () => {
+      try {
+        console.log('Llamando a getFiliales...');
+        const filialesData = await getFiliales();
+        console.log('Datos de filiales recibidos:', filialesData);
+        setFiliales(filialesData);
+      } catch (error) {
+        console.error('Error al cargar las filiales:', error);
+      }
+    };
+
+    fetchFiliales();
+  }, []);
+
 
   const [showAsignarCursosModal, setShowAsignarCursosModal] = useState(false);
   const [selectedDocente, setSelectedDocente] = useState<Docente | null>(null);
@@ -104,7 +120,7 @@ const CargaDocente: React.FC = () => {
             placeholder="Ingrese el nombre del docente"
             value={searchDocente}
             onChange={handleSearchDocente}
-          />
+          />  
           <button className="bg-blue-500 text-white px-4 rounded-r">
             Buscar
           </button>

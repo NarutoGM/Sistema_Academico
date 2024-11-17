@@ -16,6 +16,32 @@ export interface Curso {
   escuela: string;
 }
 
+export interface Filial {
+  id: number;
+  name: string;
+}
+
+// Función para obtener las filiales
+export const getFiliales = async (): Promise<Filial[]> => {
+  const authData = isAuthenticated();
+  if (!authData || !authData.token) {
+    throw new Error('User is not authenticated');
+  }
+
+  const response = await fetch(`${apiUrl}/filiales`, {
+    headers: {
+      Authorization: `Bearer ${authData.token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Error al obtener filiales');
+  }
+
+  return response.json();
+}
+
 // Obtener la lista de docentes
 export const getDocentes = async (): Promise<Docente[]> => {
   const authData = isAuthenticated();
