@@ -16,6 +16,7 @@ use App\Http\Controllers\RegimenController;
 use App\Http\Controllers\CategoriaController; 
 use App\Http\Controllers\FilialController;
 use App\Http\Controllers\SubirSilaboController;
+use App\Http\Controllers\TokenController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -83,6 +84,7 @@ Route::post('/roles/guardar-roles', [RoleUserController::class, 'guardarRoles'])
 Route::apiResource('escuelas', EscuelaController::class);
 Route::apiResource('facultades', FacultadController::class);
 
+Route::get('/generate-token', [TokenController::class, 'generateAccessToken']);
 
  
 Route::get('/miscursos', [SubirSilaboController::class, 'index']); 

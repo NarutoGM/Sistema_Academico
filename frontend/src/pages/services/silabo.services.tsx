@@ -65,6 +65,7 @@ export interface CargaDocente {
     idDirector: number;
     nomdocente: string;
     apedocente: string;
+    email: string;
 
 }
 
@@ -105,7 +106,7 @@ export const getMisCursos = async (): Promise<MisCursosResponse> => {
 };
 
 
-export const getMisSilabos = async (): Promise<MisSilabosResponse> => {
+export const getMisSilabos = async (): Promise<any> => {
     const authData = isAuthenticated();
 
     if (!authData || !authData.token) {
@@ -126,5 +127,32 @@ export const getMisSilabos = async (): Promise<MisSilabosResponse> => {
 
     const data = await response.json();
     console.log("Sílabos recibidos:", data);
+    return data;
+};
+
+
+
+export const enviarinfoSilabo = async (silaboData: any): Promise<any> => {
+    const authData = isAuthenticated();
+
+    if (!authData || !authData.token) {
+        throw new Error('User is not authenticated or token is missing');
+    }
+
+    const response = await fetch(`${apiUrl}/gestionarsilabo`, {
+        method: 'POST', // Cambiar a POST para enviar datos
+        headers: {
+            Authorization: `Bearer ${authData.token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(silaboData), // Agregar el cuerpo con los datos a enviar
+    });
+
+    if (!response.ok) {
+        throw new Error('Error al enviar los datos del sílabo');
+    }
+
+    const data = await response.json();
+    console.log("Respuesta del servidor:", data);
     return data;
 };

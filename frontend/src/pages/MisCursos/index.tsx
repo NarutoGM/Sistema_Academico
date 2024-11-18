@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { getMisCursos, CargaDocente } from '@/pages/services/silabo.services';
+import { getAccessToken } from '@/pages/services/token.services';
+import {generateDocument } from "./componentesilabo";
+import { Packer, Document } from "docx";
+import { saveAs } from "file-saver";
+
+import { crearEstructuraCompleta } from '@/pages/services/modelodrive.services';
 
 const Index: React.FC = () => {
     const [cargaDocente, setCargaDocente] = useState<CargaDocente[]>([]);
@@ -50,29 +56,56 @@ const Index: React.FC = () => {
 
     const handleGenerateScheme = (carga: CargaDocente) => {
         Swal.fire({
-            title: '¿Estás seguro?',
+            title: "¿Estás seguro?",
             text: "¿Deseas generar el esquema del sílabo?",
-            icon: 'warning',
+            icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, generar',
-            cancelButtonText: 'Cancelar',
-        }).then((result) => {
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Sí, generar",
+            cancelButtonText: "Cancelar",
+        }).then(async (result) => {
             if (result.isConfirmed) {
-                submitCarga(carga);
+                await SubmitCarga(carga, 1); // Asegúrate de que esta llamada sea asincrónica
                 Swal.fire(
-                    'Generado!',
-                    'El esquema del sílabo ha sido generado.',
-                    'success'
+                    "Generado!",
+                    "El esquema del sílabo ha sido generado.",
+                    "success"
                 );
             }
         });
     };
 
-    const submitCarga = (carga: CargaDocente) => {
-        console.log('Objeto carga enviado:', carga);
+ 
+
+    const SubmitCarga = async (carga: CargaDocente) => {
+        const accessToken = await getAccessToken();
+    
+        try {
+            console.log(carga);
+            // Genera el documento utilizando la función modularizada
+            const doc = await generateDocument(carga); // Crear el documento en base a la carga
+            const blob = await Packer.toBlob(doc); // Convertir el documento a un Blob para el manejo de archivos
+            
+            // Opcional: puedes guardar el Blob directamente como archivo si solo se necesita localmente
+          //  saveAs(blob, "CargaDocente.docx");
+    
+            // Si es necesario subir el documento como parte de la estructura, conviértelo a un formato adecuado
+            const file = new File([blob], "CargaDocente.docx", { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    
+            // Llamar al método que verifica o realiza la carga del archivo en la estructura remota
+            await crearEstructuraCompleta(carga, accessToken, file);
+            console.log("Estructura y documento manejados correctamente");
+        } catch (error) {
+            console.error("Error al manejar la carga:", error);
+            alert("Hubo un problema al crear/verificar la estructura o manejar el documento.");
+        }
     };
+    
+    
+    
+    
+    
 
     return (
         <div className="p-4">
@@ -156,16 +189,32 @@ const Index: React.FC = () => {
                                 </td>
                                 <td className="px-4 py-2 border-b text-center">
                                     <button
-                                        className={`px-2 py-1 rounded text-white ${carga.curso?.estado_silabo === "Rechazado" ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"}`}
-                                        onClick={() => carga.curso?.estado_silabo === "Aún falta generar esquema" && handleGenerateScheme(carga)}
+                                        className={`px-2 py-1 rounded text-white 
+        ${carga.curso?.estado_silabo === "Rechazado" ? "bg-red-500 hover:bg-red-600" : ""}
+        ${carga.curso?.estado_silabo === "Aún falta generar esquema" ? "bg-blue-500 hover:bg-blue-600" : ""}
+        ${carga.curso?.estado_silabo === "Confirmar envio de silabo" ? "bg-yellow-500 hover:bg-yellow-600" : ""}
+        ${carga.curso?.estado_silabo === "En espera de aprobación" ? "bg-purple-500 hover:bg-purple-600" : ""}
+        ${carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Inactivo" ? "bg-green-500 hover:bg-green-600" : ""}`
+                                        }
+                                        onClick={() => {
+                                            if (carga.curso?.estado_silabo === "Aún falta generar esquema") {
+                                                handleGenerateScheme(carga);
+                                            } else if (carga.curso?.estado_silabo === "Confirmar envio de silabo") {
+                                                // Acción para confirmar el envío del sílabo
+                                            } else if (carga.curso?.estado_silabo === "En espera de aprobación") {
+                                                // Acción para observar el sílabo
+                                            } else if (carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Inactivo") {
+                                                // Acción para ver y descargar el sílabo
+                                            }
+                                        }}
                                     >
                                         {carga.curso?.estado_silabo === "Aún falta generar esquema" && "Generar Esquema"}
-                                        {carga.curso?.estado_silabo === "En Espera de aprobación" && "Observar Sílabo"}
+                                        {carga.curso?.estado_silabo === "En espera de aprobación" && "Observar Sílabo"}
                                         {carga.curso?.estado_silabo === "Confirmar envio de silabo" && "Confirmar Envío"}
                                         {carga.curso?.estado_silabo === "Aprobado" && "Ver y Descargar"}
                                         {carga.curso?.estado_silabo === "Inactivo" && "Ver y Descargar"}
-
                                     </button>
+
                                 </td>
                             </tr>
                         ))}
