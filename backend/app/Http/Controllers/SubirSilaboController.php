@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\CargaDocente;
+use App\Models\DirectorEscuela;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use App\Models\CursoAperturado;
-use App\Models\DocenteFilial;
-use App\Models\DirectorEscuela;
+use App\Models\User;
+
 use App\Models\Docente;
+use App\Models\PlanCursoAcademico;
 use App\Models\Silabo;
 
 class SubirSilaboController extends Controller
@@ -21,62 +22,293 @@ class SubirSilaboController extends Controller
         $user = auth()->user();
         $userId = $user ? $user->id : null;
 
-            // Verificar que el usuario esté autenticado y el ID no sea null
+        // Verificar que el usuario esté autenticado y el ID no sea null
         if ($userId) {
-        // Buscar el docente en el modelo Docente usando el userId
-        $docente = Docente::where('id', $userId)->first();
-     
-        // Comprobar si el docente existe
-        if ($docente) {
+            // Buscar el docente en el modelo Docente usando el userId
+            $docente = Docente::where('id', $userId)->first();
 
-            $cargadocente = CargaDocente::with(['filial', 'docente', 'semestreAcademico', 'malla', 'curso', 'escuela', 'director'])
-            ->where('idDocente', $docente->idDocente)
-            ->where('estado', true)
-            ->get()
-            ->map(function($carga) {
-                // Obtener el sílabo asociado a esta carga docente
-                $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
-                                ->where('idFilial', $carga->idFilial)
-                                ->where('idDocente', $carga->idDocente)
-                                ->first();
-                
-                // Determinar el estado del sílabo
-                if (!$silabo) {
-                    $carga->curso->estado_silabo = "Aún falta generar esquema";
-                } elseif (is_null($silabo->estado) && !is_null($silabo->fEnvio)) {
-                    $carga->curso->estado_silabo = "En Espera de aprobación";
-                } elseif (is_null($silabo->estado)) {
-                    $carga->curso->estado_silabo = "Confirmar envio de silabo";
-                }elseif ($silabo->estado == 0) {
-                    $carga->curso->estado_silabo = "Rechazado";
-                } elseif ($silabo->estado == 1) {
-                    $carga->curso->estado_silabo = "Aprobado";
-                }
-        
-                return $carga;
-            });
-        
-        
+            // Comprobar si el docente existe
+            if ($docente) {
+
+                $cargadocente = CargaDocente::with([
+                    'filial',
+                    'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio', // Selecciona solo los campos necesarios
+                    'curso' => function ($query) {
+                        $query->with(['departamento', 'facultad', 'area', 'regimenCurso', 'tipoCurso']);
+                    },
+                    'escuela:idEscuela,name',
+                ])
+                    ->where('idDocente', $docente->idDocente)
+                    ->where('estado', true)
+                    ->get()
+                    ->map(function ($carga) {
+                        $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
+                            ->where('idFilial', $carga->idFilial)
+                            ->where('idDocente', $carga->idDocente)
+                            
+                            ->first();
+                        if (!$silabo){
+                            $carga->curso->estado_silabo = "Aún falta generar esquema";
+                        }else{
+                        if ($silabo->activo==false) {
+                            $carga->curso->estado_silabo = "Inactivo";
+                        } elseif ($silabo->estado==0 && $silabo->activo=true) {
+                            $carga->curso->estado_silabo = "Confirmar envio de silabo";
+                        } elseif ($silabo->estado==1 && $silabo->activo=true) {
+                            $carga->curso->estado_silabo = "En espera de aprobación";
+                        } elseif ($silabo->estado==2 && $silabo->activo=true) {
+                            $carga->curso->estado_silabo = "Confirmar envio de silabo";
+                        } elseif ($silabo->estado==3 && $silabo->activo=true) {
+                            $carga->curso->estado_silabo = "Aprobado";
+                        }
+                    }
+                        return $carga;
+                    })
+                    ->map(function ($carga) {
+                        $plancursoacademico = PlanCursoAcademico::where('idMalla', $carga->idMalla)
+                            ->where('idCurso', $carga->idCurso)
+                            ->where('idEscuela', $carga->idEscuela)
+                            ->first();
+
+                        // Verificar si existe el PlanCursoAcademico y asignar el ciclo
+                        if ($plancursoacademico) {
+                            $carga->ciclo = $plancursoacademico->ciclo;
+                            $carga->prerequisitos = $plancursoacademico->prerequisitos;
+                        }
+
+                        return $carga;
+                    })
+                    ->map(function ($carga) {
+                        $user = auth()->user();
+
+                        $carga->nomdocente = $user->name;
+                        $carga->apedocente = $user->lastname;
+                        $carga->email = $user->email;
+
+                        return $carga;
+                    });
 
 
 
-            return response()->json([
-                'cargadocente' => $cargadocente,
-                'message' => 'Docente encontrado',
-            ]);
 
 
-
+                return response()->json([
+                    'cargadocente' => $cargadocente,
+                    'message' => 'Docente encontrado',
+                ]);
+            } else {
+                return response()->json([
+                    'message' => 'Docente no encontrado',
+                ], 404);
+            }
         } else {
             return response()->json([
-                'message' => 'Docente no encontrado',
-            ], 404);
-        }
-        } else {
-            return response()->json([
-            'message' => 'Usuario no autenticado',
+                'message' => 'Usuario no autenticado',
             ], 401);
         }
-
     }
+
+    public function versilabos()
+    {
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+        if ($userId) {
+
+            $directorescuela = DirectorEscuela::where('id', $userId)->first();
+            if ($directorescuela) {
+                if ($directorescuela) {
+
+
+
+
+
+                    $cargadocente = CargaDocente::with([
+                        'filial',
+                        'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio', // Selecciona solo los campos necesarios
+                        'curso',
+                        'escuela:idEscuela,name',
+                    ])
+                    ->where('idDirector', $directorescuela->idDirector)
+                    ->where('estado', true)
+                    ->get()
+                    ->map(function ($carga) {
+                        $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
+                            ->where('idFilial', $carga->idFilial)
+                            ->where('idDocente', $carga->idDocente)
+                            ->where('estado', '!=', 0) 
+                            ->first();
+    
+                        if ($silabo) {
+                            if ($silabo->activo == false) {
+                                $carga->curso->estado_silabo = "Inactivo";
+                            } elseif ($silabo->estado == 1 && $silabo->activo == true) {
+                                $carga->curso->estado_silabo = "En espera de aprobación";
+                            } elseif ($silabo->estado == 2 && $silabo->activo == true) {
+                                $carga->curso->estado_silabo = "Aprobado";
+                            } elseif ($silabo->estado == 3 && $silabo->activo == true) {
+                                $carga->curso->estado_silabo = "Rechazado";
+                            }
+                            return $carga; // Solo devuelve las cargas con un sílabo
+                        }
+    
+                        return null; // Omite las cargas sin sílabo
+                    })
+                    ->filter() // Filtra para eliminar las cargas nulas (sin sílabo)
+                    ->map(function ($carga) {
+
+                        $docente = Docente::where('idDocente', $carga->idDocente)
+                        ->where('idDocente', $carga->idDocente)
+                        ->first();
+
+                        $docenteuser = User::where('id', $docente->id)
+                        ->first();
+
+                        $carga->nomdocente = $docenteuser->name;
+                        $carga->apedocente = $docenteuser->lastname;
+    
+                        return $carga;
+                    });
+
+                    
+
+
+                    return response()->json([
+                        'cargadocente' => $cargadocente,
+                        'message' => 'Docente encontrado',
+                    ]);
+
+
+                        
+                        
+                } else {
+                    return response()->json([
+                        'message' => 'Director de escuela no encontrado',
+                    ], 404);
+                }
+            } else {
+                return response()->json([
+                    'message' => 'Director de escuela no encontrado',
+                ], 404);
+            }
+        } else {
+            return response()->json([
+                'message' => 'Usuario no autenticado',
+            ], 401);
+        }
+    }
+
+    public function infohorario()
+    {
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+
+        // Verificar que el usuario esté autenticado y el ID no sea null
+        if ($userId) {
+            // Buscar el docente en el modelo Docente usando el userId
+            $docente = Docente::where('id', $userId)->first();
+
+            // Comprobar si el docente existe
+            if ($docente) {
+
+                $cargadocente = CargaDocente::with([
+                    'filial',
+                    'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio', // Selecciona solo los campos necesarios
+                    'curso' => function ($query) {
+                        $query->with(['departamento', 'facultad', 'area', 'regimenCurso', 'tipoCurso']);
+                    },
+                    'escuela:idEscuela,name',
+                ])
+                    ->where('idDocente', $docente->idDocente)
+                    ->where('estado', true)
+                    ->get()
+                    ->map(function ($carga) {
+                        $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
+                            ->where('idFilial', $carga->idFilial)
+                            ->where('idDocente', $carga->idDocente)
+                            
+                            ->first();
+                        if (!$silabo){
+                            $carga->curso->estado_silabo = "Aún falta generar esquema";
+                        }else{
+                        if ($silabo->activo==false) {
+                            $carga->curso->estado_silabo = "Inactivo";
+                        } elseif ($silabo->estado==0 && $silabo->activo=true) {
+                            $carga->curso->estado_silabo = "Confirmar envio de silabo";
+                        } elseif ($silabo->estado==1 && $silabo->activo=true) {
+                            $carga->curso->estado_silabo = "En espera de aprobación";
+                        } elseif ($silabo->estado==2 && $silabo->activo=true) {
+                            $carga->curso->estado_silabo = "Confirmar envio de silabo";
+                        } elseif ($silabo->estado==3 && $silabo->activo=true) {
+                            $carga->curso->estado_silabo = "Aprobado";
+                        }
+                    }
+                        return $carga;
+                    })
+                    ->map(function ($carga) {
+                        $plancursoacademico = PlanCursoAcademico::where('idMalla', $carga->idMalla)
+                            ->where('idCurso', $carga->idCurso)
+                            ->where('idEscuela', $carga->idEscuela)
+                            ->first();
+
+                        // Verificar si existe el PlanCursoAcademico y asignar el ciclo
+                        if ($plancursoacademico) {
+                            $carga->ciclo = $plancursoacademico->ciclo;
+                            $carga->prerequisitos = $plancursoacademico->prerequisitos;
+                        }
+
+                        return $carga;
+                    })
+                    ->map(function ($carga) {
+                        $user = auth()->user();
+
+                        $carga->nomdocente = $user->name;
+                        $carga->apedocente = $user->lastname;
+                        $carga->email = $user->email;
+
+                        return $carga;
+                    });
+
+
+
+
+
+                return response()->json([
+                    'cargadocente' => $cargadocente,
+                    'message' => 'Docente encontrado',
+                ]);
+            } else {
+                return response()->json([
+                    'message' => 'Docente no encontrado',
+                ], 404);
+            }
+        } else {
+            return response()->json([
+                'message' => 'Usuario no autenticado',
+            ], 401);
+        }
+    }
+
+
+
+
+
+
+
+    public function gestionarsilabo()
+    {
+       
+
+
+
+        
+    }
+
+
+
+
+
+
+
+    
+    
 }

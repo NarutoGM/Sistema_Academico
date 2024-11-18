@@ -16,6 +16,7 @@ use App\Http\Controllers\RegimenController;
 use App\Http\Controllers\CategoriaController; 
 use App\Http\Controllers\FilialController;
 use App\Http\Controllers\SubirSilaboController;
+use App\Http\Controllers\TokenController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -37,8 +38,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 Route::get('/users', [UserController::class, 'index']);     
 Route::get('/administrarusuarios', [UserController::class, 'administrarusuarios']); // Obtener todos los permisos con estado 1
 
-
-Route::post('/users', [UserController::class, 'store']);       
+Route::post('/users', [UserController::class, 'store']);
 Route::get('/users/{id}', [UserController::class, 'show']);    
 Route::put('/users/{id}', [UserController::class, 'update']);   
 Route::delete('/users/{id}', [UserController::class, 'destroy']); 
@@ -84,13 +84,17 @@ Route::post('/roles/guardar-roles', [RoleUserController::class, 'guardarRoles'])
 Route::apiResource('escuelas', EscuelaController::class);
 Route::apiResource('facultades', FacultadController::class);
 
+Route::get('/generate-token', [TokenController::class, 'generateAccessToken']);
 
  
 Route::get('/miscursos', [SubirSilaboController::class, 'index']); 
+Route::get('/versilabos', [SubirSilaboController::class, 'versilabos']); 
 
 Route::apiResource('condiciones', CondicionController::class);  
 Route::apiResource('regimenes', RegimenController::class);  
 Route::apiResource('categorias', CategoriaController::class);
 Route::apiResource('filiales', FilialController::class);  
+Route::get('/filiales/{idFilial}/docentes', [FilialController::class, 'getDocentes']);
+
 
 });

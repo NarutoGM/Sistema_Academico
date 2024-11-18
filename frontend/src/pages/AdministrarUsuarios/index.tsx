@@ -3,10 +3,10 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ChevronUp, ChevronDown, Plus, Edit, Download, Eye, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { saveRoles, createUsuario, getInfoAdministrarUsuarios, User,FilialInfo , Docente, DirectorEscuela, Categoria, Condicion, Regimen, Filial, Rol, Escuela } from "@/pages/services/rolesyusuarios.services";
+import { saveRoles, createUsuario, getInfoAdministrarUsuarios, User, FilialInfo, Docente, DirectorEscuela, Categoria, Condicion, Regimen, Filial, Rol, Escuela } from "@/pages/services/rolesyusuarios.services";
 
 import Modal from './Modal';
-import ModalCrear from './ModalCrear';
+import ModalCrearUser from './ModalCrearUser';
 
 interface Activity {
   id: number;
@@ -15,7 +15,7 @@ interface Activity {
 }
 
 
-const FilteredUnidad: React.FC = () => {
+const Index: React.FC = () => {
   const [formData, setFormData] = useState<{
     id: number | '';
     name: string;
@@ -31,65 +31,48 @@ const FilteredUnidad: React.FC = () => {
 
 
 
-  //const [unidadToDelete, setUnidadToDelete] = useState<null | { id: number; Name: string; AsesorFree: boolean }>(null);
   const [data, setData] = useState<User[]>([]);
   const [filters, setFilters] = useState({
     name: '',
   });
   const [sortConfig, setSortConfig] = useState<{ key: keyof User | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
   const navigate = useNavigate();
-  // const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false); // State for PersonaModal
+
+
+
+
+
+  
   // Función para abrir PersonaModal
   const [isModalCrearOpen, setIsModalCrearOpen] = useState(false);
-
-  const openPersonaModal = () => setIsPersonaModalOpen(true);
-  const closePersonaModal = () => setIsPersonaModalOpen(false);
-
   const closeModalCrear = () => {
     setIsModalCrearOpen(false);
   };
 
- // const handleSavePersona = (formData: FormData) => {
- //   console.log('Contenido de formData:');
+  const guardarusuario = async (usuarioData: { name: string; lastname: string; dni: string; email: string; password: string }) => {
+    try {
+      const errors = await createUsuario(usuarioData); 
+      if (errors) {
+        const formattedErrors: { [key: string]: string } = {};
+        Object.keys(errors).forEach((key) => {
+          // Convierte cada array de errores en una cadena
+          formattedErrors[key] = errors[key].join(' ');
+        });
+        return formattedErrors; // Devuelve el objeto con errores como cadenas
+      }
+      await fetchData();
+      closeModalCrear();
+    } catch (error: any) {
+      console.error("Error al crear usuario:", error);
+      return { general: "Ocurrió un error al crear el usuario. Inténtalo nuevamente." };
+    }
+  };
+  
+  
+  
 
-    // Convertir FormData a objeto plano
- //   const personaData: any = Object.fromEntries(formData.entries());
 
-    // Crear un objeto solo con los campos necesarios
-  //  const cleanedData = {
- //     name: personaData.Nombres,
- //     telefono: personaData.Celular,
-  //    direccion: personaData.Direccion,
- //     foto: formData.get('Foto'), // Aquí obtenemos el archivo directamente de formData
- //     email: personaData.Email,
-  //    password: personaData.Password,
- //   };
-
- //   console.log('Datos de la persona antes de enviar:', cleanedData);
-
-    // Crear una nueva instancia de FormData para enviar al servidor
- //   const newFormData = new FormData();
- //   for (const key in cleanedData) {
- //     if (cleanedData.hasOwnProperty(key)) {
-        // Aquí se añade el archivo como un objeto File
-  //      newFormData.append(key, cleanedData[key]);
-  //    }
-   // }
-
-    // Llamar a createUsuario con el nuevo FormData
-  //  createUsuario(newFormData)
-  //    .then(result => {
-  //      console.log('Usuario creado:', result);
-   //   })
-   //   .catch(error => {
-   //     console.error('Error al crear usuario:', error);
-   //   });
-
-    // Cerrar el modal de persona
-  //  closePersonaModal();
-  //};
 
 
 
@@ -199,7 +182,6 @@ const FilteredUnidad: React.FC = () => {
 
       await fetchData(); // Actualiza la lista después de guardar
       setBoxBActivities(originalBoxBActivities); // Resetea las actividades
-      closeModalCrear(); // Cierra el modal
     } catch (error: any) {
       console.error('Error guardando permisos:', error.message);
     }
@@ -268,13 +250,13 @@ const FilteredUnidad: React.FC = () => {
       <div className="w-full max-w-full rounded-lg shadow-lg bg-white p-6 dark:bg-boxdark">
         {/* Botón Agregar */}
         <button
-
-          onClick={openPersonaModal} // Abrir PersonaModal
+          onClick={() => setIsModalCrearOpen(true)} // Abre el modal de creación
           className="flex items-center bg-primary text-white font-bold py-2 px-4 rounded hover:bg-blue-600 mb-4"
         >
           <Plus className="w-5 h-5 text-white mr-2" />
           Agregar
         </button>
+
 
         {/* Título y Botón Exportar */}
         <div className="p-4 flex justify-between items-center">
@@ -356,18 +338,19 @@ const FilteredUnidad: React.FC = () => {
         />
 
 
+        <ModalCrearUser
+          isModalOpen={isModalCrearOpen}
+          closeModal={closeModalCrear} // Define la función para cerrar el modal
+          guardarusuario={guardarusuario} // Reutiliza la función de guardado si aplica
+
+        />
 
       </DndProvider>
 
-      {/*       <ModalCrear
-        isOpen={isPersonaModalOpen}
-        onClose={closePersonaModal}
-        onSave={handleSavePersona}
-      /> */}
 
 
     </div>
   );
 };
 
-export default FilteredUnidad;
+export default Index;

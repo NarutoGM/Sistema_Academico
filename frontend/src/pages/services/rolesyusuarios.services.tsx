@@ -94,38 +94,46 @@ export interface ConjuntoDatos {
   users: User[];
 }
 
-// Función para crear una nueva persona
-export const createUsuario = async (formData: FormData): Promise<any> => {
-  const authData = isAuthenticated();
-  const token = authData?.token;
+
+
+
+
+export const createUsuario = async (usuarioData: {
+  name: string;
+  lastname: string;
+  dni: string;
+  email: string;
+  password: string;
+}): Promise<{ [key: string]: string[] } | void> => { // Ajusta el tipo para reflejar los errores de validación
+  const authData = isAuthenticated(); 
+  const token = authData?.token; 
 
   if (!token) {
-    throw new Error('Token no disponible');
-  }
-
-  // Verifica que el campo name esté presente
-  if (!formData.get('name')) {
-    throw new Error('El campo name es requerido');
+    throw new Error('Token no disponible'); 
   }
 
   const response = await fetch(`${apiUrl}/users`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
     },
-    body: formData,
+    body: JSON.stringify(usuarioData),
   });
 
   if (!response.ok) {
-    const errorResponse = await response.json();
-    console.error('Error al crear la persona:', errorResponse);
-    throw new Error(`Estado: ${response.status}, Mensaje: ${errorResponse.message || 'Error desconocido al crear persona'}`);
+    if (response.status === 422) { 
+      const errorData = await response.json(); 
+      return errorData.errors; // Devuelve los errores de validación al frontend
+    }
+    throw new Error('Error al crear el usuario');
   }
-
-  const result = await response.json();
-  console.log('Persona creada:', result);
-  return result;
 };
+
+
+
+
+
 
 
 // Función para obtener todos los usuarios
