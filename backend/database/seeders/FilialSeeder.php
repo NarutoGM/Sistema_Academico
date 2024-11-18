@@ -15,8 +15,7 @@ class FilialSeeder extends Seeder
         DB::table('filial')->insert([
             ['name' => 'Filial Trujillo'],
             ['name' => 'Filial Huamachuco'],
-            ['name' => 'Filial Valle Jequetepeque'],
-            ['name' => 'Filial Santiago de Chuco']
+            ['name' => 'Filial Valle Jequetepeque']
         ]);
     }
 }

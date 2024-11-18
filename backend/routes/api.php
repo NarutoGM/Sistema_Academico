@@ -92,5 +92,7 @@ Route::apiResource('condiciones', CondicionController::class);
 Route::apiResource('regimenes', RegimenController::class);  
 Route::apiResource('categorias', CategoriaController::class);
 Route::apiResource('filiales', FilialController::class);  
+Route::get('/filiales/{idFilial}/docentes', [FilialController::class, 'getDocentes']);
+
 
 });

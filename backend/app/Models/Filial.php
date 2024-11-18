@@ -19,8 +19,7 @@ class Filial extends Model
 public function docentes()
 {
     return $this->belongsToMany(Docente::class, 'docentefilial', 'idFilial', 'idDocente')
-                ->withPivot('idCondicion', 'idRegimen', 'idCategoria', 'estado') // Campos adicionales
-                ->withTimestamps();
+                ->withPivot('idCondicion', 'idRegimen', 'idCategoria', 'estado'); // Campos adicionales
 }
 
 }
