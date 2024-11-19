@@ -207,7 +207,7 @@ const Index: React.FC = () => {
                                 <td className="px-4 py-2 border-b text-center">
                                     {carga.curso?.estado_silabo}
                                 </td>
-                            
+
                                 <td className="px-4 py-2 border-b text-center">
                                     <div className="flex flex-col space-y-2">
                                         {/* Botón principal */}

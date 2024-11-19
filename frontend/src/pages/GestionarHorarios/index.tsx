@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { getCargadocentexciclo, HorarioDocente,getHorarios ,Horario} from '@/pages/services/horario.services';
-
+import { getCargadocentexciclo, HorarioDocente, getHorarios, Horario } from '@/pages/services/horario.services';
+import { getAccessToken } from '@/pages/services/token.services';
 
 const HorariosTable: React.FC = () => {
     const [horarios, setHorarios] = useState<Horario[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+    const [selectedHorario, setSelectedHorario] = useState<Horario | null>(null);
 
     useEffect(() => {
         const fetchHorarios = async () => {
@@ -25,6 +27,33 @@ const HorariosTable: React.FC = () => {
 
         fetchHorarios();
     }, []);
+
+    const handleGenerateClick = (horario: Horario) => {
+        setSelectedHorario(horario);
+        setIsModalOpen(true);
+    };
+
+    const handleConfirm = async () => {
+        if (selectedHorario) {
+            try {
+
+                const accessToken = await getAccessToken();
+
+                const data= await getCargadocentexciclo(); // Ajusta el parámetro según sea necesario
+
+                
+                console.log(data);
+                
+                alert('Esquema de horarios generado con éxito');
+            } catch (err) {
+                console.error('Error al generar el esquema:', err);
+                alert('Error al generar el esquema');
+            } finally {
+                setIsModalOpen(false);
+                setSelectedHorario(null);
+            }
+        }
+    };
 
     if (error) {
         return <div className="text-red-500 font-bold">Error: {error}</div>;
@@ -66,7 +95,10 @@ const HorariosTable: React.FC = () => {
                                 <td className="border border-gray-300 px-4 py-2">{horario.observaciones}</td>
                                 <td className="border border-gray-300 px-4 py-2 text-center">
                                     {horario.estado ? (
-                                        <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
+                                        <button
+                                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+                                            onClick={() => handleGenerateClick(horario)}
+                                        >
                                             Generar Esquema de Horarios
                                         </button>
                                     ) : (
@@ -81,6 +113,29 @@ const HorariosTable: React.FC = () => {
                 </table>
             ) : (
                 <p className="text-gray-600 text-center">No hay horarios disponibles</p>
+            )}
+
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white rounded-lg p-6 shadow-lg w-1/3">
+                        <h2 className="text-xl font-bold mb-4">Confirmar acción</h2>
+                        <p className="mb-4">¿Estás seguro de que deseas generar el esquema de horarios?</p>
+                        <div className="flex justify-end space-x-4">
+                            <button
+                                className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition"
+                                onClick={() => setIsModalOpen(false)}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+                                onClick={handleConfirm}
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
