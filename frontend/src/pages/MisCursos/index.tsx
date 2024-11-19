@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import { getMisCursos, CargaDocente } from '@/pages/services/silabo.services';
+import { getMisCursos, CargaDocente, enviarinfoSilabo } from '@/pages/services/silabo.services';
 import { getAccessToken } from '@/pages/services/token.services';
-import {generateDocument } from "./componentesilabo";
+import { generateDocument } from "./componentesilabo";
 import { Packer, Document } from "docx";
 import { saveAs } from "file-saver";
-
+import { FaFileAlt, FaCheck, FaEye, FaDownload, FaExclamationTriangle } from "react-icons/fa"; // Íconos de React Icons
 import { crearEstructuraCompleta } from '@/pages/services/modelodrive.services';
 
 const Index: React.FC = () => {
@@ -21,6 +21,7 @@ const Index: React.FC = () => {
     const [filial, setFilial] = useState('');
     const [semestre, setSemestre] = useState('');
     const [procesoSilabo, setProcesoSilabo] = useState('');
+    const [shouldUpdate, setShouldUpdate] = useState(false); // Estado para controlar la actualización
 
     useEffect(() => {
         getMisCursos()
@@ -31,7 +32,8 @@ const Index: React.FC = () => {
             .catch((error) => {
                 setError(error.message);
             });
-    }, []);
+    }, [shouldUpdate]); // Añade shouldUpdate como dependencia
+
 
     useEffect(() => {
         const filtered = cargaDocente.filter(item => {
@@ -76,28 +78,42 @@ const Index: React.FC = () => {
         });
     };
 
- 
+
 
     const SubmitCarga = async (carga: CargaDocente) => {
         const accessToken = await getAccessToken();
-    
+
         try {
-            console.log(carga);
+            // console.log(carga);
             // Genera el documento utilizando la función modularizada
             const doc = await generateDocument(carga); // Crear el documento en base a la carga
             const blob = await Packer.toBlob(doc); // Convertir el documento a un Blob para el manejo de archivos
-            
+
             // Opcional: puedes guardar el Blob directamente como archivo si solo se necesita localmente
-          //  saveAs(blob, "CargaDocente.docx");
-    
+            //  saveAs(blob, "CargaDocente.docx");
+
             // Si es necesario subir el documento como parte de la estructura, conviértelo a un formato adecuado
             const file = new File([blob], "CargaDocente.docx", { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-    
+
             // Llamar al método que verifica o realiza la carga del archivo en la estructura remota
+
             const link = await crearEstructuraCompleta(carga, accessToken, file);
             console.log("Estructura y documento manejados correctamente");
-            
-            console.log(link);
+
+            //   console.log(link);
+            const silaboData = {
+                documento: link, // URL o información del documento generado
+                idCargaDocente: carga.idCargaDocente, // Asumiendo que `carga` tiene un `id`
+                idDocente: carga.idDocente, // Información del docente
+                idFilial: carga.idFilial, // Información del curso
+                idDirector: carga.idDirector, // Información del curso
+
+            };
+
+            const response = await enviarinfoSilabo(silaboData);
+            console.log("Información del sílabo enviada correctamente:", response);
+
+            setShouldUpdate((prev) => !prev); // Cambiar el estado para disparar el useEffect
 
 
         } catch (error) {
@@ -105,11 +121,11 @@ const Index: React.FC = () => {
             alert("Hubo un problema al crear/verificar la estructura o manejar el documento.");
         }
     };
-    
-    
-    
-    
-    
+
+
+
+
+
 
     return (
         <div className="p-4">
@@ -191,33 +207,73 @@ const Index: React.FC = () => {
                                 <td className="px-4 py-2 border-b text-center">
                                     {carga.curso?.estado_silabo}
                                 </td>
+                            
                                 <td className="px-4 py-2 border-b text-center">
-                                    <button
-                                        className={`px-2 py-1 rounded text-white 
+                                    <div className="flex flex-col space-y-2">
+                                        {/* Botón principal */}
+                                        <button
+                                            className={`flex items-center gap-2 px-2 py-1 rounded text-white 
         ${carga.curso?.estado_silabo === "Rechazado" ? "bg-red-500 hover:bg-red-600" : ""}
         ${carga.curso?.estado_silabo === "Aún falta generar esquema" ? "bg-blue-500 hover:bg-blue-600" : ""}
-        ${carga.curso?.estado_silabo === "Confirmar envio de silabo" ? "bg-yellow-500 hover:bg-yellow-600" : ""}
+        ${carga.curso?.estado_silabo === "Confirmar envio de silabo" ? "bg-green-500 hover:bg-green-600" : ""}
         ${carga.curso?.estado_silabo === "En espera de aprobación" ? "bg-purple-500 hover:bg-purple-600" : ""}
         ${carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Inactivo" ? "bg-green-500 hover:bg-green-600" : ""}`
-                                        }
-                                        onClick={() => {
-                                            if (carga.curso?.estado_silabo === "Aún falta generar esquema") {
-                                                handleGenerateScheme(carga);
-                                            } else if (carga.curso?.estado_silabo === "Confirmar envio de silabo") {
-                                                // Acción para confirmar el envío del sílabo
-                                            } else if (carga.curso?.estado_silabo === "En espera de aprobación") {
-                                                // Acción para observar el sílabo
-                                            } else if (carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Inactivo") {
-                                                // Acción para ver y descargar el sílabo
                                             }
-                                        }}
-                                    >
-                                        {carga.curso?.estado_silabo === "Aún falta generar esquema" && "Generar Esquema"}
-                                        {carga.curso?.estado_silabo === "En espera de aprobación" && "Observar Sílabo"}
-                                        {carga.curso?.estado_silabo === "Confirmar envio de silabo" && "Confirmar Envío"}
-                                        {carga.curso?.estado_silabo === "Aprobado" && "Ver y Descargar"}
-                                        {carga.curso?.estado_silabo === "Inactivo" && "Ver y Descargar"}
-                                    </button>
+                                            onClick={() => {
+                                                if (carga.curso?.estado_silabo === "Aún falta generar esquema") {
+                                                    handleGenerateScheme(carga);
+                                                } else if (carga.curso?.estado_silabo === "En espera de aprobación") {
+                                                    alert("Esperando aprobación del sílabo.");
+                                                } else if (carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Inactivo") {
+                                                    window.open(carga.curso?.documento, "_blank");
+                                                }
+                                            }}
+                                        >
+                                            {carga.curso?.estado_silabo === "Aún falta generar esquema" && (
+                                                <>
+                                                    <FaExclamationTriangle /> Generar Esquema
+                                                </>
+                                            )}
+                                            {carga.curso?.estado_silabo === "En espera de aprobación" && (
+                                                <>
+                                                    <FaEye /> Observar Sílabo
+                                                </>
+                                            )}
+                                            {carga.curso?.estado_silabo === "Confirmar envio de silabo" && (
+                                                <a
+                                                    href={carga.curso?.documento || "#"}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-white no-underline flex items-center gap-2"
+                                                >
+                                                    <FaFileAlt /> Ver Documento
+                                                </a>
+                                            )}
+                                            {carga.curso?.estado_silabo === "Aprobado" && (
+                                                <>
+                                                    <FaDownload /> Ver y Descargar
+                                                </>
+                                            )}
+                                            {carga.curso?.estado_silabo === "Inactivo" && (
+                                                <>
+                                                    <FaDownload /> Ver y Descargar
+                                                </>
+                                            )}
+                                        </button>
+
+                                        {/* Botón adicional para Confirmar Envío */}
+                                        {carga.curso?.estado_silabo === "Confirmar envio de silabo" && (
+                                            <button
+                                                className="flex items-center gap-2 px-2 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white"
+                                                onClick={() => {
+                                                    alert("El envío del sílabo ha sido confirmado.");
+                                                    // Aquí puedes agregar lógica adicional para manejar la confirmación
+                                                }}
+                                            >
+                                                <FaCheck /> Confirmar Envío
+                                            </button>
+                                        )}
+                                    </div>
 
                                 </td>
                             </tr>

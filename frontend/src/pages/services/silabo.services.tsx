@@ -18,6 +18,8 @@ export interface Curso {
     idCurso: number;
     name: string;
     estado_silabo: string;
+    documento: string;
+
 }
 
 export interface Filial {

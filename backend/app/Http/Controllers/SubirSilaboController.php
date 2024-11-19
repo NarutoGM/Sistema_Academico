@@ -47,9 +47,17 @@ class SubirSilaboController extends Controller
                             ->where('idDocente', $carga->idDocente)
                             
                             ->first();
+
+
                         if (!$silabo){
                             $carga->curso->estado_silabo = "Aún falta generar esquema";
+
+                            $carga->curso->documento="";
+
                         }else{
+
+                            $carga->curso->documento=$silabo->documento;
+
                         if ($silabo->activo==false) {
                             $carga->curso->estado_silabo = "Inactivo";
                         } elseif ($silabo->estado==0 && $silabo->activo=true) {
@@ -129,23 +137,24 @@ class SubirSilaboController extends Controller
                         'escuela:idEscuela,name',
                     ])
                     ->where('idDirector', $directorescuela->idDirector)
-                    ->where('estado', true)
                     ->get()
                     ->map(function ($carga) {
                         $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
                             ->where('idFilial', $carga->idFilial)
                             ->where('idDocente', $carga->idDocente)
-                            ->where('estado', '!=', 0) 
+                            ->where('estado', '!=', null) 
                             ->first();
-    
+
                         if ($silabo) {
+
+
                             if ($silabo->activo == false) {
                                 $carga->curso->estado_silabo = "Inactivo";
-                            } elseif ($silabo->estado == 1 && $silabo->activo == true) {
+                            }elseif ($silabo->estado == 1 && $silabo->activo == true) {
                                 $carga->curso->estado_silabo = "En espera de aprobación";
-                            } elseif ($silabo->estado == 2 && $silabo->activo == true) {
-                                $carga->curso->estado_silabo = "Aprobado";
                             } elseif ($silabo->estado == 3 && $silabo->activo == true) {
+                                $carga->curso->estado_silabo = "Aprobado";
+                            } elseif ($silabo->estado == 2 && $silabo->activo == true) {
                                 $carga->curso->estado_silabo = "Rechazado";
                             }
                             return $carga; // Solo devuelve las cargas con un sílabo
@@ -229,7 +238,9 @@ class SubirSilaboController extends Controller
                             ->first();
                         if (!$silabo){
                             $carga->curso->estado_silabo = "Aún falta generar esquema";
+
                         }else{
+
                         if ($silabo->activo==false) {
                             $carga->curso->estado_silabo = "Inactivo";
                         } elseif ($silabo->estado==0 && $silabo->activo=true) {
@@ -294,14 +305,44 @@ class SubirSilaboController extends Controller
 
 
 
-    public function gestionarsilabo()
+    public function gestionarsilabo(Request $request)
     {
-       
-
-
-
-        
+        try {
+            // Validar los datos entrantes
+            $request->validate([
+                'idCargaDocente' => 'required|integer',
+                'idDocente' => 'required|integer',
+                'idFilial' => 'required|integer',
+                'documento' => 'nullable|string',
+                'idDirector' => 'required|integer',
+            ]);
+    
+            // Crear el registro en la base de datos
+            $silabo = Silabo::create([
+                'idCargaDocente' => $request->idCargaDocente,
+                'idDocente' => $request->idDocente,
+                'idFilial' => $request->idFilial,
+                'documento' => $request->documento,
+                'activo' => 1,
+                'estado' => 0,
+                'idDirector' => $request->idDirector,
+            ]);
+    
+            // Retornar una respuesta de éxito
+            return response()->json([
+                'message' => 'El sílabo se creó correctamente.',
+                'silabo' => $silabo,
+            ], 201);
+    
+        } catch (\Exception $e) {
+            // Retornar una respuesta de error si algo sale mal
+            return response()->json([
+                'message' => 'Hubo un error al crear el sílabo.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
+    
 
 
 

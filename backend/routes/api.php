@@ -96,6 +96,7 @@ Route::apiResource('filiales', FilialController::class);
 Route::get('/filiales/{idFilial}/docentes', [FilialController::class, 'getDocentes']);
 Route::get('/cargadocentexciclo', [HorarioController::class, 'index']); // Obtener todos los permisos
 Route::get('/listarhorarios', [HorarioController::class, 'listarhorarios']); // Obtener todos los permisos
+Route::post('gestionarsilabo', [SubirSilaboController::class, 'gestionarsilabo']);
 
 
 });
