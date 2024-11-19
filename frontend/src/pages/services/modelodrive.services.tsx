@@ -1,11 +1,16 @@
 import { Document, Paragraph, TextRun, AlignmentType } from "docx";
 import { saveAs } from "file-saver";
-import {  CargaDocente } from '@/pages/services/silabo.services';
+import { CargaDocente } from '@/pages/services/silabo.services';
 
 // Constantes necesarias
 const SERVICE_ACCOUNT_EMAIL = "XXXX@XXXX.iam.gserviceaccount.com";
 const PARENT_FOLDER_ID = "1Mi65WujBQwmANIKLfJfdBUSFOeVAzlPC";
 const ACCESS_TOKEN = "TOKEN_GENERADO";
+
+// Normalizar nombres de carpetas
+const normalizarNombre = (nombre: string): string => {
+    return nombre.trim().toLowerCase().replace(/\s+/g, " ");
+};
 
 // Función para verificar o crear una carpeta en Google Drive
 const verificarOCrearCarpeta = async (
@@ -13,7 +18,8 @@ const verificarOCrearCarpeta = async (
     accessToken: string,
     parentFolderId: string
 ): Promise<string> => {
-    const url = `https://www.googleapis.com/drive/v3/files?q='${parentFolderId}' in parents and name = '${nombreCarpeta}' and mimeType = 'application/vnd.google-apps.folder'&fields=files(id,name)`;
+    const nombreNormalizado = normalizarNombre(nombreCarpeta);
+    const url = `https://www.googleapis.com/drive/v3/files?q='${parentFolderId}' in parents and name = '${nombreNormalizado}' and mimeType = 'application/vnd.google-apps.folder'&fields=files(id,name)`;
 
     try {
         const response = await fetch(url, {
@@ -35,7 +41,7 @@ const verificarOCrearCarpeta = async (
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                name: nombreCarpeta,
+                name: nombreNormalizado,
                 mimeType: "application/vnd.google-apps.folder",
                 parents: [parentFolderId],
             }),
@@ -49,13 +55,14 @@ const verificarOCrearCarpeta = async (
     }
 };
 
-// Función para verificar si un archivo existe y manejar versiones
+// Función para verificar si un archivo ya existe y devolver su enlace
 const verificarArchivoExistente = async (
     nombreArchivo: string,
     folderId: string,
     accessToken: string
 ): Promise<string | null> => {
-    const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents and name contains '${nombreArchivo}' and mimeType != 'application/vnd.google-apps.folder'&fields=files(id,name)`;
+    const nombreNormalizado = normalizarNombre(nombreArchivo);
+    const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents and mimeType != 'application/vnd.google-apps.folder'&fields=files(id,name)`;
 
     try {
         const response = await fetch(url, {
@@ -66,7 +73,14 @@ const verificarArchivoExistente = async (
 
         const data = await response.json();
         if (data.files && data.files.length > 0) {
-            return data.files[0].id;
+            // Comparar los nombres de los archivos existentes con el nombre normalizado
+            const archivoExistente = data.files.find(
+                (file: { name: string }) => normalizarNombre(file.name) === nombreNormalizado
+            );
+            if (archivoExistente) {
+                console.log(`Archivo '${nombreArchivo}' ya existe con ID: ${archivoExistente.id}`);
+                return `https://drive.google.com/file/d/${archivoExistente.id}/view`;
+            }
         }
         return null;
     } catch (error) {
@@ -75,28 +89,25 @@ const verificarArchivoExistente = async (
     }
 };
 
-// Función para subir un archivo con manejo de versiones
-const subirArchivoConVersion = async (
+
+// Función para manejar la creación o retorno del archivo
+const manejarArchivo = async (
     fileBlob: Blob,
     nombreArchivo: string,
     folderId: string,
     accessToken: string
-): Promise<void> => {
-    let version = 1;
-    let nombreFinal = nombreArchivo;
-    let archivoExistente;
+): Promise<string> => {
+    // Verificar si el archivo ya existe
+    const archivoExistenteLink = await verificarArchivoExistente(nombreArchivo, folderId, accessToken);
+    if (archivoExistenteLink) {
+        console.log(`El archivo '${nombreArchivo}' ya existe. Retornando enlace.`);
+        return archivoExistenteLink;
+    }
 
-    do {
-        archivoExistente = await verificarArchivoExistente(nombreFinal, folderId, accessToken);
-        if (archivoExistente) {
-            version++;
-            nombreFinal = `${nombreArchivo}_v${version}`;
-        }
-    } while (archivoExistente);
-
+    // Subir un nuevo archivo si no existe
     try {
         const metadata = {
-            name: nombreFinal,
+            name: nombreArchivo,
             parents: [folderId],
         };
 
@@ -107,27 +118,32 @@ const subirArchivoConVersion = async (
         );
         formData.append("file", fileBlob);
 
-        await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            body: formData,
-        });
+        const response = await fetch(
+            "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: formData,
+            }
+        );
 
-        console.log(`Archivo '${nombreFinal}' subido correctamente.`);
+        const data = await response.json();
+        console.log(`Archivo '${nombreArchivo}' creado correctamente.`);
+        return `https://drive.google.com/file/d/${data.id}/view`;
     } catch (error) {
-        console.error(`Error al subir el archivo '${nombreFinal}':`, error);
+        console.error(`Error al subir el archivo '${nombreArchivo}':`, error);
         throw error;
     }
 };
 
-// Función para crear la estructura de carpetas y subir el archivo
+// Función para crear la estructura de carpetas y manejar el archivo
 export const crearEstructuraCompleta = async (
     carga: CargaDocente,
     accessToken: string,
     fileBlob: Blob
-): Promise<void> => {
+): Promise<string> => {
     try {
         const parentFolderId = PARENT_FOLDER_ID;
 
@@ -148,7 +164,10 @@ export const crearEstructuraCompleta = async (
             cursoFolderId
         );
 
-        await subirArchivoConVersion(fileBlob, carga.curso.name, semestreFolderId, accessToken);
+        // Manejar archivo (crear o devolver existente)
+        const link = await manejarArchivo(fileBlob, carga.curso.name, semestreFolderId, accessToken);
+
+        return link;
     } catch (error) {
         console.error("Error al crear la estructura completa:", error);
         throw error;
@@ -185,4 +204,3 @@ export const generateDocument = (data: any): Document => {
         ],
     });
 };
-

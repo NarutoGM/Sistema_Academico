@@ -94,8 +94,12 @@ const Index: React.FC = () => {
             const file = new File([blob], "CargaDocente.docx", { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
     
             // Llamar al método que verifica o realiza la carga del archivo en la estructura remota
-            await crearEstructuraCompleta(carga, accessToken, file);
+            const link = await crearEstructuraCompleta(carga, accessToken, file);
             console.log("Estructura y documento manejados correctamente");
+            
+            console.log(link);
+
+
         } catch (error) {
             console.error("Error al manejar la carga:", error);
             alert("Hubo un problema al crear/verificar la estructura o manejar el documento.");

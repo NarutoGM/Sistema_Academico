@@ -15,6 +15,7 @@ use App\Http\Controllers\CondicionController;
 use App\Http\Controllers\RegimenController;  
 use App\Http\Controllers\CategoriaController; 
 use App\Http\Controllers\FilialController;
+use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\SubirSilaboController;
 use App\Http\Controllers\TokenController;
 
@@ -85,8 +86,6 @@ Route::apiResource('escuelas', EscuelaController::class);
 Route::apiResource('facultades', FacultadController::class);
 
 Route::get('/generate-token', [TokenController::class, 'generateAccessToken']);
-
- 
 Route::get('/miscursos', [SubirSilaboController::class, 'index']); 
 Route::get('/versilabos', [SubirSilaboController::class, 'versilabos']); 
 
@@ -95,6 +94,8 @@ Route::apiResource('regimenes', RegimenController::class);
 Route::apiResource('categorias', CategoriaController::class);
 Route::apiResource('filiales', FilialController::class);  
 Route::get('/filiales/{idFilial}/docentes', [FilialController::class, 'getDocentes']);
+Route::get('/cargadocentexciclo', [HorarioController::class, 'index']); // Obtener todos los permisos
+Route::get('/listarhorarios', [HorarioController::class, 'listarhorarios']); // Obtener todos los permisos
 
 
 });
