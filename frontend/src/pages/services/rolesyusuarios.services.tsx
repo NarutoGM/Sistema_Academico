@@ -95,7 +95,11 @@ export interface ConjuntoDatos {
 }
 
 
-
+export interface Permiso {
+  id: number;
+  descripcion: string;
+  estado: boolean;
+}
 
 
 export const createUsuario = async (usuarioData: {
@@ -252,3 +256,24 @@ export const saveRoles = async (
 };
 
 
+export const getMisPermisos: () => Promise<Permiso[] | { permisos: Permiso[] }> = async () => {
+  const authData = isAuthenticated(); // Verificar autenticación
+
+  if (!authData || !authData.token) {
+    throw new Error('User is not authenticated or token is missing');
+  }
+
+  const response = await fetch(`${apiUrl}/obtenerMisPermisos`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${authData.token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Error al obtener permisos');
+  }
+
+  return response.json();
+};

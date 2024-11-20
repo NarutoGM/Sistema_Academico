@@ -97,6 +97,7 @@ Route::get('/filiales/{idFilial}/docentes', [FilialController::class, 'getDocent
 Route::get('/cargadocentexciclo', [HorarioController::class, 'index']); // Obtener todos los permisos
 Route::get('/listarhorarios', [HorarioController::class, 'listarhorarios']); // Obtener todos los permisos
 Route::post('gestionarsilabo', [SubirSilaboController::class, 'gestionarsilabo']);
+Route::get('/obtenerMisPermisos', [UserController::class, 'obtenerMisPermisos']); // Obtener todos los permisos
 
 
 });

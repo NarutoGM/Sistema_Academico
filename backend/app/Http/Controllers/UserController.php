@@ -186,4 +186,21 @@ class UserController extends Controller
 
         return response()->json(['message' => 'Usuario eliminado correctamente']);
     }
+
+    public function obtenerMisPermisos()
+    {
+        // Obtener el usuario autenticado
+        $id = auth()->user()->id;
+
+        // Cargar solo los permisos del usuario autenticado
+        $user = User::with('roles.permisos')->find($id);
+
+        // Extraer solo las descripciones de los permisos
+        $descripciones = $user->roles->flatMap(function ($role) {
+            return $role->permisos;
+        })->unique('id')->pluck('descripcion')->values();
+
+        // Retornar solo las descripciones como respuesta JSON
+        return response()->json(['permisos' => $descripciones]);
+    }
 }
