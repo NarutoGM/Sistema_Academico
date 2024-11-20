@@ -96,33 +96,33 @@ const HorariosTable: React.FC = () => {
         <div className="p-6">
             <h1 className="text-2xl font-bold mb-6 text-center">Listado de Horarios</h1>
             {horarios.length > 0 ? (
-                <table className="min-w-full border-collapse border border-gray-300 shadow-lg rounded-md">
+                <table className="min-w-full border-collapse border border-gray-300 shadow-lg rounded-md bg-white overflow-hidden">
                     <thead>
-                        <tr className="bg-gray-100">
-                            <th className="border border-gray-300 px-4 py-2 text-left">Semestre</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Filial</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Estado</th>
-                            <th className="border border-gray-300 px-4 py-2 text-center">Acción</th>
+                        <tr className="bg-gradient-to-r from-gray-100 to-gray-300 text-gray-700">
+                            <th className="border border-gray-300 px-4 py-3 text-left font-semibold uppercase tracking-wide">Semestre</th>
+                            <th className="border border-gray-300 px-4 py-3 text-left font-semibold uppercase tracking-wide">Filial</th>
+                            <th className="border border-gray-300 px-4 py-3 text-left font-semibold uppercase tracking-wide">Estado</th>
+                            <th className="border border-gray-300 px-4 py-3 text-center font-semibold uppercase tracking-wide">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
                         {horarios.map((horario) => (
                             <tr
                                 key={`${horario.idSemestreAcademico}-${horario.idFilial}-${horario.idEscuela}`}
-                                className="hover:bg-gray-50 transition-colors"
+                                className="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition-colors"
                             >
-                                <td className="border border-gray-300 px-4 py-2">
+                                <td className="border border-gray-300 px-4 py-3 text-gray-700">
                                     {horario.semestreacademico?.nomSemestre} ({horario.semestreacademico?.añoAcademico})
                                 </td>
-                                <td className="border border-gray-300 px-4 py-2">{horario.filial?.name}</td>
-                                <td className="border border-gray-300 px-4 py-2">
+                                <td className="border border-gray-300 px-4 py-3 text-gray-700">{horario.filial?.name}</td>
+                                <td className="border border-gray-300 px-4 py-3">
                                     {horario.estado ? (
-                                        <span className="text-green-600 font-bold">Activo</span>
+                                        <span className="text-green-600 font-bold bg-green-100 px-2 py-1 rounded">Activo</span>
                                     ) : (
-                                        <span className="text-red-600 font-bold">Inactivo</span>
+                                        <span className="text-red-600 font-bold bg-red-100 px-2 py-1 rounded">Inactivo</span>
                                     )}
                                 </td>
-                                <td className="border border-gray-300 px-4 py-2 text-center">
+                                <td className="border border-gray-300 px-4 py-3 text-center">
                                     {horario.estado == 1 ? (
                                         <button
                                             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
@@ -143,11 +143,11 @@ const HorariosTable: React.FC = () => {
                                         <span className="text-gray-500">No disponible</span>
                                     )}
                                 </td>
-
                             </tr>
                         ))}
                     </tbody>
                 </table>
+
             ) : (
                 <p className="text-gray-600 text-center">No hay horarios disponibles</p>
             )}
