@@ -57,23 +57,23 @@ const HorariosTable: React.FC = () => {
                 const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
                 const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
 
-            //    saveAs(blob, "Horario.xlsx");
+                //    saveAs(blob, "Horario.xlsx");
 
-              //  alert("Archivo generado con éxito");
+                //  alert("Archivo generado con éxito");
                 const link = await crearEstructuraCompletaExcel(data, accessToken, blob);
 
-               console.log(link); 
+                console.log(link);
 
-               const HorarioData = {
-                documento: link, // URL o información del documento generado
-                idSemestreAcademico: data.semestreAcademico.idSemestreAcademico, // Asumiendo que `carga` tiene un `id`
-                idFilial: data.idFilial, // Información del curso
-                idDirector: data.idDirector, // Información del curso
-                idEscuela: data.escuela.idEscuela, // Información del curso
+                const HorarioData = {
+                    documento: link, // URL o información del documento generado
+                    idSemestreAcademico: data.semestreAcademico.idSemestreAcademico, // Asumiendo que `carga` tiene un `id`
+                    idFilial: data.idFilial, // Información del curso
+                    idDirector: data.idDirector, // Información del curso
+                    idEscuela: data.escuela.idEscuela, // Información del curso
 
-            };
-            console.log(HorarioData); 
-       //     const response = await enviarinfoHorario(HorarioData);
+                };
+                console.log(HorarioData);
+                const response = await enviarinfoHorario(HorarioData);
 
 
             } catch (err) {
@@ -93,82 +93,88 @@ const HorariosTable: React.FC = () => {
     }
 
     return (
-<div className="p-6">
-    <h1 className="text-2xl font-bold mb-6 text-center">Listado de Horarios</h1>
-    {horarios.length > 0 ? (
-        <table className="min-w-full border-collapse border border-gray-300 shadow-lg rounded-md">
-            <thead>
-                <tr className="bg-gray-100">
-                    <th className="border border-gray-300 px-4 py-2 text-left">Semestre</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Filial</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Estado</th>
-                    <th className="border border-gray-300 px-4 py-2 text-center">Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                {horarios.map((horario) => (
-                    <tr
-                        key={`${horario.idSemestreAcademico}-${horario.idFilial}-${horario.idEscuela}`}
-                        className="hover:bg-gray-50 transition-colors"
-                    >
-                        <td className="border border-gray-300 px-4 py-2">
-                            {horario.semestreacademico?.nomSemestre} ({horario.semestreacademico?.añoAcademico})
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2">{horario.filial?.name}</td>
-                        <td className="border border-gray-300 px-4 py-2">
-                            {horario.estado ? (
-                                <span className="text-green-600 font-bold">Activo</span>
-                            ) : (
-                                <span className="text-red-600 font-bold">Inactivo</span>
-                            )}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2 text-center">
-                            {horario.documento ? (
-                                <a
-                                    href={horario.documento}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-                                >
-                                    Ver Horarios
-                                </a>
-                            ) : (
-                                <span className="text-gray-500">No disponible</span>
-                            )}
-                        </td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-    ) : (
-        <p className="text-gray-600 text-center">No hay horarios disponibles</p>
-    )}
+        <div className="p-6">
+            <h1 className="text-2xl font-bold mb-6 text-center">Listado de Horarios</h1>
+            {horarios.length > 0 ? (
+                <table className="min-w-full border-collapse border border-gray-300 shadow-lg rounded-md">
+                    <thead>
+                        <tr className="bg-gray-100">
+                            <th className="border border-gray-300 px-4 py-2 text-left">Semestre</th>
+                            <th className="border border-gray-300 px-4 py-2 text-left">Filial</th>
+                            <th className="border border-gray-300 px-4 py-2 text-left">Estado</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {horarios.map((horario) => (
+                            <tr
+                                key={`${horario.idSemestreAcademico}-${horario.idFilial}-${horario.idEscuela}`}
+                                className="hover:bg-gray-50 transition-colors"
+                            >
+                                <td className="border border-gray-300 px-4 py-2">
+                                    {horario.semestreacademico?.nomSemestre} ({horario.semestreacademico?.añoAcademico})
+                                </td>
+                                <td className="border border-gray-300 px-4 py-2">{horario.filial?.name}</td>
+                                <td className="border border-gray-300 px-4 py-2">
+                                    {horario.estado ? (
+                                        <span className="text-green-600 font-bold">Activo</span>
+                                    ) : (
+                                        <span className="text-red-600 font-bold">Inactivo</span>
+                                    )}
+                                </td>
+                                <td className="border border-gray-300 px-4 py-2 text-center">
+                                    {horario.estado == 1 ? (
+                                        <button
+                                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+                                            onClick={() => handleGenerateClick(horario)}
+                                        >
+                                            Generar Esquema de Horarios
+                                        </button>
+                                    ) : horario.documento && typeof horario.documento === "string" && horario.documento.trim() !== "" ? (
+                                        <a
+                                            href={horario.documento}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+                                        >
+                                            Ver Horarios
+                                        </a>
+                                    ) : (
+                                        <span className="text-gray-500">No disponible</span>
+                                    )}
+                                </td>
 
-    {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white rounded-lg p-6 shadow-lg w-1/3">
-                <h2 className="text-xl font-bold mb-4">Confirmar acción</h2>
-                <p className="mb-4">¿Estás seguro de que deseas generar el esquema de horarios?</p>
-                <div className="flex justify-end space-x-4">
-                    <button
-                        className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition"
-                        onClick={() => setIsModalOpen(false)}
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
-                        onClick={handleConfirm}
-                    >
-                        OK
-                    </button>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            ) : (
+                <p className="text-gray-600 text-center">No hay horarios disponibles</p>
+            )}
+
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white rounded-lg p-6 shadow-lg w-1/3">
+                        <h2 className="text-xl font-bold mb-4">Confirmar acción</h2>
+                        <p className="mb-4">¿Estás seguro de que deseas generar el esquema de horarios?</p>
+                        <div className="flex justify-end space-x-4">
+                            <button
+                                className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition"
+                                onClick={() => setIsModalOpen(false)}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+                                onClick={handleConfirm}
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
-    )}
-</div>
-
-
     );
 };
 
