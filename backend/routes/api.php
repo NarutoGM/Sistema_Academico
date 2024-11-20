@@ -98,6 +98,9 @@ Route::get('/cargadocentexciclo', [HorarioController::class, 'index']); // Obten
 Route::get('/listarhorarios', [HorarioController::class, 'listarhorarios']); // Obtener todos los permisos
 Route::post('gestionarsilabo', [SubirSilaboController::class, 'gestionarsilabo']);
 Route::get('/obtenerMisPermisos', [UserController::class, 'obtenerMisPermisos']); // Obtener todos los permisos
+Route::post('gestionarhorarios', [SubirSilaboController::class, 'gestionarhorarios']);
+
+
 
 
 });

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\User;
 
 use App\Models\Docente;
+use App\Models\Horario;
 use App\Models\PlanCursoAcademico;
 use App\Models\Silabo;
 
@@ -345,7 +346,54 @@ class SubirSilaboController extends Controller
     
 
 
-
+    public function gestionarhorarios(Request $request)
+    {
+        try {
+            // Validar los datos entrantes
+            $request->validate([
+                'idSemestreAcademico' => 'required|integer',
+                'idFilial' => 'required|integer',
+                'idDirector' => 'required|integer',
+                'idEscuela' => 'required|integer',
+                'documento' => 'nullable|string',
+            ]);
+    
+            // Buscar horario existente
+            $horario = Horario::where('idSemestreAcademico', $request->idSemestreAcademico)
+                ->where('idFilial', $request->idFilial)
+                ->where('idEscuela', $request->idEscuela)
+                ->first(); 
+    
+            if ($horario) {
+                // Si el registro existe, realiza la actualización.
+                $horario->update([
+                    'documento' => $request->documento ?? null,
+                    'estado' => 1,
+                    'idDirector' => $request->idDirector,
+                ]);
+            } 
+    
+            // Retornar una respuesta de éxito
+            return response()->json([
+                'message' => 'El horario se gestionó correctamente.',
+                'horario' => $horario,
+            ], 201);
+    
+        } catch (\Exception $e) {
+            // Loguea el error para inspección
+            \Log::error('Error en gestionarhorarios:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+    
+            // Retornar una respuesta de error si algo sale mal
+            return response()->json([
+                'message' => 'Hubo un error al gestionar los horarios.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+    
 
 
 
