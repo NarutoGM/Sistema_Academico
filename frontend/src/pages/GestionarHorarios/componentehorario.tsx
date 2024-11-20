@@ -13,7 +13,7 @@ export const generateExcel = (data: any) => {
       if (Array.isArray(cursos) && cursos.length > 0) {
         // Crear los datos para la hoja
         const worksheetData: any[] = [
-          ["Docente", "Curso", "Grupo", "Filial", "Créditos", "Horas Teóricas", "Horas Prácticas", "Horas Laboratorio"],
+          ["Docente", "Curso", "Grupo",  "Créditos", "Horas Teóricas", "Horas Prácticas", "Horas Laboratorio"],
         ];
 
         // Agregar los cursos al worksheetData
@@ -22,7 +22,6 @@ export const generateExcel = (data: any) => {
             `${curso.nomdocente} ${curso.apedocente}`,
             curso.curso.name,
             curso.grupo,
-            curso.filial.name,
             curso.curso.creditos,
             curso.curso.hTeoricas,
             curso.curso.hPracticas,

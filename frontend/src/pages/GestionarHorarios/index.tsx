@@ -4,6 +4,7 @@ import { getAccessToken } from '@/pages/services/token.services';
 import { saveAs } from "file-saver";
 import { generateExcel } from "./componentehorario";
 import * as XLSX from "xlsx";
+import { crearEstructuraCompletaExcel } from '../services/modelodriveexcel.services';
 
 const HorariosTable: React.FC = () => {
     const [horarios, setHorarios] = useState<Horario[]>([]);
@@ -40,7 +41,7 @@ const HorariosTable: React.FC = () => {
         if (selectedHorario) {
             try {
                 // Obtén el token si es necesario
-             //   const accessToken = await getAccessToken();
+                const accessToken = await getAccessToken();
 
                 // Obtén los datos
                 const data = await getCargadocentexciclo(); // Ajusta la función según tus necesidades
@@ -55,10 +56,21 @@ const HorariosTable: React.FC = () => {
                 const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
                 const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
 
-                saveAs(blob, "Horario.xlsx");
+            //    saveAs(blob, "Horario.xlsx");
 
-                alert("Archivo generado con éxito");
-            // const link = await crearEstructuraCompleta(data, accessToken, blob);
+              //  alert("Archivo generado con éxito");
+                const link = await crearEstructuraCompletaExcel(data, accessToken, blob);
+
+               console.log(link); 
+
+               const HorarioData = {
+                documento: link, // URL o información del documento generado
+                idSemestreAcademico: data.semestreAcademico.idSemestreAcademico, // Asumiendo que `carga` tiene un `id`
+                idFilial: data.idFilial, // Información del curso
+                idDirector: data.idDirector, // Información del curso
+
+            };
+            console.log(HorarioData); 
 
 
             } catch (err) {

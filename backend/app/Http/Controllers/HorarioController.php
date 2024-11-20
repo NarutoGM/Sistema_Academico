@@ -133,7 +133,8 @@ class HorarioController extends Controller
             'semestreAcademico' => $semestreAcademico,
             'escuela' => $escuela,
             'filial' => "Trujillo",
-
+            'idFilial' => 1,
+            'idDirector' => 2,
             'message' => 'Datos procesados exitosamente',
         ]);
     }
