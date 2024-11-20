@@ -102,7 +102,6 @@ const HorariosTable: React.FC = () => {
                     <th className="border border-gray-300 px-4 py-2 text-left">Semestre</th>
                     <th className="border border-gray-300 px-4 py-2 text-left">Filial</th>
                     <th className="border border-gray-300 px-4 py-2 text-left">Estado</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Observaciones</th>
                     <th className="border border-gray-300 px-4 py-2 text-center">Acción</th>
                 </tr>
             </thead>
@@ -123,7 +122,6 @@ const HorariosTable: React.FC = () => {
                                 <span className="text-red-600 font-bold">Inactivo</span>
                             )}
                         </td>
-                        <td className="border border-gray-300 px-4 py-2">{horario.observaciones}</td>
                         <td className="border border-gray-300 px-4 py-2 text-center">
                             {horario.documento ? (
                                 <a
