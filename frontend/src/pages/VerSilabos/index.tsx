@@ -20,13 +20,19 @@ const Index: React.FC = () => {
     useEffect(() => {
         getMisSilabos()
             .then((data) => {
-                setCargaDocente(data.cargadocente);
-                setFilteredData(data.cargadocente);
+                // Asegúrate de que TypeScript interprete correctamente los valores como CargaDocente[]
+                const docenteArray = Object.values(data.cargadocente) as CargaDocente[];
+                setCargaDocente(docenteArray);
+                console.log(docenteArray);
+                setFilteredData(docenteArray);
+
             })
             .catch((error) => {
                 setError(error.message);
             });
     }, []);
+    
+    
 
     useEffect(() => {
         const filtered = cargaDocente.filter(item => {

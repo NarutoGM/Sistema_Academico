@@ -110,8 +110,8 @@ const Index: React.FC = () => {
 
             };
 
-            const response = await enviarinfoSilabo(silaboData);
-            console.log("Información del sílabo enviada correctamente:", response);
+   //         const response = await enviarinfoSilabo(silaboData);
+       //     console.log("Información del sílabo enviada correctamente:", response);
 
             setShouldUpdate((prev) => !prev); // Cambiar el estado para disparar el useEffect
 

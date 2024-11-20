@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\CargaDocente;
 use App\Models\DirectorEscuela;
+use App\Models\Docente;
 use App\Models\Escuela;
 use App\Models\Facultad;
 use App\Models\Horario;
 use App\Models\PlanCursoAcademico;
 use App\Models\Regimen;
 use App\Models\SemestreAcademico;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -49,8 +51,14 @@ class HorarioController extends Controller
                 ->where('estado', 1)
                 ->get()
                 ->map(function ($carga) {
-                    $user = auth()->user();
 
+
+                    $docente = Docente::where('idDocente', $carga->idDocente)->first();
+
+
+                    $user = User::where('id', $docente->id)->first();
+
+                    
                     $carga->nomdocente = $user->name;
                     $carga->apedocente = $user->lastname;
 

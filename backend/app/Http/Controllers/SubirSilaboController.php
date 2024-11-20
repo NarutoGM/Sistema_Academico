@@ -142,7 +142,7 @@ class SubirSilaboController extends Controller
                         $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
                             ->where('idFilial', $carga->idFilial)
                             ->where('idDocente', $carga->idDocente)
-                            ->where('estado', '!=', null) 
+                            ->where('estado', '!=', 0) 
                             ->first();
 
                         if ($silabo) {
