@@ -40,7 +40,7 @@ const HorariosTable: React.FC = () => {
         if (selectedHorario) {
             try {
                 // Obtén el token si es necesario
-                const accessToken = await getAccessToken();
+             //   const accessToken = await getAccessToken();
 
                 // Obtén los datos
                 const data = await getCargadocentexciclo(); // Ajusta la función según tus necesidades
@@ -58,6 +58,7 @@ const HorariosTable: React.FC = () => {
                 saveAs(blob, "Horario.xlsx");
 
                 alert("Archivo generado con éxito");
+            // const link = await crearEstructuraCompleta(data, accessToken, blob);
 
 
             } catch (err) {

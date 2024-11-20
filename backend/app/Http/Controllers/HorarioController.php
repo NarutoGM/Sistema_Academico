@@ -6,9 +6,10 @@ use App\Models\CargaDocente;
 use App\Models\DirectorEscuela;
 use App\Models\Docente;
 use App\Models\Escuela;
+use App\Models\Facultad;
 use App\Models\Horario;
 use App\Models\PlanCursoAcademico;
-use App\Models\Filial;
+use App\Models\Regimen;
 use App\Models\SemestreAcademico;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -74,7 +75,6 @@ class HorarioController extends Controller
         $idSemestreAcademico = $cargadocentes->first()->idSemestreAcademico;
         $escuela = Escuela::with('facultad')->where('idEscuela', $directorescuela->idEscuela)->first();
 
-        $filial = Filial::where('idFilial', 1)->first();
 
         $semestreAcademico = SemestreAcademico::where('idSemestreAcademico', $idSemestreAcademico)->first();
     
@@ -132,7 +132,8 @@ class HorarioController extends Controller
             'cargadocente' => $cursosPorCiclo,
             'semestreAcademico' => $semestreAcademico,
             'escuela' => $escuela,
-            'filial' => $filial,
+            'filial' => "Trujillo",
+
             'message' => 'Datos procesados exitosamente',
         ]);
     }
