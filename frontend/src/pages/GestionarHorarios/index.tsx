@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { getCargadocentexciclo, HorarioDocente, getHorarios, Horario } from '@/pages/services/horario.services';
 import { getAccessToken } from '@/pages/services/token.services';
+import { saveAs } from "file-saver";
+import { generateExcel } from "./componentehorario";
+import * as XLSX from "xlsx";
 
 const HorariosTable: React.FC = () => {
     const [horarios, setHorarios] = useState<Horario[]>([]);
@@ -36,24 +39,38 @@ const HorariosTable: React.FC = () => {
     const handleConfirm = async () => {
         if (selectedHorario) {
             try {
-
+                // Obtén el token si es necesario
                 const accessToken = await getAccessToken();
 
-                const data= await getCargadocentexciclo(); // Ajusta el parámetro según sea necesario
+                // Obtén los datos
+                const data = await getCargadocentexciclo(); // Ajusta la función según tus necesidades
 
-                
-                console.log(data);
-                
-                alert('Esquema de horarios generado con éxito');
+                console.log("Datos obtenidos:", data);
+
+                // Procesa los datos en un archivo Excel
+                const workbook = generateExcel(data);
+
+                // Convierte el archivo a un Blob para descargarlo
+                // Convertir el archivo a Blob y descargarlo
+                const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+                const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+
+                saveAs(blob, "Horario.xlsx");
+
+                alert("Archivo generado con éxito");
+
+
             } catch (err) {
                 console.error('Error al generar el esquema:', err);
                 alert('Error al generar el esquema');
             } finally {
+                // Limpieza
                 setIsModalOpen(false);
                 setSelectedHorario(null);
             }
         }
     };
+
 
     if (error) {
         return <div className="text-red-500 font-bold">Error: {error}</div>;
