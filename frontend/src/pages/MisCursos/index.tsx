@@ -151,7 +151,7 @@ const Index: React.FC = () => {
             html: `
                 <div id="ckeditor-container" class="w-full h-[600px] border border-gray-300 rounded-md overflow-hidden bg-white shadow-sm p-6"></div>
             `,
-            width: "90vw", // Ampliar el modal
+            width: "80vw", // Ampliar el modal
             customClass: {
                 popup: "p-6 rounded-lg",
             },
