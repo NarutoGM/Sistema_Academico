@@ -330,7 +330,7 @@ class SubirSilaboController extends Controller
                         'idFilial' => $request->idFilial,
                         'documento' => $htmlContent,  // Guardar el contenido HTML
                         'activo' => 1,
-                        'estado' => 0,
+                        'estado' => 1,
                         'idDirector' => $request->idDirector,
                     ]);
 

@@ -10,10 +10,24 @@ import { jsPDF } from "jspdf";  // Asegúrate de instalar jsPDF
 
 import Swal from "sweetalert2";
 
-
-
 import "quill/dist/quill.snow.css";
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+// Componente Modal para mostrar contenido HTML
+const DocumentoModal = ({ contenidoHtml, onClose }: { contenidoHtml: string; onClose: () => void }) => {
+    return (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white p-4 max-w-4xl w-full max-h-screen overflow-auto">
+                <button onClick={onClose} className="absolute top-2 right-2 text-red-500">
+                    X
+                </button>
+                <div
+                    className="prose"
+                    dangerouslySetInnerHTML={{ __html: contenidoHtml }} // Renderiza el HTML
+                ></div>
+            </div>
+        </div>
+    );
+};
 
 
 const Index: React.FC = () => {
@@ -63,10 +77,39 @@ const Index: React.FC = () => {
     const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const DocumentoModal = ({ contenidoHtml, onClose }: { contenidoHtml: string; onClose: () => void }) => {
+        return (
+            <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+                <div className="bg-white p-4 max-w-4xl w-full max-h-screen overflow-auto">
+                    <button onClick={onClose} className="absolute top-2 right-2 text-red-500">
+                        X
+                    </button>
+                    <div
+                        className="prose"
+                        dangerouslySetInnerHTML={{ __html: contenidoHtml }} // Renderiza el HTML
+                    ></div>
+                </div>
+            </div>
+        );
+    };
+
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [htmlContent, setHtmlContent] = useState("");
+
+    const handleClick = (carga: any) => {
+        // Verificar el estado del silabo y manejar la acción
+        if (carga.curso?.estado_silabo === "Aún falta generar esquema") {
+            modal(carga, 1); // Si necesitas usar tu modal de edición
+        } else if (carga.curso?.estado_silabo === "En espera de aprobación" || carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Inactivo") {
+            setHtmlContent(carga.curso?.documento || ""); // Asigna el contenido HTML al estado
+            setIsModalOpen(true); // Abre el modal
+        }
+    };
 
     const modal = async (carga: any, numero: number) => {
         let htmlContent = ""; // Contenido HTML inicial
-    
+
         try {
             if (numero === 1) {
                 // Contenido con celdas compartidas y bordes, con padding
@@ -89,7 +132,7 @@ const Index: React.FC = () => {
                     </table>
                 `;
             }
-    
+
             if (!htmlContent) {
                 Swal.fire("Error", "No se pudo generar el contenido HTML.", "error");
                 return;
@@ -99,7 +142,7 @@ const Index: React.FC = () => {
             Swal.fire("Error", "No se pudo generar el contenido HTML.", "error");
             return;
         }
-    
+
         Swal.fire({
             title: "Editar Documento",
             html: `<div id="ckeditor-container" style="height: 400px; border: 1px solid #ccc;"></div>`,
@@ -153,13 +196,13 @@ const Index: React.FC = () => {
                     Swal.fire("Error", "No se pudo obtener el contenido editado.", "error");
                     return;
                 }
-    
+
                 // Llamar a SubmitCarga y enviar el contenido HTML directamente
                 await SubmitCarga(carga, numero, updatedContent);
             }
         });
     };
-    
+
     // Modificación de SubmitCarga para enviar solo el contenido HTML
     const SubmitCarga = async (carga: any, numero: number, htmlContent: string) => {
         if (numero === 1 && htmlContent) {
@@ -181,14 +224,14 @@ const Index: React.FC = () => {
                     numero: numeroStr,
                     documentoHtml: htmlContent,  // Enviar el HTML en lugar del PDF
                 };
-    
+
                 // Llamar a la función enviarinfoSilabo para enviar los datos
                 const response = await enviarinfoSilabo(data);
                 console.log("Información del sílabo enviada correctamente:", response);
-    
+
                 // Disparar el estado para que se actualice el useEffect
                 setShouldUpdate((prev) => !prev);
-    
+
             } catch (error) {
                 console.error("Error al manejar la carga:", error);
                 alert(`Hubo un problema al crear/verificar la estructura o manejar el documento. Error: ${error.message}`);
@@ -197,7 +240,7 @@ const Index: React.FC = () => {
             console.log("Número no válido o contenido HTML no proporcionado.");
         }
     };
-    
+
 
 
 
@@ -265,102 +308,93 @@ const Index: React.FC = () => {
             </div>
 
             <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border border-gray-200">
-                    <thead>
-                        <tr className='bg-blue-700'>
-                            <th className="px-4 py-2 border-b font-medium text-white">Código</th>
-                            <th className="px-4 py-2 border-b font-medium text-white">Curso</th>
-                            <th className="px-4 py-2 border-b font-medium text-white">Filial</th>
-                            <th className="px-4 py-2 border-b font-medium text-white">Semestre</th>
-                            <th className="px-4 py-2 border-b font-medium text-white">Proceso Sílabos</th>
-                            <th className="px-4 py-2 border-b font-medium text-white">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {currentData.map((carga) => (
-                            <tr key={carga.idCargaDocente} className="hover:bg-gray-100">
-                                <td className="px-4 py-2 border-b text-center">{carga.idCurso}</td>
-                                <td className="px-4 py-2 border-b text-center">{carga.curso?.name}</td>
-                                <td className="px-4 py-2 border-b text-center">{carga.filial?.name}</td>
-                                <td className="px-4 py-2 border-b text-center">{carga.semestre_academico?.nomSemestre}</td>
-                                <td className="px-4 py-2 border-b text-center">
-                                    {carga.curso?.estado_silabo}
-                                </td>
+            <table className="min-w-full bg-white border border-gray-200">
+                <thead>
+                    <tr className="bg-blue-700">
+                        <th className="px-4 py-2 border-b font-medium text-white">Código</th>
+                        <th className="px-4 py-2 border-b font-medium text-white">Curso</th>
+                        <th className="px-4 py-2 border-b font-medium text-white">Filial</th>
+                        <th className="px-4 py-2 border-b font-medium text-white">Semestre</th>
+                        <th className="px-4 py-2 border-b font-medium text-white">Proceso Sílabos</th>
+                        <th className="px-4 py-2 border-b font-medium text-white">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {currentData.map((carga) => (
+                        <tr key={carga.idCargaDocente} className="hover:bg-gray-100">
+                            <td className="px-4 py-2 border-b text-center">{carga.idCurso}</td>
+                            <td className="px-4 py-2 border-b text-center">{carga.curso?.name}</td>
+                            <td className="px-4 py-2 border-b text-center">{carga.filial?.name}</td>
+                            <td className="px-4 py-2 border-b text-center">{carga.semestre_academico?.nomSemestre}</td>
+                            <td className="px-4 py-2 border-b text-center">
+                                {carga.curso?.estado_silabo}
+                            </td>
+                            <td className="px-4 py-2 border-b text-center">
+                                <div className="flex flex-col space-y-2">
+                                    {/* Botón principal */}
+                                    <button
+                                        className={`flex items-center gap-2 px-2 py-1 rounded text-white 
+                                            ${carga.curso?.estado_silabo === "Rechazado" ? "bg-red-500 hover:bg-red-600" : ""}
+                                            ${carga.curso?.estado_silabo === "Aún falta generar esquema" ? "bg-blue-500 hover:bg-blue-600" : ""}
+                                            ${carga.curso?.estado_silabo === "Confirmar envio de silabo" ? "bg-green-500 hover:bg-green-600" : ""}
+                                            ${carga.curso?.estado_silabo === "En espera de aprobación" ? "bg-purple-500 hover:bg-purple-600" : ""}
+                                            ${carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Inactivo" ? "bg-green-500 hover:bg-green-600" : ""}`}
+                                        onClick={() => handleClick(carga)} // Pasar `carga` a la función handleClick
+                                    >
+                                        {carga.curso?.estado_silabo === "Aún falta generar esquema" && (
+                                            <>
+                                                <FaExclamationTriangle /> Generar Esquema
+                                            </>
+                                        )}
+                                        {carga.curso?.estado_silabo === "En espera de aprobación" && (
+                                            <>
+                                                <FaEye /> Observar Sílabo
+                                            </>
+                                        )}
+                                        {carga.curso?.estado_silabo === "Confirmar envio de silabo" && (
+                                            <a
+                                                href={carga.curso?.documento || "#"}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-white no-underline flex items-center gap-2"
+                                            >
+                                                <FaFileAlt /> Ver Documento
+                                            </a>
+                                        )}
+                                        {carga.curso?.estado_silabo === "Aprobado" && (
+                                            <>
+                                                <FaDownload /> Ver y Descargar
+                                            </>
+                                        )}
+                                        {carga.curso?.estado_silabo === "Inactivo" && (
+                                            <>
+                                                <FaDownload /> Ver y Descargar
+                                            </>
+                                        )}
+                                    </button>
 
-                                <td className="px-4 py-2 border-b text-center">
-                                    <div className="flex flex-col space-y-2">
-                                        {/* Botón principal */}
+                                    {/* Botón adicional para Confirmar Envío */}
+                                    {carga.curso?.estado_silabo === "Confirmar envio de silabo" && (
                                         <button
-                                            className={`flex items-center gap-2 px-2 py-1 rounded text-white 
-        ${carga.curso?.estado_silabo === "Rechazado" ? "bg-red-500 hover:bg-red-600" : ""}
-        ${carga.curso?.estado_silabo === "Aún falta generar esquema" ? "bg-blue-500 hover:bg-blue-600" : ""}
-        ${carga.curso?.estado_silabo === "Confirmar envio de silabo" ? "bg-green-500 hover:bg-green-600" : ""}
-        ${carga.curso?.estado_silabo === "En espera de aprobación" ? "bg-purple-500 hover:bg-purple-600" : ""}
-        ${carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Inactivo" ? "bg-green-500 hover:bg-green-600" : ""}`
-                                            }
+                                            className="flex items-center gap-2 px-2 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white"
                                             onClick={() => {
-                                                if (carga.curso?.estado_silabo === "Aún falta generar esquema") {
-                                                    modal(carga, 1);
-                                                } else if (carga.curso?.estado_silabo === "En espera de aprobación") {
-                                                    window.open(carga.curso?.documento, "_blank");
-                                                } else if (carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Inactivo") {
-                                                    window.open(carga.curso?.documento, "_blank");
-                                                }
+                                                modal(carga, 2); // Acción para confirmar envío
                                             }}
                                         >
-                                            {carga.curso?.estado_silabo === "Aún falta generar esquema" && (
-                                                <>
-                                                    <FaExclamationTriangle /> Generar Esquema
-                                                </>
-                                            )}
-                                            {carga.curso?.estado_silabo === "En espera de aprobación" && (
-                                                <>
-                                                    <FaEye /> Observar Sílabo
-                                                </>
-                                            )}
-                                            {carga.curso?.estado_silabo === "Confirmar envio de silabo" && (
-                                                <a
-                                                    href={carga.curso?.documento || "#"}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-white no-underline flex items-center gap-2"
-                                                >
-                                                    <FaFileAlt /> Ver Documento
-                                                </a>
-                                            )}
-                                            {carga.curso?.estado_silabo === "Aprobado" && (
-                                                <>
-                                                    <FaDownload /> Ver y Descargar
-                                                </>
-                                            )}
-                                            {carga.curso?.estado_silabo === "Inactivo" && (
-                                                <>
-                                                    <FaDownload /> Ver y Descargar
-                                                </>
-                                            )}
+                                            <FaCheck /> Confirmar Envío
                                         </button>
+                                    )}
 
-                                        {/* Botón adicional para Confirmar Envío */}
-                                        {carga.curso?.estado_silabo === "Confirmar envio de silabo" && (
-                                            <button
-                                                className="flex items-center gap-2 px-2 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white"
-                                                onClick={() => {
-                                                    modal(carga, 2);
-                                                }}
-                                            >
-                                                <FaCheck /> Confirmar Envío
-                                            </button>
-
-
-
-                                        )}
-                                    </div>
-
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                                    {/* Modal para ver el contenido HTML */}
+                                    {isModalOpen && (
+                                        <DocumentoModal contenidoHtml={htmlContent} onClose={() => setIsModalOpen(false)} />
+                                    )}
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
             </div>
 
             <div className="flex justify-center items-center mt-4">
