@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { getMisSilabos, CargaDocente ,enviarinfoSilabo} from '@/pages/services/silabo.services';
+import "quill/dist/quill.snow.css";
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic'; // Asegúrate de importar CKEditor
 
 const Index: React.FC = () => {
     const [cargaDocente, setCargaDocente] = useState<CargaDocente[]>([]);

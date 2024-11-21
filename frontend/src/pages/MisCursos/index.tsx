@@ -74,68 +74,151 @@ const Index: React.FC = () => {
 
         setHtmlContent(carga.curso?.documento || ""); // Asigna el contenido HTML al estado
         setIsModalOpen(true); // Abre el modal
-        
+
         if (carga.curso?.estado_silabo === "No hay silabo") {
             modal(carga, 1); // Muestra "Enviar" y "Cerrar"
         }
-        
+
         if (carga.curso?.estado_silabo === "En espera de aprobación") {
             modal2(carga, 2); // Solo muestra "Cerrar"
         }
-        
+
         if (carga.curso?.estado_silabo === "Aprobado") {
             modal2(carga, 2); // Solo muestra "Cerrar"
         }
-        
+
         if (carga.curso?.estado_silabo === "Rechazado") {
             modal2(carga, 3); // Muestra "Enviar" y "Cerrar"
         }
-        
+
         if (carga.curso?.estado_silabo === "Inactivo") {
             modal2(carga, 2); // Solo muestra "Cerrar"
         }
-        
-        
+
+
 
     };
 
     const modal = async (carga: any, numero: number) => {
         let htmlContent = ""; // Contenido HTML inicial
-    
+
         try {
             if (numero === 1) {
                 // Contenido con diseño limpio y mejor estructura
                 htmlContent = `
-                    <div class="p-8 bg-gray-50 rounded-lg shadow-md max-h-[80vh] overflow-y-auto">
-                        <h2 class="text-3xl font-bold text-center mb-6 text-blue-600">
-                            SÍLABO DE LA EXPERIENCIA CURRICULAR
-                        </h2>
-                        
-                        <!-- Datos de Identificación -->
-                        <section class="mb-6">
-                            <h3 class="text-lg font-semibold text-gray-700 mb-4">I. Datos de Identificación</h3>
-                            <ul class="list-disc list-inside space-y-3">
-                                <li><strong>1.1 Área:</strong> ${carga.curso?.area?.nomArea || "No especificado"}</li>
-                                <li><strong>1.2 Facultad:</strong> ${carga.curso?.facultad?.nomFacultad || "No especificado"}</li>
-                                <li><strong>1.3 Departamento Académico:</strong> ${carga.curso?.departamento?.nomDepartamento || "No especificado"}</li>
-                                <li><strong>1.4 Programa/carrera profesional:</strong> ${carga.escuela?.name || "No especificado"}</li>
-                                <li><strong>1.5 Sede:</strong> ${carga.filial?.name || "No especificado"}</li>
-                                <li><strong>1.6 Año y Semestre Académico:</strong> ${carga.semestre_academico?.nomSemestre || "No especificado"}</li>
-                                <li><strong>1.7 Ciclo:</strong> ${carga.ciclo || "No especificado"}</li>
-                                <li><strong>1.8 Código de la experiencia curricular:</strong> ${carga.idCurso || "No especificado"}</li>
-                                <li><strong>1.9 Sección(es)/grupo(s):</strong> ${carga.grupo || "No especificado"}</li>
-                                <li><strong>1.10 Créditos:</strong> ${carga.curso?.creditos || "No especificado"}</li>
-                                <li><strong>1.11 Pre requisito:</strong> ${carga.curso?.prerequisitos || "No especificado"}</li>
-                                <li><strong>1.12 Inicio – término:</strong> ${carga.semestre_academico?.fInicio || "No especificado"}</li>
-                                <li><strong>1.13 Tipo:</strong> ${carga.curso?.tipo_curso?.descripcion || "No especificado"}</li>
-                                <li><strong>1.14 Régimen:</strong> ${carga.curso?.regimen_curso?.nomRegimen || "No especificado"}</li>
-                                <li><strong>1.15 Organización semestral del tiempo (semanas):</strong> N/A</li>
-                            </ul>
-                        </section>
-                    </div>
+<div class="p-4">
+    <h2 class="text-2xl font-bold text-center mb-6">
+        <strong>SÍLABO DE LA EXPERIENCIA CURRICULAR</strong>
+    </h2>
+    <h3 class="text-lg font-semibold text-center"> <!-- Clase text-center añadida -->
+        <strong>${carga.curso?.name || "No especificado"}</strong>
+    </h3>
+    <!-- Datos de Identificación -->
+    <section class="mb-6">
+        <h3 class="text-lg font-semibold">
+            <strong>I. Datos de Identificación</strong>
+        </h3>
+        <ul class="list-disc list-inside space-y-2">
+            <li><strong>1.1 Área:</strong> ${carga.curso?.area?.nomArea || "No especificado"}</li>
+            <li><strong>1.2 Facultad:</strong> ${carga.curso?.facultad?.nomFacultad || "No especificado"}</li>
+            <li><strong>1.3 Departamento Académico:</strong> ${carga.curso?.departamento?.nomDepartamento || "No especificado"}</li>
+            <li><strong>1.4 Programa/carrera profesional:</strong> ${carga.escuela?.name || "No especificado"}</li>
+            <li><strong>1.5 Sede:</strong> ${carga.filial?.name || "No especificado"}</li>
+            <li><strong>1.6 Año y Semestre Académico:</strong> ${carga.semestre_academico?.nomSemestre || "No especificado"}</li>
+            <li><strong>1.7 Ciclo:</strong> ${carga.ciclo || "No especificado"}</li>
+            <li><strong>1.8 Código de la experiencia curricular:</strong> ${carga.idCurso || "No especificado"}</li>
+            <li><strong>1.9 Sección(es)/grupo(s):</strong> ${carga.grupo || "No especificado"}</li>
+            <li><strong>1.10 Créditos:</strong> ${carga.curso?.creditos || "No especificado"}</li>
+            <li><strong>1.11 Pre requisito:</strong> ${carga.curso?.prerequisitos || "No especificado"}</li>
+            <li><strong>1.12 Inicio – término:</strong> ${carga.semestre_academico?.fInicio || "No especificado"}</li>
+            <li><strong>1.13. Tipo:</strong> ${carga.curso?.tipo_curso?.descripcion || "No especificado"}</li>
+            <li><strong>1.14. Régimen:</strong> ${carga.curso?.regimen_curso?.nomRegimen || "No especificado"}</li>
+            <li><strong>1.15. Organización semestral del tiempo (semanas):</strong>}</li>
+        </ul>
+    </section>
+    <table class="table-auto border-collapse border border-black w-full text-center mt-4">
+    <thead>
+        <tr>
+            <th rowspan="2" class="border border-black px-4 py-2">Actividades</th>
+            <th rowspan="2" class="border border-black px-4 py-2">Total de Horas</th>
+            <th colspan="3" class="border border-black px-4 py-2">Unidades</th>
+        </tr>
+        <tr>
+            <th class="border border-black px-4 py-2">I</th>
+            <th class="border border-black px-4 py-2">II</th>
+            <th class="border border-black px-4 py-2">III</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="border border-black px-4 py-2">Teóricas</td>
+            <td class="border border-black px-4 py-2">45</td>
+            <td class="border border-black px-4 py-2">15</td>
+            <td class="border border-black px-4 py-2">15</td>
+            <td class="border border-black px-4 py-2">15</td>
+        </tr>
+        <tr>
+            <td class="border border-black px-4 py-2">Prácticas</td>
+            <td class="border border-black px-4 py-2">30</td>
+            <td class="border border-black px-4 py-2">10</td>
+            <td class="border border-black px-4 py-2">10</td>
+            <td class="border border-black px-4 py-2">10</td>
+        </tr>
+        <tr>
+            <td class="border border-black px-4 py-2">Retroalimentación</td>
+            <td class="border border-black px-4 py-2">5</td>
+            <td class="border border-black px-4 py-2">2</td>
+            <td class="border border-black px-4 py-2">2</td>
+            <td class="border border-black px-4 py-2">1</td>
+        </tr>
+        <tr>
+            <td colspan="2" class="border border-black px-4 py-2 font-bold">Total Horas</td>
+            <td class="border border-black px-4 py-2 font-bold">27</td>
+            <td class="border border-black px-4 py-2 font-bold">27</td>
+            <td class="border border-black px-4 py-2 font-bold">26</td>
+        </tr>
+    </tbody>
+</table>
+
+<li><strong>1.16. Docente / equipo docente(s):</strong>}</li>
+<table class="table-auto border-collapse border border-black w-full text-center mt-4">
+    <thead>
+        <tr>
+            <th class="border border-black px-4 py-2">CONDICIÓN</th>
+            <th class="border border-black px-4 py-2">APELLIDOS Y NOMBRES</th>
+            <th class="border border-black px-4 py-2">PROFESIÓN</th>
+            <th class="border border-black px-4 py-2">EMAIL INSTITUCIONAL</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="border border-black px-4 py-2">Coordinador(a)</td>
+            <td class="border border-black px-4 py-2">${carga.apedocente} ${carga.nomdocente}</td>
+            <td class="border border-black px-4 py-2">ingenieria</td>
+            <td class="border border-black px-4 py-2">rarellano@unitru.edu.pe</td>
+        </tr>
+    </tbody>
+</table>
+<section class="mt-6">
+    <h3 class="text-lg font-semibold"><strong>II. SUMILLA:</strong></h3>
+    <p class="text-justify mt-2">
+        La experiencia curricular de Inteligencia de Negocios es de naturaleza teórico–práctico, se orienta a desarrollar las competencias para el desarrollo de soluciones de información para toma de decisiones; contribuye directamente al logro de las Capacidades terminales CT1.2, CT1.6, CT2.1, CT2.2, y CT2.4, del perfil de egreso.
+    </p>
+    <p class="text-justify mt-2">
+        Esta experiencia curricular permitirá al estudiante plantear estrategias al interior de las empresas y soportar estratégicamente el proceso de toma de decisiones basado en el desarrollo de un sistema de información.
+    </p>
+    <p class="text-justify mt-2">
+        La experiencia curricular de Inteligencia de Negocios, comprende las etapas de definición de requerimientos estratégicos, elaboración de análisis dimensionales, modelamiento y diseño dimensional, Implementación de un DataMart. ETL, Construcción de Aplicaciones y análisis de la información.
+    </p>
+    <p class="text-justify mt-2">
+        Además, contribuye al desarrollo de la competencia para comunicarse eficazmente, mediante la comprensión y redacción de informes eficaces y documentación de diseño, la realización de exposiciones eficaces, y la transmisión y recepción de instrucciones claras.
+    </p>
+</section>
+
+</div>
                 `;
             }
-    
+
             if (!htmlContent) {
                 Swal.fire("Error", "No se pudo generar el contenido HTML.", "error");
                 return;
@@ -145,7 +228,7 @@ const Index: React.FC = () => {
             Swal.fire("Error", "No se pudo generar el contenido HTML.", "error");
             return;
         }
-    
+
         Swal.fire({
             title: "Editar Documento",
             html: `
@@ -212,21 +295,21 @@ const Index: React.FC = () => {
                     Swal.fire("Error", "No se pudo obtener el contenido editado.", "error");
                     return;
                 }
-    
+
                 // Llamar a SubmitCarga y enviar el contenido HTML directamente
                 await SubmitCarga(carga, numero, updatedContent);
             }
         });
     };
-    
-    
-    
+
+
+
     const modal2 = async (carga: CargaDocente, numero: number) => {
         const observacionesText = numero === 2 || numero === 1 ? carga.curso?.observaciones || "" : ""; // Observaciones solo para números 1 o 2
         const showEnviarButton = numero === 1 || numero === 3; // Mostrar "Enviar" solo cuando el número sea 1 o 3
         const showCerrarButton = true; // Siempre mostrar "Cerrar"
         let editorInstance: any; // Variable para guardar la instancia de CKEditor
-    
+
         Swal.fire({
             title: "Detalles del Sílabo",
             html: `
@@ -239,11 +322,10 @@ const Index: React.FC = () => {
                         <p><strong>Filial:</strong> ${carga.filial?.name}</p>
                         <p><strong>Semestre Académico:</strong> ${carga.semestre_academico?.nomSemestre}</p>
                         <p><strong>Estado del Sílabo:</strong> ${carga.curso?.estado_silabo}</p>
-                        ${
-                            numero === 2 || numero === 1
-                                ? `<p><strong>Observaciones:</strong> ${carga.curso?.observaciones || "Sin observaciones registradas"}</p>`
-                                : ""
-                        }
+                        ${numero === 2 || numero === 1
+                    ? `<p><strong>Observaciones:</strong> ${carga.curso?.observaciones || "Sin observaciones registradas"}</p>`
+                    : ""
+                }
                         <textarea 
                             id="observaciones" 
                             placeholder="Observaciones del director de escuela..." 
@@ -300,10 +382,10 @@ const Index: React.FC = () => {
             }
         });
     };
-    
 
-    
-    
+
+
+
 
 
 
