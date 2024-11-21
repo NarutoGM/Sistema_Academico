@@ -143,21 +143,23 @@ export const enviarinfoSilabo = async (silaboData: any): Promise<any> => {
 
     // Crear un objeto FormData
     const formData = new FormData();
+    console.log("Contenido HTML: ", silaboData);
 
     // Agregar campos de texto (campos de datos adicionales)
     formData.append("idCargaDocente", silaboData.idCargaDocente.toString());
     formData.append("idDocente", silaboData.idDocente.toString());
     formData.append("idFilial", silaboData.idFilial.toString());
-    formData.append("idDirector", silaboData.idDirector.toString());
-    formData.append("numero", silaboData.numero.toString()); // Convertir el número a string
+    formData.append("idDirector", silaboData.idDirector?.toString() || ""); // Maneja null o undefined
+    formData.append("numero", silaboData.numero.toString() || ""); // Convertir el número a string
+    if(silaboData.observaciones){
+    formData.append("observaciones", silaboData.observaciones.toString() || ""); // Convertir el número a string
+    }
 
     // Enviar el contenido HTML (ya no el PDF)
     if (silaboData.documentoHtml) {
         // Verificar que el contenido HTML se va a enviar correctamente
         console.log("Contenido HTML: ", silaboData.documentoHtml);
         formData.append("documentoHtml", silaboData.documentoHtml);  // Enviar el HTML como texto
-    } else {
-        throw new Error("No se ha recibido el contenido HTML.");
     }
 
     try {

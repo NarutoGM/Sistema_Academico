@@ -53,10 +53,11 @@ class SubirSilaboController extends Controller
 
 
                         if (!$silabo) {
-                            $carga->curso->estado_silabo = "Aún falta generar esquema";
+                            $carga->curso->estado_silabo = "No hay silabo";
 
                             $carga->curso->documento = "";
                         } else {
+                            $carga->curso->observaciones = $silabo->observaciones;
 
                             $carga->curso->documento = $silabo->documento;
 
@@ -67,7 +68,7 @@ class SubirSilaboController extends Controller
                             } elseif ($silabo->estado == 1 && $silabo->activo = true) {
                                 $carga->curso->estado_silabo = "En espera de aprobación";
                             } elseif ($silabo->estado == 2 && $silabo->activo = true) {
-                                $carga->curso->estado_silabo = "Confirmar envio de silabo";
+                                $carga->curso->estado_silabo = "Rechazado";
                             } elseif ($silabo->estado == 3 && $silabo->activo = true) {
                                 $carga->curso->estado_silabo = "Aprobado";
                             }
@@ -158,8 +159,12 @@ class SubirSilaboController extends Controller
                                     $carga->curso->estado_silabo = "En espera de aprobación";
                                 } elseif ($silabo->estado == 3 && $silabo->activo == true) {
                                     $carga->curso->estado_silabo = "Aprobado";
+                                    $carga->curso->observaciones = $silabo->observaciones;
+
                                 } elseif ($silabo->estado == 2 && $silabo->activo == true) {
                                     $carga->curso->estado_silabo = "Rechazado";
+                                    $carga->curso->observaciones = $silabo->observaciones;
+
                                 }
                                 return $carga; // Solo devuelve las cargas con un sílabo
                             }
@@ -322,17 +327,26 @@ class SubirSilaboController extends Controller
 
                     // Log para verificar el contenido HTML que se está recibiendo
                     Log::info('Contenido HTML recibido: ' . substr($htmlContent, 0, 100)); // Solo mostramos los primeros 100 caracteres para evitar exceso de log
-
-                    // Guardar el HTML en la base de datos o en un archivo
-                    $silabo = Silabo::create([
+                    
+                    $conditions = [
                         'idCargaDocente' => $request->idCargaDocente,
                         'idDocente' => $request->idDocente,
                         'idFilial' => $request->idFilial,
-                        'documento' => $htmlContent,  // Guardar el contenido HTML
-                        'activo' => 1,
-                        'estado' => 1,
-                        'idDirector' => $request->idDirector,
-                    ]);
+                    ];
+                
+                    // Guardar o actualizar el registro
+                    $silabo = Silabo::updateOrCreate(
+                        $conditions, // Condiciones para buscar
+                        [ // Valores para crear o actualizar
+                            'documento' =>  $htmlContent,
+                            'activo' => 1, // Puedes cambiar estos valores si es necesario
+                            'estado' => 1,
+                            'idDirector' => $request->idDirector,
+                        ]
+                    );
+
+
+            
 
                     // Log para confirmar que el sílabo se ha creado correctamente
                     Log::info('Sílabo creado con ID: ' . $silabo->id);

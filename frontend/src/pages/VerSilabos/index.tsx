@@ -58,8 +58,9 @@ const Index: React.FC = () => {
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-    const modal = (carga: CargaDocente) => {
-        const previewUrl = carga.curso?.documento?.replace("/view", "/preview"); // Modifica el enlace para incrustar
+    const modal = (carga: CargaDocente, numero: number) => {
+        const isEditable = numero === 1;
+        const observacionesText = numero === 2 ? carga.curso?.observaciones || "" : "";
     
         Swal.fire({
             title: "Detalles del Sílabo",
@@ -72,49 +73,60 @@ const Index: React.FC = () => {
                         <p><strong>Filial:</strong> ${carga.filial?.name}</p>
                         <p><strong>Semestre Académico:</strong> ${carga.semestre_academico?.nomSemestre}</p>
                         <p><strong>Estado del Sílabo:</strong> ${carga.curso?.estado_silabo}</p>
-                        <p><strong>Documento:</strong> <a href="${carga.curso?.documento}" target="_blank" style="color: #3085d6; text-decoration: underline;">Ver Documento</a></p>
-                        <textarea id="observaciones" placeholder="Escribe las observaciones aquí..." style="width: 100%; height: 300px; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
-                        </div>
-                    <div style="flex: 2; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; height: 600px;">
-                        <iframe 
-                            src="${previewUrl}" 
-                            style="width: 100%; height: 100%;" 
-                            frameborder="0">
-                        </iframe>
+                        ${
+                            numero === 2 
+                                ? `<p><strong>Observaciones:</strong> ${carga.curso?.observaciones || "Sin observaciones registradas"}</p>`
+                                : ""
+                        }
+                        <textarea 
+                            id="observaciones" 
+                            placeholder="Escribe las observaciones aquí..." 
+                            style="width: 100%; height: 300px; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" 
+                            ${!isEditable ? "disabled" : ""}
+                        >${observacionesText}</textarea>
+                    </div>
+                    <div style="flex: 2; border: 1px solid #ccc; border-radius: 4px; overflow-y: auto; height: 600px; padding: 10px;">
+                        ${carga.curso?.documento}
                     </div>
                 </div>
             `,
-            width: 1000, // Aumenta el ancho del modal
+            width: 1000,
             showCancelButton: true,
-            showDenyButton: true,
+            showDenyButton: isEditable,
+            showConfirmButton: isEditable,
             confirmButtonText: "Aceptar",
             denyButtonText: "Rechazar",
             cancelButtonText: "Cancelar",
             focusConfirm: false,
         }).then(async (result) => {
-            if (result.isConfirmed) {
-                const observaciones = (document.getElementById("observaciones") as HTMLTextAreaElement)?.value || "";
-                await SubmitCarga(carga, 1, observaciones);
-                Swal.fire(
-                    "Aceptado",
-                    "El sílabo ha sido aceptado correctamente.",
-                    "success"
-                );
-            } else if (result.isDenied) {
-                const observaciones = (document.getElementById("observaciones") as HTMLTextAreaElement)?.value || "";
-                if (!observaciones) {
-                    Swal.fire("Error", "Debe proporcionar observaciones para rechazar el sílabo.", "error");
-                    return;
+            if (isEditable) {
+                if (result.isConfirmed) {
+                    const observaciones = (document.getElementById("observaciones") as HTMLTextAreaElement)?.value || "";
+                    await SubmitCarga(carga, 1, observaciones);
+                    Swal.fire(
+                        "Aceptado",
+                        "El sílabo ha sido aceptado correctamente.",
+                        "success"
+                    );
+                } else if (result.isDenied) {
+                    const observaciones = (document.getElementById("observaciones") as HTMLTextAreaElement)?.value || "";
+                    if (!observaciones) {
+                        Swal.fire("Error", "Debe proporcionar observaciones para rechazar el sílabo.", "error");
+                        return;
+                    }
+                    await SubmitCarga(carga, 0, observaciones);
+                    Swal.fire(
+                        "Rechazado",
+                        "El sílabo ha sido rechazado correctamente.",
+                        "success"
+                    );
                 }
-                await SubmitCarga(carga, 0, observaciones);
-                Swal.fire(
-                    "Rechazado",
-                    "El sílabo ha sido rechazado correctamente.",
-                    "success"
-                );
             }
         });
     };
+    
+    
+    
     
     
     

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getMisCursos, CargaDocente, enviarinfoSilabo } from '@/pages/services/silabo.services';
 import { FaFileAlt, FaCheck, FaEye, FaDownload, FaExclamationTriangle } from "react-icons/fa"; // Íconos de React Icons
 import ReactQuill from 'react-quill';
+import Quill from "quill";
 
 
 import Swal from "sweetalert2";
@@ -10,31 +11,9 @@ import "quill/dist/quill.snow.css";
 
 
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { Eye } from 'lucide-react';
 // Componente Modal para mostrar contenido HTML
-const DocumentoModal = ({ contenidoHtml, onClose }: { contenidoHtml: string; onClose: () => void }) => {
-    return (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-4 max-w-4xl w-full h-auto max-h-[80vh] overflow-auto relative">
-                <button
-                    onClick={onClose}
-                    className="absolute top-2 right-2 text-red-500 text-xl font-bold"
-                >
-                    X
-                </button>
 
-                {/* Usamos Quill para mostrar el HTML de manera presentable */}
-                <div className="mb-4 max-h-[60vh] overflow-y-auto">
-                    <ReactQuill
-                        value={contenidoHtml}
-                        readOnly={true}
-                        theme="snow"
-                        className="border rounded-md"
-                    />
-                </div>
-            </div>
-        </div>
-    );
-};
 
 
 const Index: React.FC = () => {
@@ -86,42 +65,38 @@ const Index: React.FC = () => {
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
 
-const DocumentoModal = ({ contenidoHtml, onClose }: { contenidoHtml: string; onClose: () => void }) => {
-    return (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-4 max-w-4xl w-full max-h-screen overflow-auto relative">
-                <button
-                    onClick={onClose}
-                    className="absolute top-2 right-2 text-red-500 text-xl font-bold"
-                >
-                    X
-                </button>
-                <div
-                    className="prose prose-lg bg-gray-100 p-4 rounded-md shadow-md"
-                    dangerouslySetInnerHTML={{ __html: contenidoHtml }} // Renderiza el HTML
-                ></div>
-
-                {/* Aquí mostramos el HTML en un formato de solo lectura */}
-                <div className="mt-4 border rounded-md bg-gray-800 p-4 text-white">
-                    <pre className="whitespace-pre-wrap">{contenidoHtml}</pre>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [htmlContent, setHtmlContent] = useState("");
 
     const handleClick = (carga: any) => {
         // Verificar el estado del silabo y manejar la acción
-        if (carga.curso?.estado_silabo === "Aún falta generar esquema") {
-            modal(carga, 1); // Si necesitas usar tu modal de edición
-        } else if (carga.curso?.estado_silabo === "En espera de aprobación" || carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Inactivo") {
-            setHtmlContent(carga.curso?.documento || ""); // Asigna el contenido HTML al estado
-            setIsModalOpen(true); // Abre el modal
+
+        setHtmlContent(carga.curso?.documento || ""); // Asigna el contenido HTML al estado
+        setIsModalOpen(true); // Abre el modal
+        
+        if (carga.curso?.estado_silabo === "No hay silabo") {
+            modal(carga, 1); // Muestra "Enviar" y "Cerrar"
         }
+        
+        if (carga.curso?.estado_silabo === "En espera de aprobación") {
+            modal2(carga, 2); // Solo muestra "Cerrar"
+        }
+        
+        if (carga.curso?.estado_silabo === "Aprobado") {
+            modal2(carga, 2); // Solo muestra "Cerrar"
+        }
+        
+        if (carga.curso?.estado_silabo === "Rechazado") {
+            modal2(carga, 3); // Muestra "Enviar" y "Cerrar"
+        }
+        
+        if (carga.curso?.estado_silabo === "Inactivo") {
+            modal2(carga, 2); // Solo muestra "Cerrar"
+        }
+        
+        
+
     };
 
     const modal = async (carga: any, numero: number) => {
@@ -219,6 +194,93 @@ const DocumentoModal = ({ contenidoHtml, onClose }: { contenidoHtml: string; onC
             }
         });
     };
+    
+    const modal2 = async (carga: CargaDocente, numero: number) => {
+        const observacionesText = numero === 2 || numero === 1 ? carga.curso?.observaciones || "" : ""; // Observaciones solo para números 1 o 2
+        const showEnviarButton = numero === 1 || numero === 3; // Mostrar "Enviar" solo cuando el número sea 1 o 3
+        const showCerrarButton = true; // Siempre mostrar "Cerrar"
+        let editorInstance: any; // Variable para guardar la instancia de CKEditor
+    
+        Swal.fire({
+            title: "Detalles del Sílabo",
+            html: `
+                <div style="display: flex; flex-direction: row; gap: 20px; align-items: stretch; max-height: 80vh; overflow: hidden;">
+                    <!-- Información del curso -->
+                    <div style="flex: 1; text-align: left; line-height: 1.5; min-width: 300px; max-width: 400px; overflow-y: auto;">
+                        <p><strong>ID Curso:</strong> ${carga.idCurso}</p>
+                        <p><strong>Curso:</strong> ${carga.curso?.name}</p>
+                        <p><strong>Docente:</strong> ${carga.nomdocente} ${carga.apedocente}</p>
+                        <p><strong>Filial:</strong> ${carga.filial?.name}</p>
+                        <p><strong>Semestre Académico:</strong> ${carga.semestre_academico?.nomSemestre}</p>
+                        <p><strong>Estado del Sílabo:</strong> ${carga.curso?.estado_silabo}</p>
+                        ${
+                            numero === 2 || numero === 1
+                                ? `<p><strong>Observaciones:</strong> ${carga.curso?.observaciones || "Sin observaciones registradas"}</p>`
+                                : ""
+                        }
+                        <textarea 
+                            id="observaciones" 
+                            placeholder="Observaciones del director de escuela..." 
+                            style="width: 100%; height: 100px; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" 
+                            ${numero === 2 || numero === 3 ? "disabled" : ""} 
+                        >${observacionesText}</textarea>
+                    </div>
+                    <!-- Editor CKEditor -->
+                    <div style="flex: 2; display: flex; flex-direction: column; gap: 10px; border: 1px solid #ccc; border-radius: 4px; padding: 10px; min-height: 400px; overflow-y: auto;">
+                        <div id="ckeditor-container" style="flex: 1; min-height: 400px; max-height: 400px;">
+                            <!-- CKEditor será inicializado aquí -->
+                        </div>
+                    </div>
+                </div>
+            `,
+            width: 900, // Ajustar el ancho total del modal
+            showConfirmButton: showEnviarButton, // Mostrar "Enviar" solo cuando el número sea 1 o 3
+            showDenyButton: showCerrarButton, // Siempre mostrar "Cerrar"
+            confirmButtonText: "Enviar", // Texto del botón de confirmación
+            denyButtonText: "Cerrar", // Texto del botón de cierre
+            focusConfirm: false,
+            didOpen: () => {
+                // Inicializar CKEditor cuando el modal esté abierto
+                const ckEditorContainer = document.getElementById("ckeditor-container");
+                if (ckEditorContainer) {
+                    ClassicEditor.create(ckEditorContainer)
+                        .then((editor) => {
+                            // Establecer el contenido inicial desde `carga.curso?.documento`
+                            if (carga.curso?.documento) {
+                                editor.setData(carga.curso.documento);
+                            }
+                            editorInstance = editor; // Guardar la instancia del editor
+                        })
+                        .catch((error) => {
+                            console.error("Error al inicializar CKEditor:", error);
+                        });
+                }
+            },
+            preConfirm: () => {
+                // Obtener el contenido actualizado del editor
+                if (editorInstance) {
+                    const updatedContent = editorInstance.getData(); // Obtener el contenido HTML del editor
+                    return updatedContent; // Devolver el contenido actualizado para usarlo en `then`
+                }
+                return null;
+            },
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const updatedContent = result.value; // Contenido HTML del editor
+                if (updatedContent) {
+                    // Llamar a la función SubmitCarga con el contenido actualizado
+                    await SubmitCarga(carga, 1, updatedContent);
+                }
+            }
+        });
+    };
+    
+
+    
+    
+
+
+
 
     // Modificación de SubmitCarga para enviar solo el contenido HTML
     const SubmitCarga = async (carga: any, numero: number, htmlContent: string) => {
@@ -241,6 +303,7 @@ const DocumentoModal = ({ contenidoHtml, onClose }: { contenidoHtml: string; onC
                     numero: numeroStr,
                     documentoHtml: htmlContent,  // Enviar el HTML en lugar del PDF
                 };
+                console.log("Información del sílabo enviada correctamente:", data);
 
                 // Llamar a la función enviarinfoSilabo para enviar los datos
                 const response = await enviarinfoSilabo(data);
@@ -325,93 +388,86 @@ const DocumentoModal = ({ contenidoHtml, onClose }: { contenidoHtml: string; onC
             </div>
 
             <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200">
-                <thead>
-                    <tr className="bg-blue-700">
-                        <th className="px-4 py-2 border-b font-medium text-white">Código</th>
-                        <th className="px-4 py-2 border-b font-medium text-white">Curso</th>
-                        <th className="px-4 py-2 border-b font-medium text-white">Filial</th>
-                        <th className="px-4 py-2 border-b font-medium text-white">Semestre</th>
-                        <th className="px-4 py-2 border-b font-medium text-white">Proceso Sílabos</th>
-                        <th className="px-4 py-2 border-b font-medium text-white">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {currentData.map((carga) => (
-                        <tr key={carga.idCargaDocente} className="hover:bg-gray-100">
-                            <td className="px-4 py-2 border-b text-center">{carga.idCurso}</td>
-                            <td className="px-4 py-2 border-b text-center">{carga.curso?.name}</td>
-                            <td className="px-4 py-2 border-b text-center">{carga.filial?.name}</td>
-                            <td className="px-4 py-2 border-b text-center">{carga.semestre_academico?.nomSemestre}</td>
-                            <td className="px-4 py-2 border-b text-center">
-                                {carga.curso?.estado_silabo}
-                            </td>
-                            <td className="px-4 py-2 border-b text-center">
-                                <div className="flex flex-col space-y-2">
-                                    {/* Botón principal */}
-                                    <button
-                                        className={`flex items-center gap-2 px-2 py-1 rounded text-white 
+                <table className="min-w-full bg-white border border-gray-200">
+                    <thead>
+                        <tr className="bg-blue-700">
+                            <th className="px-4 py-2 border-b font-medium text-white">Código</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Curso</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Filial</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Semestre</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Proceso Sílabos</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {currentData.map((carga) => (
+                            <tr key={carga.idCargaDocente} className="hover:bg-gray-100">
+                                <td className="px-4 py-2 border-b text-center">{carga.idCurso}</td>
+                                <td className="px-4 py-2 border-b text-center">{carga.curso?.name}</td>
+                                <td className="px-4 py-2 border-b text-center">{carga.filial?.name}</td>
+                                <td className="px-4 py-2 border-b text-center">{carga.semestre_academico?.nomSemestre}</td>
+                                <td className="px-4 py-2 border-b text-center">
+                                    {carga.curso?.estado_silabo}
+                                </td>
+                                <td className="px-4 py-2 border-b text-center">
+                                    <div className="flex flex-col space-y-2">
+                                        {/* Botón principal */}
+                                        <button
+                                            className={`flex items-center gap-2 px-2 py-1 rounded text-white 
                                             ${carga.curso?.estado_silabo === "Rechazado" ? "bg-red-500 hover:bg-red-600" : ""}
-                                            ${carga.curso?.estado_silabo === "Aún falta generar esquema" ? "bg-blue-500 hover:bg-blue-600" : ""}
+                                            ${carga.curso?.estado_silabo === "No hay silabo" ? "bg-blue-500 hover:bg-blue-600" : ""}
                                             ${carga.curso?.estado_silabo === "Confirmar envio de silabo" ? "bg-green-500 hover:bg-green-600" : ""}
                                             ${carga.curso?.estado_silabo === "En espera de aprobación" ? "bg-purple-500 hover:bg-purple-600" : ""}
                                             ${carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Inactivo" ? "bg-green-500 hover:bg-green-600" : ""}`}
-                                        onClick={() => handleClick(carga)} // Pasar `carga` a la función handleClick
-                                    >
-                                        {carga.curso?.estado_silabo === "Aún falta generar esquema" && (
-                                            <>
-                                                <FaExclamationTriangle /> Generar Esquema
-                                            </>
-                                        )}
-                                        {carga.curso?.estado_silabo === "En espera de aprobación" && (
-                                            <>
-                                                <FaEye /> Observar Sílabo
-                                            </>
-                                        )}
-                                        {carga.curso?.estado_silabo === "Confirmar envio de silabo" && (
-                                            <a
-                                                href={carga.curso?.documento || "#"}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-white no-underline flex items-center gap-2"
-                                            >
-                                                <FaFileAlt /> Ver Documento
-                                            </a>
-                                        )}
-                                        {carga.curso?.estado_silabo === "Aprobado" && (
-                                            <>
-                                                <FaDownload /> Ver y Descargar
-                                            </>
-                                        )}
-                                        {carga.curso?.estado_silabo === "Inactivo" && (
-                                            <>
-                                                <FaDownload /> Ver y Descargar
-                                            </>
-                                        )}
-                                    </button>
-
-                                    {/* Botón adicional para Confirmar Envío */}
-                                    {carga.curso?.estado_silabo === "Confirmar envio de silabo" && (
-                                        <button
-                                            className="flex items-center gap-2 px-2 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white"
-                                            onClick={() => {
-                                                modal(carga, 2); // Acción para confirmar envío
-                                            }}
+                                            onClick={() => handleClick(carga)} // Pasar `carga` a la función handleClick
                                         >
-                                            <FaCheck /> Confirmar Envío
+                                            {carga.curso?.estado_silabo === "No hay silabo" && (
+                                                <>
+                                                    <FaExclamationTriangle /> Generar Esquema
+                                                </>
+                                            )}
+                                            {carga.curso?.estado_silabo === "En espera de aprobación" && (
+                                                <>
+                                                    <FaEye /> Observar Sílabo
+                                                </>
+                                            )}
+                                            {carga.curso?.estado_silabo === "Rechazado" && (
+                                                <>
+                                                    <FaEye /> Corregir envio
+                                                </>
+                                            )}
+                                            {carga.curso?.estado_silabo === "Confirmar envio de silabo" && (
+                                                <a
+                                                    onClick={() => {
+                                                        modal2(carga); // Acción para confirmar envío
+                                                    }}
+                                                    rel="noopener noreferrer"
+                                                    className="text-white no-underline flex items-center gap-2"
+                                                >
+                                                    <FaFileAlt /> Ver Documento
+                                                </a>
+                                            )}
+                                            {carga.curso?.estado_silabo === "Aprobado" && (
+                                                <>
+                                                    <Eye /> Ver
+                                                </>
+                                            )}
+                                            {carga.curso?.estado_silabo === "Inactivo" && (
+                                                <>
+                                                    <Eye /> Ver
+                                                </>
+                                            )}
                                         </button>
-                                    )}
 
-                                    {/* Modal para ver el contenido HTML */}
-                                    {isModalOpen && (
-                                        <DocumentoModal contenidoHtml={htmlContent} onClose={() => setIsModalOpen(false)} />
-                                    )}
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+
+
+
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
 
             <div className="flex justify-center items-center mt-4">
