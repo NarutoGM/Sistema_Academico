@@ -304,50 +304,57 @@ class SubirSilaboController extends Controller
 
 
 
+
     public function gestionarsilabo(Request $request)
     {
         try {
+            // Log para verificar el número recibido
+            Log::info('Recibido número: ' . $request->numero);
+
+            // Verificar si el número es 1 y procesar el contenido HTML
             if ($request->numero == 1) {
+                // Log para verificar que hemos entrado en el caso número 1
+                Log::info('Procesando contenido HTML para número: 1');
 
-                // Crear el registro en la base de datos
-                $silabo = Silabo::create([
-                    'idCargaDocente' => $request->idCargaDocente,
-                    'idDocente' => $request->idDocente,
-                    'idFilial' => $request->idFilial,
-                    'documento' => $request->documento,
-                    'activo' => 1,
-                    'estado' => 0,
-                    'idDirector' => $request->idDirector,
-                ]);
+                // Verificar si se ha recibido el contenido HTML
+                if ($request->has('documentoHtml')) {
+                    $htmlContent = $request->input('documentoHtml');
 
-                // Retornar una respuesta de éxito
-                return response()->json([
-                    'message' => 'El sílabo se creó correctamente.',
-                    'silabo' => $silabo,
-                ], 201);
-            }
-            if ($request->numero == 2) {
-                $silabo = Silabo::where('idCargaDocente', $request->idCargaDocente)
-                    ->where('idFilial', $request->idFilial)
-                    ->where('idDocente', $request->idDocente)
-                    ->first();
+                    // Log para verificar el contenido HTML que se está recibiendo
+                    Log::info('Contenido HTML recibido: ' . substr($htmlContent, 0, 100)); // Solo mostramos los primeros 100 caracteres para evitar exceso de log
 
-                if ($silabo) {
-                    $silabo->estado = 1;
-                    $silabo->fEnvio = Carbon::now(); // Asigna la fecha y hora actual en formato compatible
-                    $silabo->save();
+                    // Guardar el HTML en la base de datos o en un archivo
+                    $silabo = Silabo::create([
+                        'idCargaDocente' => $request->idCargaDocente,
+                        'idDocente' => $request->idDocente,
+                        'idFilial' => $request->idFilial,
+                        'documento' => $htmlContent,  // Guardar el contenido HTML
+                        'activo' => 1,
+                        'estado' => 0,
+                        'idDirector' => $request->idDirector,
+                    ]);
+
+                    // Log para confirmar que el sílabo se ha creado correctamente
+                    Log::info('Sílabo creado con ID: ' . $silabo->id);
+
+                    // Retornar una respuesta de éxito
+                    return response()->json([
+                        'message' => 'El sílabo se creó correctamente.',
+                        'silabo' => $silabo,
+                    ], 201);
+                } else {
+                    Log::warning('No se ha recibido un documento HTML');
+                    return response()->json([
+                        'message' => 'No se ha recibido un documento HTML.',
+                    ], 400);
                 }
-
-                // Retornar una respuesta de éxito
-                return response()->json([
-                    'message' => 'El sílabo se creó correctamente.',
-                    'silabo' => $silabo,
-                ], 201);
             }
 
-
+            // Procesar los otros casos de número
             if ($request->numero == 11) {
                 // Rechazar el sílabo
+                Log::info('Rechazando sílabo con ID de carga docente: ' . $request->idCargaDocente);
+
                 Silabo::where('idCargaDocente', $request->idCargaDocente)
                     ->where('idFilial', $request->idFilial)
                     ->where('idDocente', $request->idDocente)
@@ -355,14 +362,16 @@ class SubirSilaboController extends Controller
                         'estado' => 2,
                         'observaciones' => $request->observaciones,
                     ]);
-            
+
                 return response()->json([
                     'message' => 'El sílabo se rechazó correctamente.',
                 ], 201);
             }
-            
+
             if ($request->numero == 12) {
                 // Aprobar el sílabo
+                Log::info('Aprobando sílabo con ID de carga docente: ' . $request->idCargaDocente);
+
                 Silabo::where('idCargaDocente', $request->idCargaDocente)
                     ->where('idFilial', $request->idFilial)
                     ->where('idDocente', $request->idDocente)
@@ -370,16 +379,16 @@ class SubirSilaboController extends Controller
                         'estado' => 3,
                         'observaciones' => $request->observaciones,
                     ]);
-            
+
                 return response()->json([
                     'message' => 'El sílabo se aprobó correctamente.',
                 ], 201);
             }
-            
-
-
-
         } catch (\Exception $e) {
+            // Log del error
+            Log::error('Error al crear el sílabo: ' . $e->getMessage());
+            Log::error('Detalles del error: ' . $e->getTraceAsString());
+
             // Retornar una respuesta de error si algo sale mal
             return response()->json([
                 'message' => 'Hubo un error al crear el sílabo.',

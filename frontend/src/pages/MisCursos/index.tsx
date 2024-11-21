@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import Swal from 'sweetalert2';
 import { getMisCursos, CargaDocente, enviarinfoSilabo } from '@/pages/services/silabo.services';
 import { getAccessToken } from '@/pages/services/token.services';
 import { generateDocument } from "./componentesilabo";
-import { Packer, Document } from "docx";
 import { saveAs } from "file-saver";
 import { FaFileAlt, FaCheck, FaEye, FaDownload, FaExclamationTriangle } from "react-icons/fa"; // Íconos de React Icons
 import { crearEstructuraCompleta } from '@/pages/services/modelodrive.services';
+import { jsPDF } from "jspdf";  // Asegúrate de instalar jsPDF
+
+
+import Swal from "sweetalert2";
+
+
+
+import "quill/dist/quill.snow.css";
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+
 
 const Index: React.FC = () => {
     const [cargaDocente, setCargaDocente] = useState<CargaDocente[]>([]);
@@ -56,105 +64,142 @@ const Index: React.FC = () => {
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-    const modal = (carga: CargaDocente, numero: number) => {
+    const modal = async (carga: any, numero: number) => {
+        let htmlContent = ""; // Contenido HTML inicial
+    
+        try {
+            if (numero === 1) {
+                // Contenido con celdas compartidas y bordes, con padding
+                htmlContent = `
+                    <h2 style="text-align: center;">Documento con Celdas Compartidas</h2>
+                    <table class="table" style="width: 100%; border-collapse: collapse; text-align: center; border: 1px solid black;">
+                        <tr>
+                            <th colspan="2" class="cell-shared-horizontal" data-colspan="2" style="border: 1px solid black; padding: 8px;">Encabezado Compartido</th>
+                            <th style="border: 1px solid black; padding: 8px;">Celda 3</th>
+                        </tr>
+                        <tr>
+                            <td rowspan="2" class="cell-shared-vertical" data-rowspan="2" style="border: 1px solid black; padding: 8px;">Celda Vertical</td>
+                            <td style="border: 1px solid black; padding: 8px;">Celda 4</td>
+                            <td style="border: 1px solid black; padding: 8px;">Celda 5</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid black; padding: 8px;">Celda 6</td>
+                            <td style="border: 1px solid black; padding: 8px;">Celda 7</td>
+                        </tr>
+                    </table>
+                `;
+            }
+    
+            if (!htmlContent) {
+                Swal.fire("Error", "No se pudo generar el contenido HTML.", "error");
+                return;
+            }
+        } catch (error) {
+            console.error("Error al generar el contenido HTML:", error);
+            Swal.fire("Error", "No se pudo generar el contenido HTML.", "error");
+            return;
+        }
+    
         Swal.fire({
-            title: numero === 1 ? "¿Estás seguro?" : "¿Confirmar envío del sílabo?",
-            text:
-                numero === 1
-                    ? "¿Deseas generar el esquema del sílabo?"
-                    : "Esto enviará el sílabo al director de escuela.",
-            icon: "warning",
+            title: "Editar Documento",
+            html: `<div id="ckeditor-container" style="height: 400px; border: 1px solid #ccc;"></div>`,
             showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            confirmButtonText: numero === 1 ? "Sí, generar" : "Sí, enviar",
+            confirmButtonText: "Guardar Cambios",
             cancelButtonText: "Cancelar",
+            didOpen: () => {
+                const editorContainer = document.querySelector("#ckeditor-container") as HTMLElement;
+                if (editorContainer) {
+                    ClassicEditor.create(editorContainer, {
+                        toolbar: [
+                            "bold",
+                            "italic",
+                            "underline",
+                            "|",
+                            "insertTable",
+                            "|",
+                            "undo",
+                            "redo",
+                        ],
+                        table: {
+                            contentToolbar: [
+                                "tableColumn",
+                                "tableRow",
+                                "mergeTableCells",
+                                "tableProperties",
+                                "tableCellProperties",
+                            ],
+                        },
+                    })
+                        .then((editor) => {
+                            editor.setData(htmlContent);
+                            (window as any).editor = editor;
+                        })
+                        .catch((error) => {
+                            console.error("Error al inicializar CKEditor:", error);
+                        });
+                }
+            },
+            preConfirm: async () => {
+                const editor = (window as any).editor;
+                if (editor) {
+                    return editor.getData();
+                }
+                return null;
+            },
         }).then(async (result) => {
             if (result.isConfirmed) {
-                if (numero === 1) {
-                    // Caso para generar el esquema del sílabo
-                    await SubmitCarga(carga, numero); // Asegúrate de que esta llamada sea asincrónica
-                    Swal.fire(
-                        "Generado!",
-                        "El esquema del sílabo ha sido generado.",
-                        "success"
-                    );
-                } else if (numero === 2) {
-                    // Caso para enviar el sílabo al director de escuela
-                    await SubmitCarga(carga,numero); // Implementa esta función
-                    Swal.fire(
-                        "Enviado!",
-                        "El sílabo ha sido enviado al director de escuela.",
-                        "success"
-                    );
+                const updatedContent = result.value;
+                if (!updatedContent) {
+                    Swal.fire("Error", "No se pudo obtener el contenido editado.", "error");
+                    return;
                 }
+    
+                // Llamar a SubmitCarga y enviar el contenido HTML directamente
+                await SubmitCarga(carga, numero, updatedContent);
             }
         });
     };
     
+    // Modificación de SubmitCarga para enviar solo el contenido HTML
+    const SubmitCarga = async (carga: any, numero: number, htmlContent: string) => {
+        if (numero === 1 && htmlContent) {
+            try {
+                // Asegurarnos de que los campos de carga no sean undefined o null antes de usarlos
+                const idCargaDocente = carga.idCargaDocente ?? "0";  // Si es undefined o null, asignar "0"
+                const idDocente = carga.idDocente ?? "0";
+                const idFilial = carga.idFilial ?? "0";
+                const idDirector = carga.idDirector ?? "0";
+                const numeroStr = numero ?? "0";  // Asignar valor predeterminado "0" si no está definido
+                console.log("html", htmlContent);
 
-
-    const SubmitCarga = async (carga: CargaDocente,numero : number) => {
-        const accessToken = await getAccessToken();
-        if (numero==1){
-
-                try {
-            // console.log(carga);
-            // Genera el documento utilizando la función modularizada
-            const doc = await generateDocument(carga); // Crear el documento en base a la carga
-            const blob = await Packer.toBlob(doc); // Convertir el documento a un Blob para el manejo de archivos
-
-            // Opcional: puedes guardar el Blob directamente como archivo si solo se necesita localmente
-            //  saveAs(blob, "CargaDocente.docx");
-
-            // Si es necesario subir el documento como parte de la estructura, conviértelo a un formato adecuado
-            const file = new File([blob], "CargaDocente.docx", { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-
-            // Llamar al método que verifica o realiza la carga del archivo en la estructura remota
-
-            const link = await crearEstructuraCompleta(carga, accessToken, file);
-            console.log("Estructura y documento manejados correctamente");
-
-            //   console.log(link);
-            const silaboData = {
-                documento: link, // URL o información del documento generado
-                idCargaDocente: carga.idCargaDocente, // Asumiendo que `carga` tiene un `id`
-                idDocente: carga.idDocente, // Información del docente
-                idFilial: carga.idFilial, // Información del curso
-                idDirector: carga.idDirector, // Información del curso
-                numero: 1,
-
-            };
-
-            const response = await enviarinfoSilabo(silaboData);
-            console.log("Información del sílabo enviada correctamente:", response);
-
-            setShouldUpdate((prev) => !prev); // Cambiar el estado para disparar el useEffect
-
-
-        } catch (error) {
-            console.error("Error al manejar la carga:", error);
-            alert("Hubo un problema al crear/verificar la estructura o manejar el documento.");
+                // Crear un objeto con los datos a enviar
+                const data = {
+                    idCargaDocente: idCargaDocente,
+                    idDocente: idDocente,
+                    idFilial: idFilial,
+                    idDirector: idDirector,
+                    numero: numeroStr,
+                    documentoHtml: htmlContent,  // Enviar el HTML en lugar del PDF
+                };
+    
+                // Llamar a la función enviarinfoSilabo para enviar los datos
+                const response = await enviarinfoSilabo(data);
+                console.log("Información del sílabo enviada correctamente:", response);
+    
+                // Disparar el estado para que se actualice el useEffect
+                setShouldUpdate((prev) => !prev);
+    
+            } catch (error) {
+                console.error("Error al manejar la carga:", error);
+                alert(`Hubo un problema al crear/verificar la estructura o manejar el documento. Error: ${error.message}`);
+            }
+        } else {
+            console.log("Número no válido o contenido HTML no proporcionado.");
         }
-
-        }
-        if (numero==2){
-
-            const silaboData = {
-                idCargaDocente: carga.idCargaDocente, // Asumiendo que `carga` tiene un `id`
-                idDocente: carga.idDocente, // Información del docente
-                idFilial: carga.idFilial, // Información del curso
-                numero: 2,
-            };
-
-            const response = await enviarinfoSilabo(silaboData);
-            console.log("Información del sílabo enviada correctamente:", response);
-            
-            setShouldUpdate((prev) => !prev); // Cambiar el estado para disparar el useEffect
-
-        }
-        
     };
+    
+
+
 
 
 
@@ -255,7 +300,7 @@ const Index: React.FC = () => {
                                             }
                                             onClick={() => {
                                                 if (carga.curso?.estado_silabo === "Aún falta generar esquema") {
-                                                    modal(carga,1);
+                                                    modal(carga, 1);
                                                 } else if (carga.curso?.estado_silabo === "En espera de aprobación") {
                                                     window.open(carga.curso?.documento, "_blank");
                                                 } else if (carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Inactivo") {
@@ -300,7 +345,7 @@ const Index: React.FC = () => {
                                             <button
                                                 className="flex items-center gap-2 px-2 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white"
                                                 onClick={() => {
-                                                    modal(carga,2);
+                                                    modal(carga, 2);
                                                 }}
                                             >
                                                 <FaCheck /> Confirmar Envío

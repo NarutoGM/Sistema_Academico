@@ -133,31 +133,59 @@ export const getMisSilabos = async (): Promise<any> => {
 };
 
 
-
 export const enviarinfoSilabo = async (silaboData: any): Promise<any> => {
     const authData = isAuthenticated();
+    console.log("hola si se esta enviando");
 
     if (!authData || !authData.token) {
         throw new Error('User is not authenticated or token is missing');
     }
 
-    const response = await fetch(`${apiUrl}/gestionarsilabo`, {
-        method: 'POST', // Cambiar a POST para enviar datos
-        headers: {
-            Authorization: `Bearer ${authData.token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(silaboData), // Agregar el cuerpo con los datos a enviar
-    });
+    // Crear un objeto FormData
+    const formData = new FormData();
 
-    if (!response.ok) {
-        throw new Error('Error al enviar los datos del sílabo');
+    // Agregar campos de texto (campos de datos adicionales)
+    formData.append("idCargaDocente", silaboData.idCargaDocente.toString());
+    formData.append("idDocente", silaboData.idDocente.toString());
+    formData.append("idFilial", silaboData.idFilial.toString());
+    formData.append("idDirector", silaboData.idDirector.toString());
+    formData.append("numero", silaboData.numero.toString()); // Convertir el número a string
+
+    // Enviar el contenido HTML (ya no el PDF)
+    if (silaboData.documentoHtml) {
+        // Verificar que el contenido HTML se va a enviar correctamente
+        console.log("Contenido HTML: ", silaboData.documentoHtml);
+        formData.append("documentoHtml", silaboData.documentoHtml);  // Enviar el HTML como texto
+    } else {
+        throw new Error("No se ha recibido el contenido HTML.");
     }
 
-    const data = await response.json();
-    console.log("Respuesta del servidor:", data);
-    return data;
+    try {
+        // Realizar la solicitud POST con FormData
+        const response = await fetch(`${apiUrl}/gestionarsilabo`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${authData.token}`,
+                // No necesitamos Content-Type porque fetch lo maneja automáticamente con FormData
+            },
+            body: formData, // Enviamos el FormData que contiene los datos y el HTML
+        });
+
+        // Verificar si la respuesta es exitosa
+        if (!response.ok) {
+            throw new Error('Error al enviar los datos del sílabo');
+        }
+
+        // Procesar la respuesta como JSON
+        const data = await response.json();
+        console.log("Respuesta del servidor:", data);
+        return data; // Retornar los datos recibidos del servidor
+    } catch (error) {
+        console.error("Error al enviar los datos del sílabo:", error);
+        throw error; // Re-lanzamos el error para manejarlo fuera de esta función
+    }
 };
+
 
 
 
