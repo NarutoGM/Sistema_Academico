@@ -12,6 +12,7 @@ const HorariosTable: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [selectedHorario, setSelectedHorario] = useState<Horario | null>(null);
+    const [shouldUpdate, setShouldUpdate] = useState(false); // Estado para controlar la actualización
 
     useEffect(() => {
         const fetchHorarios = async () => {
@@ -31,7 +32,7 @@ const HorariosTable: React.FC = () => {
         };
 
         fetchHorarios();
-    }, []);
+    }, [shouldUpdate]);
 
     const handleGenerateClick = (horario: Horario) => {
         setSelectedHorario(horario);
@@ -57,7 +58,7 @@ const HorariosTable: React.FC = () => {
                 const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
                 const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
 
-                //    saveAs(blob, "Horario.xlsx");
+               //    saveAs(blob, "Horario.xlsx");
 
                 //  alert("Archivo generado con éxito");
                 const link = await crearEstructuraCompletaExcel(data, accessToken, blob);
@@ -70,10 +71,12 @@ const HorariosTable: React.FC = () => {
                     idFilial: data.idFilial, // Información del curso
                     idDirector: data.idDirector, // Información del curso
                     idEscuela: data.escuela.idEscuela, // Información del curso
-
                 };
                 console.log(HorarioData);
+
+
                 const response = await enviarinfoHorario(HorarioData);
+                setShouldUpdate((prev) => !prev); // Cambiar el estado para disparar el useEffect
 
 
             } catch (err) {
@@ -123,7 +126,7 @@ const HorariosTable: React.FC = () => {
                                     )}
                                 </td>
                                 <td className="border border-gray-300 px-4 py-3 text-center">
-                                    {horario.estado == 1 ? (
+                                    {horario.documento == "" ? (
                                         <button
                                             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
                                             onClick={() => handleGenerateClick(horario)}

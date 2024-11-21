@@ -7,6 +7,8 @@ use App\Models\DirectorEscuela;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 use App\Models\Docente;
 use App\Models\Horario;
@@ -46,31 +48,30 @@ class SubirSilaboController extends Controller
                         $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
                             ->where('idFilial', $carga->idFilial)
                             ->where('idDocente', $carga->idDocente)
-                            
+
                             ->first();
 
 
-                        if (!$silabo){
+                        if (!$silabo) {
                             $carga->curso->estado_silabo = "Aún falta generar esquema";
 
-                            $carga->curso->documento="";
+                            $carga->curso->documento = "";
+                        } else {
 
-                        }else{
+                            $carga->curso->documento = $silabo->documento;
 
-                            $carga->curso->documento=$silabo->documento;
-
-                        if ($silabo->activo==false) {
-                            $carga->curso->estado_silabo = "Inactivo";
-                        } elseif ($silabo->estado==0 && $silabo->activo=true) {
-                            $carga->curso->estado_silabo = "Confirmar envio de silabo";
-                        } elseif ($silabo->estado==1 && $silabo->activo=true) {
-                            $carga->curso->estado_silabo = "En espera de aprobación";
-                        } elseif ($silabo->estado==2 && $silabo->activo=true) {
-                            $carga->curso->estado_silabo = "Confirmar envio de silabo";
-                        } elseif ($silabo->estado==3 && $silabo->activo=true) {
-                            $carga->curso->estado_silabo = "Aprobado";
+                            if ($silabo->activo == false) {
+                                $carga->curso->estado_silabo = "Inactivo";
+                            } elseif ($silabo->estado == 0 && $silabo->activo = true) {
+                                $carga->curso->estado_silabo = "Confirmar envio de silabo";
+                            } elseif ($silabo->estado == 1 && $silabo->activo = true) {
+                                $carga->curso->estado_silabo = "En espera de aprobación";
+                            } elseif ($silabo->estado == 2 && $silabo->activo = true) {
+                                $carga->curso->estado_silabo = "Confirmar envio de silabo";
+                            } elseif ($silabo->estado == 3 && $silabo->activo = true) {
+                                $carga->curso->estado_silabo = "Aprobado";
+                            }
                         }
-                    }
                         return $carga;
                     })
                     ->map(function ($carga) {
@@ -137,59 +138,57 @@ class SubirSilaboController extends Controller
                         'curso',
                         'escuela:idEscuela,name',
                     ])
-                    ->where('idDirector', $directorescuela->idDirector)
-                    ->get()
-                    ->map(function ($carga) {
-                        $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
-                            ->where('idFilial', $carga->idFilial)
-                            ->where('idDocente', $carga->idDocente)
-                            ->where('estado', '!=', 0) 
-                            ->first();
+                        ->where('idDirector', $directorescuela->idDirector)
+                        ->get()
+                        ->map(function ($carga) {
+                            $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
+                                ->where('idFilial', $carga->idFilial)
+                                ->where('idDocente', $carga->idDocente)
+                                ->where('estado', '!=', 0)
+                                ->first();
+                            $carga->curso->documento = "";
 
-                        if ($silabo) {
+                            if ($silabo) {
 
+                                $carga->curso->documento = $silabo->documento;
 
-                            if ($silabo->activo == false) {
-                                $carga->curso->estado_silabo = "Inactivo";
-                            }elseif ($silabo->estado == 1 && $silabo->activo == true) {
-                                $carga->curso->estado_silabo = "En espera de aprobación";
-                            } elseif ($silabo->estado == 3 && $silabo->activo == true) {
-                                $carga->curso->estado_silabo = "Aprobado";
-                            } elseif ($silabo->estado == 2 && $silabo->activo == true) {
-                                $carga->curso->estado_silabo = "Rechazado";
+                                if ($silabo->activo == false) {
+                                    $carga->curso->estado_silabo = "Inactivo";
+                                } elseif ($silabo->estado == 1 && $silabo->activo == true) {
+                                    $carga->curso->estado_silabo = "En espera de aprobación";
+                                } elseif ($silabo->estado == 3 && $silabo->activo == true) {
+                                    $carga->curso->estado_silabo = "Aprobado";
+                                } elseif ($silabo->estado == 2 && $silabo->activo == true) {
+                                    $carga->curso->estado_silabo = "Rechazado";
+                                }
+                                return $carga; // Solo devuelve las cargas con un sílabo
                             }
-                            return $carga; // Solo devuelve las cargas con un sílabo
-                        }
-    
-                        return null; // Omite las cargas sin sílabo
-                    })
-                    ->filter() // Filtra para eliminar las cargas nulas (sin sílabo)
-                    ->map(function ($carga) {
 
-                        $docente = Docente::where('idDocente', $carga->idDocente)
-                        ->where('idDocente', $carga->idDocente)
-                        ->first();
+                            return null; // Omite las cargas sin sílabo
+                        })
+                        ->filter() // Filtra para eliminar las cargas nulas (sin sílabo)
+                        ->map(function ($carga) {
 
-                        $docenteuser = User::where('id', $docente->id)
-                        ->first();
+                            $docente = Docente::where('idDocente', $carga->idDocente)
+                                ->where('idDocente', $carga->idDocente)
+                                ->first();
 
-                        $carga->nomdocente = $docenteuser->name;
-                        $carga->apedocente = $docenteuser->lastname;
-    
-                        return $carga;
-                    });
+                            $docenteuser = User::where('id', $docente->id)
+                                ->first();
 
-                    
+                            $carga->nomdocente = $docenteuser->name;
+                            $carga->apedocente = $docenteuser->lastname;
+
+                            return $carga;
+                        });
+
+
 
 
                     return response()->json([
                         'cargadocente' => $cargadocente,
                         'message' => 'Docente encontrado',
                     ]);
-
-
-                        
-                        
                 } else {
                     return response()->json([
                         'message' => 'Director de escuela no encontrado',
@@ -235,25 +234,24 @@ class SubirSilaboController extends Controller
                         $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
                             ->where('idFilial', $carga->idFilial)
                             ->where('idDocente', $carga->idDocente)
-                            
+
                             ->first();
-                        if (!$silabo){
+                        if (!$silabo) {
                             $carga->curso->estado_silabo = "Aún falta generar esquema";
+                        } else {
 
-                        }else{
-
-                        if ($silabo->activo==false) {
-                            $carga->curso->estado_silabo = "Inactivo";
-                        } elseif ($silabo->estado==0 && $silabo->activo=true) {
-                            $carga->curso->estado_silabo = "Confirmar envio de silabo";
-                        } elseif ($silabo->estado==1 && $silabo->activo=true) {
-                            $carga->curso->estado_silabo = "En espera de aprobación";
-                        } elseif ($silabo->estado==2 && $silabo->activo=true) {
-                            $carga->curso->estado_silabo = "Confirmar envio de silabo";
-                        } elseif ($silabo->estado==3 && $silabo->activo=true) {
-                            $carga->curso->estado_silabo = "Aprobado";
+                            if ($silabo->activo == false) {
+                                $carga->curso->estado_silabo = "Inactivo";
+                            } elseif ($silabo->estado == 0 && $silabo->activo = true) {
+                                $carga->curso->estado_silabo = "Confirmar envio de silabo";
+                            } elseif ($silabo->estado == 1 && $silabo->activo = true) {
+                                $carga->curso->estado_silabo = "En espera de aprobación";
+                            } elseif ($silabo->estado == 2 && $silabo->activo = true) {
+                                $carga->curso->estado_silabo = "Confirmar envio de silabo";
+                            } elseif ($silabo->estado == 3 && $silabo->activo = true) {
+                                $carga->curso->estado_silabo = "Aprobado";
+                            }
                         }
-                    }
                         return $carga;
                     })
                     ->map(function ($carga) {
@@ -309,32 +307,78 @@ class SubirSilaboController extends Controller
     public function gestionarsilabo(Request $request)
     {
         try {
-            // Validar los datos entrantes
-            $request->validate([
-                'idCargaDocente' => 'required|integer',
-                'idDocente' => 'required|integer',
-                'idFilial' => 'required|integer',
-                'documento' => 'nullable|string',
-                'idDirector' => 'required|integer',
-            ]);
-    
-            // Crear el registro en la base de datos
-            $silabo = Silabo::create([
-                'idCargaDocente' => $request->idCargaDocente,
-                'idDocente' => $request->idDocente,
-                'idFilial' => $request->idFilial,
-                'documento' => $request->documento,
-                'activo' => 1,
-                'estado' => 0,
-                'idDirector' => $request->idDirector,
-            ]);
-    
-            // Retornar una respuesta de éxito
-            return response()->json([
-                'message' => 'El sílabo se creó correctamente.',
-                'silabo' => $silabo,
-            ], 201);
-    
+            if ($request->numero == 1) {
+
+                // Crear el registro en la base de datos
+                $silabo = Silabo::create([
+                    'idCargaDocente' => $request->idCargaDocente,
+                    'idDocente' => $request->idDocente,
+                    'idFilial' => $request->idFilial,
+                    'documento' => $request->documento,
+                    'activo' => 1,
+                    'estado' => 0,
+                    'idDirector' => $request->idDirector,
+                ]);
+
+                // Retornar una respuesta de éxito
+                return response()->json([
+                    'message' => 'El sílabo se creó correctamente.',
+                    'silabo' => $silabo,
+                ], 201);
+            }
+            if ($request->numero == 2) {
+                $silabo = Silabo::where('idCargaDocente', $request->idCargaDocente)
+                    ->where('idFilial', $request->idFilial)
+                    ->where('idDocente', $request->idDocente)
+                    ->first();
+
+                if ($silabo) {
+                    $silabo->estado = 1;
+                    $silabo->fEnvio = Carbon::now(); // Asigna la fecha y hora actual en formato compatible
+                    $silabo->save();
+                }
+
+                // Retornar una respuesta de éxito
+                return response()->json([
+                    'message' => 'El sílabo se creó correctamente.',
+                    'silabo' => $silabo,
+                ], 201);
+            }
+
+
+            if ($request->numero == 11) {
+                // Rechazar el sílabo
+                Silabo::where('idCargaDocente', $request->idCargaDocente)
+                    ->where('idFilial', $request->idFilial)
+                    ->where('idDocente', $request->idDocente)
+                    ->update([
+                        'estado' => 2,
+                        'observaciones' => $request->observaciones,
+                    ]);
+            
+                return response()->json([
+                    'message' => 'El sílabo se rechazó correctamente.',
+                ], 201);
+            }
+            
+            if ($request->numero == 12) {
+                // Aprobar el sílabo
+                Silabo::where('idCargaDocente', $request->idCargaDocente)
+                    ->where('idFilial', $request->idFilial)
+                    ->where('idDocente', $request->idDocente)
+                    ->update([
+                        'estado' => 3,
+                        'observaciones' => $request->observaciones,
+                    ]);
+            
+                return response()->json([
+                    'message' => 'El sílabo se aprobó correctamente.',
+                ], 201);
+            }
+            
+
+
+
         } catch (\Exception $e) {
             // Retornar una respuesta de error si algo sale mal
             return response()->json([
@@ -343,61 +387,77 @@ class SubirSilaboController extends Controller
             ], 500);
         }
     }
-    
+
 
 
     public function gestionarhorarios(Request $request)
     {
         try {
-            // Validar los datos entrantes
-            $request->validate([
+            // Log de entrada del Request
+            Log::info('Request recibido en gestionarhorarios:', $request->all());
+
+            // Validar los datos de entrada
+            $validatedData = $request->validate([
                 'idSemestreAcademico' => 'required|integer',
                 'idFilial' => 'required|integer',
-                'idDirector' => 'required|integer',
                 'idEscuela' => 'required|integer',
                 'documento' => 'nullable|string',
             ]);
-    
-            // Buscar horario existente
-            $horario = Horario::where('idSemestreAcademico', $request->idSemestreAcademico)
-                ->where('idFilial', $request->idFilial)
-                ->where('idEscuela', $request->idEscuela)
-                ->first(); 
-    
+
+            // Log de IDs proporcionados
+            Log::info('IDs proporcionados:', [
+                'idSemestreAcademico' => $validatedData['idSemestreAcademico'],
+                'idFilial' => $validatedData['idFilial'],
+                'idEscuela' => $validatedData['idEscuela'],
+            ]);
+
+            // Buscar horario existente usando las claves primarias compuestas
+            $horario = Horario::where('idSemestreAcademico', $validatedData['idSemestreAcademico'])
+                ->where('idFilial', $validatedData['idFilial'])
+                ->where('idEscuela', $validatedData['idEscuela'])
+                ->first();
+
+            // Log del horario encontrado o no encontrado
             if ($horario) {
-                // Si el registro existe, realiza la actualización.
-                $horario->update([
-                    'documento' => $request->documento ?? null,
-                    'estado' => 1,
-                    'idDirector' => $request->idDirector,
+                Log::info('Horario encontrado:', $horario->toArray());
+            } else {
+                Log::warning('No se encontró el horario con los IDs proporcionados:', [
+                    'idSemestreAcademico' => $validatedData['idSemestreAcademico'],
+                    'idFilial' => $validatedData['idFilial'],
+                    'idEscuela' => $validatedData['idEscuela'],
                 ]);
-            } 
-    
-            // Retornar una respuesta de éxito
-            return response()->json([
-                'message' => 'El horario se gestionó correctamente.',
-                'horario' => $horario,
-            ], 201);
-    
+            }
+
+            if ($horario) {
+                // Si el registro existe, realiza la actualización
+                $horario->update([
+                    'documento' => $validatedData['documento'] ?? null,
+                ]);
+
+                // Log después de la actualización
+                Log::info('Horario actualizado con éxito:', $horario->toArray());
+
+                return response()->json([
+                    'message' => 'El horario se actualizó correctamente.',
+                    'horario' => $horario,
+                ], 200);
+            } else {
+                // Si no existe, retornar una respuesta indicando que no se encontró
+                return response()->json([
+                    'message' => 'No se encontró el horario especificado.',
+                ], 404);
+            }
         } catch (\Exception $e) {
-            // Loguea el error para inspección
-            \Log::error('Error en gestionarhorarios:', [
-                'error' => $e->getMessage(),
+            // Log del error capturado
+            Log::error('Error al gestionar horarios:', [
+                'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-    
-            // Retornar una respuesta de error si algo sale mal
+
             return response()->json([
                 'message' => 'Hubo un error al gestionar los horarios.',
                 'error' => $e->getMessage(),
             ], 500);
         }
     }
-    
-
-
-
-
-    
-    
 }

@@ -12,9 +12,9 @@ class Silabo extends Model
     // Nombre de la tabla en la base de datos
     protected $table = 'silabo';
 
-    // Clave primaria compuesta
-    protected $primaryKey = ['idCargaDocente', 'idFilial', 'idDocente'];
-    public $incrementing = false; // Indica que la clave primaria no es autoincremental
+    // Desactiva la clave primaria predeterminada de Laravel
+    protected $primaryKey = null;
+    public $incrementing = false; // No es autoincremental
     public $timestamps = false; // Desactiva los timestamps (created_at, updated_at)
 
     // Define los atributos que se pueden asignar de forma masiva
@@ -25,31 +25,28 @@ class Silabo extends Model
         'documento',
         'estado',
         'activo',
-
         'observaciones',
         'idDirector',
-        'fEnvio'
+        'fEnvio',
     ];
 
-    // Relación con el modelo CargaDocente
+    // Relaciones
+
     public function cargaDocente()
     {
         return $this->belongsTo(CargaDocente::class, 'idCargaDocente', 'idCargaDocente');
     }
 
-    // Relación con el modelo Filial
     public function filial()
     {
         return $this->belongsTo(Filial::class, 'idFilial', 'idFilial');
     }
 
-    // Relación con el modelo Docente
     public function docente()
     {
         return $this->belongsTo(Docente::class, 'idDocente', 'idDocente');
     }
 
-    // Relación con el modelo DirectorEscuela
     public function director()
     {
         return $this->belongsTo(DirectorEscuela::class, 'idDirector', 'idDirector');

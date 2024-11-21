@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import { getMisSilabos, CargaDocente } from '@/pages/services/silabo.services';
+import { getMisSilabos, CargaDocente ,enviarinfoSilabo} from '@/pages/services/silabo.services';
 
 const Index: React.FC = () => {
     const [cargaDocente, setCargaDocente] = useState<CargaDocente[]>([]);
@@ -16,6 +16,7 @@ const Index: React.FC = () => {
     const [semestre, setSemestre] = useState('');
     const [procesoSilabo, setProcesoSilabo] = useState('');
     const [docente, setDocente] = useState('');
+    const [shouldUpdate, setShouldUpdate] = useState(false); // Estado para controlar la actualización
 
     useEffect(() => {
         getMisSilabos()
@@ -31,8 +32,8 @@ const Index: React.FC = () => {
                 setError(error.message);
             });
     }, []);
-    
-    
+
+
 
     useEffect(() => {
         const filtered = cargaDocente.filter(item => {
@@ -57,10 +58,101 @@ const Index: React.FC = () => {
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
+    const modal = (carga: CargaDocente) => {
+        const previewUrl = carga.curso?.documento?.replace("/view", "/preview"); // Modifica el enlace para incrustar
+    
+        Swal.fire({
+            title: "Detalles del Sílabo",
+            html: `
+                <div style="display: flex; gap: 20px; align-items: flex-start;">
+                    <div style="flex: 1; text-align: left; line-height: 1.5; margin-bottom: 20px; min-width: 300px;">
+                        <p><strong>ID Curso:</strong> ${carga.idCurso}</p>
+                        <p><strong>Curso:</strong> ${carga.curso?.name}</p>
+                        <p><strong>Docente:</strong> ${carga.nomdocente} ${carga.apedocente}</p>
+                        <p><strong>Filial:</strong> ${carga.filial?.name}</p>
+                        <p><strong>Semestre Académico:</strong> ${carga.semestre_academico?.nomSemestre}</p>
+                        <p><strong>Estado del Sílabo:</strong> ${carga.curso?.estado_silabo}</p>
+                        <p><strong>Documento:</strong> <a href="${carga.curso?.documento}" target="_blank" style="color: #3085d6; text-decoration: underline;">Ver Documento</a></p>
+                        <textarea id="observaciones" placeholder="Escribe las observaciones aquí..." style="width: 100%; height: 300px; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                        </div>
+                    <div style="flex: 2; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; height: 600px;">
+                        <iframe 
+                            src="${previewUrl}" 
+                            style="width: 100%; height: 100%;" 
+                            frameborder="0">
+                        </iframe>
+                    </div>
+                </div>
+            `,
+            width: 1000, // Aumenta el ancho del modal
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonText: "Aceptar",
+            denyButtonText: "Rechazar",
+            cancelButtonText: "Cancelar",
+            focusConfirm: false,
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const observaciones = (document.getElementById("observaciones") as HTMLTextAreaElement)?.value || "";
+                await SubmitCarga(carga, 1, observaciones);
+                Swal.fire(
+                    "Aceptado",
+                    "El sílabo ha sido aceptado correctamente.",
+                    "success"
+                );
+            } else if (result.isDenied) {
+                const observaciones = (document.getElementById("observaciones") as HTMLTextAreaElement)?.value || "";
+                if (!observaciones) {
+                    Swal.fire("Error", "Debe proporcionar observaciones para rechazar el sílabo.", "error");
+                    return;
+                }
+                await SubmitCarga(carga, 0, observaciones);
+                Swal.fire(
+                    "Rechazado",
+                    "El sílabo ha sido rechazado correctamente.",
+                    "success"
+                );
+            }
+        });
+    };
+    
+    
+    
+    
 
+    const SubmitCarga = async (carga: CargaDocente, numero: number, observaciones: string) => {
+        console.log('observaciones:', observaciones);
 
-    const submitCarga = (carga: CargaDocente) => {
-        console.log('Objeto carga enviado:', carga);
+        if (numero==0){
+            const silaboData = {
+                idCargaDocente: carga.idCargaDocente, // Asumiendo que `carga` tiene un `id`
+                idDocente: carga.idDocente, // Información del docente
+                idFilial: carga.idFilial, // Información del curso
+                numero: 11,
+                observaciones:observaciones,
+            };
+            const response = await enviarinfoSilabo(silaboData);
+            console.log("Información del sílabo enviada correctamente:", response);
+
+            setShouldUpdate((prev) => !prev); // Cambiar el estado para disparar el useEffect
+
+        }else{
+            if(numero==1){
+                const silaboData = {
+                    idCargaDocente: carga.idCargaDocente, // Asumiendo que `carga` tiene un `id`
+                    idDocente: carga.idDocente, // Información del docente
+                    idFilial: carga.idFilial, // Información del curso
+                    numero: 12,
+                    observaciones:observaciones,
+                };
+                const response = await enviarinfoSilabo(silaboData);
+                console.log("Información del sílabo enviada correctamente:", response);
+    
+                setShouldUpdate((prev) => !prev); // Cambiar el estado para disparar el useEffect
+    
+            }
+        }
+
     };
 
     return (
@@ -154,22 +246,28 @@ const Index: React.FC = () => {
                                 <td className="px-4 py-2 border-b text-center">
                                     <button
                                         className={`px-2 py-1 rounded text-white 
-                                            ${carga.curso?.estado_silabo === "Rechazado" ? "bg-red-500 hover:bg-red-600" : ""}
-                                            ${carga.curso?.estado_silabo === "Aprobado" ? "bg-green-500 hover:bg-green-600" : ""}
-                                            ${carga.curso?.estado_silabo === "En espera de aprobación" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`
+        ${carga.curso?.estado_silabo === "Rechazado" ? "bg-red-500 hover:bg-red-600" : ""}
+        ${carga.curso?.estado_silabo === "Aprobado" ? "bg-green-500 hover:bg-green-600" : ""}
+        ${carga.curso?.estado_silabo === "En espera de aprobación" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`
                                         }
                                         onClick={() => {
                                             if (carga.curso?.estado_silabo === "En espera de aprobación") {
-                                                // Acción para observar el sílabo
-                                            } else if (carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Rechazado") {
-                                                // Acción para ver el sílabo
+                                                // Abrir modal para observar el sílabo
+                                                modal(carga, 1);
+                                            } else if (
+                                                carga.curso?.estado_silabo === "Aprobado" ||
+                                                carga.curso?.estado_silabo === "Rechazado"
+                                            ) {
+                                                // Abrir modal para ver el sílabo
+                                                modal(carga, 2);
                                             }
                                         }}
                                     >
                                         {carga.curso?.estado_silabo === "En espera de aprobación" && "Observar Sílabo"}
-                                        {carga.curso?.estado_silabo === "Aprobado" && "Ver"}
-                                        {carga.curso?.estado_silabo === "Rechazado" && "Ver"}
+                                        {carga.curso?.estado_silabo === "Aprobado" && "Observar"}
+                                        {carga.curso?.estado_silabo === "Rechazado" && "Observar"}
                                     </button>
+
                                 </td>
                             </tr>
                         ))}

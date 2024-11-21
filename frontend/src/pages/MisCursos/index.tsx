@@ -56,34 +56,49 @@ const Index: React.FC = () => {
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-    const handleGenerateScheme = (carga: CargaDocente) => {
+    const modal = (carga: CargaDocente, numero: number) => {
         Swal.fire({
-            title: "¿Estás seguro?",
-            text: "¿Deseas generar el esquema del sílabo?",
+            title: numero === 1 ? "¿Estás seguro?" : "¿Confirmar envío del sílabo?",
+            text:
+                numero === 1
+                    ? "¿Deseas generar el esquema del sílabo?"
+                    : "Esto enviará el sílabo al director de escuela.",
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
-            confirmButtonText: "Sí, generar",
+            confirmButtonText: numero === 1 ? "Sí, generar" : "Sí, enviar",
             cancelButtonText: "Cancelar",
         }).then(async (result) => {
             if (result.isConfirmed) {
-                await SubmitCarga(carga, 1); // Asegúrate de que esta llamada sea asincrónica
-                Swal.fire(
-                    "Generado!",
-                    "El esquema del sílabo ha sido generado.",
-                    "success"
-                );
+                if (numero === 1) {
+                    // Caso para generar el esquema del sílabo
+                    await SubmitCarga(carga, numero); // Asegúrate de que esta llamada sea asincrónica
+                    Swal.fire(
+                        "Generado!",
+                        "El esquema del sílabo ha sido generado.",
+                        "success"
+                    );
+                } else if (numero === 2) {
+                    // Caso para enviar el sílabo al director de escuela
+                    await SubmitCarga(carga,numero); // Implementa esta función
+                    Swal.fire(
+                        "Enviado!",
+                        "El sílabo ha sido enviado al director de escuela.",
+                        "success"
+                    );
+                }
             }
         });
     };
+    
 
 
-
-    const SubmitCarga = async (carga: CargaDocente) => {
+    const SubmitCarga = async (carga: CargaDocente,numero : number) => {
         const accessToken = await getAccessToken();
+        if (numero==1){
 
-        try {
+                try {
             // console.log(carga);
             // Genera el documento utilizando la función modularizada
             const doc = await generateDocument(carga); // Crear el documento en base a la carga
@@ -107,6 +122,7 @@ const Index: React.FC = () => {
                 idDocente: carga.idDocente, // Información del docente
                 idFilial: carga.idFilial, // Información del curso
                 idDirector: carga.idDirector, // Información del curso
+                numero: 1,
 
             };
 
@@ -120,6 +136,24 @@ const Index: React.FC = () => {
             console.error("Error al manejar la carga:", error);
             alert("Hubo un problema al crear/verificar la estructura o manejar el documento.");
         }
+
+        }
+        if (numero==2){
+
+            const silaboData = {
+                idCargaDocente: carga.idCargaDocente, // Asumiendo que `carga` tiene un `id`
+                idDocente: carga.idDocente, // Información del docente
+                idFilial: carga.idFilial, // Información del curso
+                numero: 2,
+            };
+
+            const response = await enviarinfoSilabo(silaboData);
+            console.log("Información del sílabo enviada correctamente:", response);
+            
+            setShouldUpdate((prev) => !prev); // Cambiar el estado para disparar el useEffect
+
+        }
+        
     };
 
 
@@ -221,9 +255,9 @@ const Index: React.FC = () => {
                                             }
                                             onClick={() => {
                                                 if (carga.curso?.estado_silabo === "Aún falta generar esquema") {
-                                                    handleGenerateScheme(carga);
+                                                    modal(carga,1);
                                                 } else if (carga.curso?.estado_silabo === "En espera de aprobación") {
-                                                    alert("Esperando aprobación del sílabo.");
+                                                    window.open(carga.curso?.documento, "_blank");
                                                 } else if (carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Inactivo") {
                                                     window.open(carga.curso?.documento, "_blank");
                                                 }
@@ -266,12 +300,14 @@ const Index: React.FC = () => {
                                             <button
                                                 className="flex items-center gap-2 px-2 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white"
                                                 onClick={() => {
-                                                    alert("El envío del sílabo ha sido confirmado.");
-                                                    // Aquí puedes agregar lógica adicional para manejar la confirmación
+                                                    modal(carga,2);
                                                 }}
                                             >
                                                 <FaCheck /> Confirmar Envío
                                             </button>
+
+
+
                                         )}
                                     </div>
 
