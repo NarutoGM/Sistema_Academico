@@ -101,30 +101,41 @@ const Index: React.FC = () => {
 
     const modal = async (carga: any, numero: number) => {
         let htmlContent = ""; // Contenido HTML inicial
-
+    
         try {
             if (numero === 1) {
-                // Contenido con celdas compartidas y bordes, con padding
+                // Contenido con diseño limpio y mejor estructura
                 htmlContent = `
-                    <h2 style="text-align: center;">Documento con Celdas Compartidas</h2>
-                    <table class="table" style="width: 100%; border-collapse: collapse; text-align: center; border: 1px solid black;">
-                        <tr>
-                            <th colspan="2" class="cell-shared-horizontal" data-colspan="2" style="border: 1px solid black; padding: 8px;">Encabezado Compartido</th>
-                            <th style="border: 1px solid black; padding: 8px;">Celda 3</th>
-                        </tr>
-                        <tr>
-                            <td rowspan="2" class="cell-shared-vertical" data-rowspan="2" style="border: 1px solid black; padding: 8px;">Celda Vertical</td>
-                            <td style="border: 1px solid black; padding: 8px;">Celda 4</td>
-                            <td style="border: 1px solid black; padding: 8px;">Celda 5</td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid black; padding: 8px;">Celda 6</td>
-                            <td style="border: 1px solid black; padding: 8px;">Celda 7</td>
-                        </tr>
-                    </table>
+                    <div class="p-8 bg-gray-50 rounded-lg shadow-md max-h-[80vh] overflow-y-auto">
+                        <h2 class="text-3xl font-bold text-center mb-6 text-blue-600">
+                            SÍLABO DE LA EXPERIENCIA CURRICULAR
+                        </h2>
+                        
+                        <!-- Datos de Identificación -->
+                        <section class="mb-6">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">I. Datos de Identificación</h3>
+                            <ul class="list-disc list-inside space-y-3">
+                                <li><strong>1.1 Área:</strong> ${carga.curso?.area?.nomArea || "No especificado"}</li>
+                                <li><strong>1.2 Facultad:</strong> ${carga.curso?.facultad?.nomFacultad || "No especificado"}</li>
+                                <li><strong>1.3 Departamento Académico:</strong> ${carga.curso?.departamento?.nomDepartamento || "No especificado"}</li>
+                                <li><strong>1.4 Programa/carrera profesional:</strong> ${carga.escuela?.name || "No especificado"}</li>
+                                <li><strong>1.5 Sede:</strong> ${carga.filial?.name || "No especificado"}</li>
+                                <li><strong>1.6 Año y Semestre Académico:</strong> ${carga.semestre_academico?.nomSemestre || "No especificado"}</li>
+                                <li><strong>1.7 Ciclo:</strong> ${carga.ciclo || "No especificado"}</li>
+                                <li><strong>1.8 Código de la experiencia curricular:</strong> ${carga.idCurso || "No especificado"}</li>
+                                <li><strong>1.9 Sección(es)/grupo(s):</strong> ${carga.grupo || "No especificado"}</li>
+                                <li><strong>1.10 Créditos:</strong> ${carga.curso?.creditos || "No especificado"}</li>
+                                <li><strong>1.11 Pre requisito:</strong> ${carga.curso?.prerequisitos || "No especificado"}</li>
+                                <li><strong>1.12 Inicio – término:</strong> ${carga.semestre_academico?.fInicio || "No especificado"}</li>
+                                <li><strong>1.13 Tipo:</strong> ${carga.curso?.tipo_curso?.descripcion || "No especificado"}</li>
+                                <li><strong>1.14 Régimen:</strong> ${carga.curso?.regimen_curso?.nomRegimen || "No especificado"}</li>
+                                <li><strong>1.15 Organización semestral del tiempo (semanas):</strong> N/A</li>
+                            </ul>
+                        </section>
+                    </div>
                 `;
             }
-
+    
             if (!htmlContent) {
                 Swal.fire("Error", "No se pudo generar el contenido HTML.", "error");
                 return;
@@ -134,10 +145,16 @@ const Index: React.FC = () => {
             Swal.fire("Error", "No se pudo generar el contenido HTML.", "error");
             return;
         }
-
+    
         Swal.fire({
             title: "Editar Documento",
-            html: `<div id="ckeditor-container" style="height: 400px; border: 1px solid #ccc;"></div>`,
+            html: `
+                <div id="ckeditor-container" class="w-full h-[600px] border border-gray-300 rounded-md overflow-hidden bg-white shadow-sm p-6"></div>
+            `,
+            width: "90vw", // Ampliar el modal
+            customClass: {
+                popup: "p-6 rounded-lg",
+            },
             showCancelButton: true,
             confirmButtonText: "Guardar Cambios",
             cancelButtonText: "Cancelar",
@@ -146,11 +163,18 @@ const Index: React.FC = () => {
                 if (editorContainer) {
                     ClassicEditor.create(editorContainer, {
                         toolbar: [
+                            "heading",
+                            "|",
                             "bold",
                             "italic",
                             "underline",
+                            "link",
+                            "bulletedList",
+                            "numberedList",
+                            "blockQuote",
                             "|",
                             "insertTable",
+                            "mediaEmbed",
                             "|",
                             "undo",
                             "redo",
@@ -188,12 +212,14 @@ const Index: React.FC = () => {
                     Swal.fire("Error", "No se pudo obtener el contenido editado.", "error");
                     return;
                 }
-
+    
                 // Llamar a SubmitCarga y enviar el contenido HTML directamente
                 await SubmitCarga(carga, numero, updatedContent);
             }
         });
     };
+    
+    
     
     const modal2 = async (carga: CargaDocente, numero: number) => {
         const observacionesText = numero === 2 || numero === 1 ? carga.curso?.observaciones || "" : ""; // Observaciones solo para números 1 o 2
