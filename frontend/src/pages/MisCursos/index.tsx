@@ -1,29 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { getMisCursos, CargaDocente, enviarinfoSilabo } from '@/pages/services/silabo.services';
-import { getAccessToken } from '@/pages/services/token.services';
-import { generateDocument } from "./componentesilabo";
-import { saveAs } from "file-saver";
 import { FaFileAlt, FaCheck, FaEye, FaDownload, FaExclamationTriangle } from "react-icons/fa"; // Íconos de React Icons
-import { crearEstructuraCompleta } from '@/pages/services/modelodrive.services';
-import { jsPDF } from "jspdf";  // Asegúrate de instalar jsPDF
+import ReactQuill from 'react-quill';
 
 
 import Swal from "sweetalert2";
 
 import "quill/dist/quill.snow.css";
+
+
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 // Componente Modal para mostrar contenido HTML
 const DocumentoModal = ({ contenidoHtml, onClose }: { contenidoHtml: string; onClose: () => void }) => {
     return (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-4 max-w-4xl w-full max-h-screen overflow-auto">
-                <button onClick={onClose} className="absolute top-2 right-2 text-red-500">
+            <div className="bg-white p-4 max-w-4xl w-full h-auto max-h-[80vh] overflow-auto relative">
+                <button
+                    onClick={onClose}
+                    className="absolute top-2 right-2 text-red-500 text-xl font-bold"
+                >
                     X
                 </button>
-                <div
-                    className="prose"
-                    dangerouslySetInnerHTML={{ __html: contenidoHtml }} // Renderiza el HTML
-                ></div>
+
+                {/* Usamos Quill para mostrar el HTML de manera presentable */}
+                <div className="mb-4 max-h-[60vh] overflow-y-auto">
+                    <ReactQuill
+                        value={contenidoHtml}
+                        readOnly={true}
+                        theme="snow"
+                        className="border rounded-md"
+                    />
+                </div>
             </div>
         </div>
     );
@@ -77,21 +84,31 @@ const Index: React.FC = () => {
     const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-    const DocumentoModal = ({ contenidoHtml, onClose }: { contenidoHtml: string; onClose: () => void }) => {
-        return (
-            <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
-                <div className="bg-white p-4 max-w-4xl w-full max-h-screen overflow-auto">
-                    <button onClick={onClose} className="absolute top-2 right-2 text-red-500">
-                        X
-                    </button>
-                    <div
-                        className="prose"
-                        dangerouslySetInnerHTML={{ __html: contenidoHtml }} // Renderiza el HTML
-                    ></div>
+
+
+const DocumentoModal = ({ contenidoHtml, onClose }: { contenidoHtml: string; onClose: () => void }) => {
+    return (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white p-4 max-w-4xl w-full max-h-screen overflow-auto relative">
+                <button
+                    onClick={onClose}
+                    className="absolute top-2 right-2 text-red-500 text-xl font-bold"
+                >
+                    X
+                </button>
+                <div
+                    className="prose prose-lg bg-gray-100 p-4 rounded-md shadow-md"
+                    dangerouslySetInnerHTML={{ __html: contenidoHtml }} // Renderiza el HTML
+                ></div>
+
+                {/* Aquí mostramos el HTML en un formato de solo lectura */}
+                <div className="mt-4 border rounded-md bg-gray-800 p-4 text-white">
+                    <pre className="whitespace-pre-wrap">{contenidoHtml}</pre>
                 </div>
             </div>
-        );
-    };
+        </div>
+    );
+};
 
 
     const [isModalOpen, setIsModalOpen] = useState(false);
