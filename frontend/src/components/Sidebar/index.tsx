@@ -25,26 +25,26 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const [error, setError] = useState<string | null>(null);
 
 
-  useEffect(() => {
-    const fetchPermisos = async () => {
-      try {
-        const data = await getMisPermisos(); // Verifica la estructura aquí
-        if (Array.isArray(data)) {
-          setPermisos(data); // Asumimos que es un array de strings
-        } else if (Array.isArray(data.permisos)) {
-          setPermisos(data.permisos); // Si viene anidado como un array de permisos
-        } else {
-          throw new Error('Estructura de datos no válida');
-        }
-        console.log(permisos);
-      } catch (err: any) {
-        setError(err.message);
-        console.error('Error fetching permisos:', err);
-      }
-    };
+ // useEffect(() => {
+ //   const fetchPermisos = async () => {
+//      try {
+ //       const data = await getMisPermisos(); // Verifica la estructura aquí
+ //       if (Array.isArray(data)) {
+  //        setPermisos(data); // Asumimos que es un array de strings
+  //      } else if (Array.isArray(data.permisos)) {
+  //        setPermisos(data.permisos); // Si viene anidado como un array de permisos
+  //      } else {
+  //        throw new Error('Estructura de datos no válida');
+  //      }
+  //      console.log(permisos);
+  //    } catch (err: any) {
+  //      setError(err.message);
+  //      console.error('Error fetching permisos:', err);
+ //     }
+ //   };
 
-    fetchPermisos();
-  }, []);
+ //   fetchPermisos();
+//  }, []);
 
 
   // close on click outside
@@ -129,7 +129,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
             <ul className="mb-6 flex flex-col gap-1.5">
 
-{permisos.includes("gestionarrolesypermisos") && (
 
 
 
@@ -151,13 +150,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 </NavLink>
 
 
-              )}
+            
 
 
 
 
               <li>
-{permisos.includes("gestionarpermisos") && (
 
                   <NavLink
                     to="/permisos"
@@ -174,7 +172,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     Permisos
                   </NavLink>
 
-                )}
+                
 
               </li>
 
@@ -185,7 +183,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* <!-- Menu Item Settings --> */}
               <li>
 
-{permisos.includes("gestionarusuarios") && (
 
                   <NavLink
                     to="/administrarusuario"
@@ -201,13 +198,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
                     Administrar Usuarios
                   </NavLink>
-                )}
+                
               </li>
 
 
               {/* <!-- Menu Item Settings --> */}
               <li>
-              {permisos.includes("editarperfil") && (
 
 
                   <NavLink
@@ -225,12 +221,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
                     EditarPerfil
                   </NavLink>
-                )}
+                
               </li>
 
 
               <li>
-              {permisos.includes("vermiscursos") && (
 
 
                   <NavLink
@@ -245,13 +240,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
                     Mis Cursos
                   </NavLink>
-                )}
+                
 
               </li>
 
 
               <li>
-              {permisos.includes("gestionarhorarios") && (
+
 
                   <NavLink
                     to="/GestionarHorarios"
@@ -265,11 +260,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
                     Gestionar Horarios
                   </NavLink>
-                )}
+                
               </li>
 
               <li>
-              {permisos.includes("gestionarhorarios") && (
 
 
                   <NavLink
@@ -285,7 +279,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
                     Carga Docente
                   </NavLink>
-                )}
+                
               </li>
 
 
@@ -295,7 +289,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
               <li>
 
-               {permisos.includes("gestionarcursos") && (
 
 
                   <NavLink
@@ -310,7 +303,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
                     Gestión de Sílabos
                   </NavLink>
-                )}
+                
               </li>
 
               {/* <!-- Menu Item Settings --> */}
