@@ -8,14 +8,16 @@ const Index: React.FC = () => {
     const [cargaDocente, setCargaDocente] = useState<CargaDocente[]>([]);
     const [filteredData, setFilteredData] = useState<CargaDocente[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [selectedCarga, setSelectedCarga] = useState<CargaDocente | null>(null);
     const [isFlipped, setIsFlipped] = useState(false); // Controla la transición entre las caras
     const [isModalOpen, setIsModalOpen] = useState(false); // Controla si el modal1 está abierto
 
     const [isModalOpen2, setIsModalOpen2] = useState(false); // Controla si el modal2 está abierto
 
+    const [selectedCarga, setSelectedCarga] = useState<CargaDocente>();
 
     const [modalContent, setModalContent] = useState<string>(''); // Contenido del modal
+    const [cargaDocente2, setCargaDocente2] = useState<CargaDocente>();
+
     const itemsPerPage = 5;
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -39,8 +41,8 @@ const Index: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const openModal2 = (content: string) => {
-        setModalContent(content);
+    const openModal2 = (carga: CargaDocente | undefined) => {
+        setCargaDocente2(carga);
         setIsModalOpen2(true);
     };
 
@@ -135,7 +137,8 @@ const Index: React.FC = () => {
                         {/* Opción: Reutilizar un sílabo */}
                         <div
                             onClick={() =>
-                                openModal2('Reutilizar un sílabo ya creado para el curso ' + selectedCarga?.curso?.name)
+                                
+                                openModal2(selectedCarga)
                             }
                             className="flex flex-col items-center bg-white border rounded-lg shadow-lg p-6 w-96 cursor-pointer transition transform hover:scale-105 hover:shadow-xl relative"
                         >
@@ -159,8 +162,10 @@ const Index: React.FC = () => {
             {isModalOpen2 && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-0 z-50">
                     <div className="bg-white p-16 rounded-lg shadow-2xl max-w-full text-center">
-                        <h2 className="text-6xl font-bold mb-12">Información</h2>
-                        <p className="text-2xl mb-8">{modalContent}</p>
+                        <h2 className="text-6xl  font-bold mb-12">Información</h2>
+
+                        {selectedCarga?.curso?.name || 'Sin nombre'}
+
                         <button onClick={closeModal2} className="px-8 py-4 bg-blue-600 text-white text-2xl rounded-lg hover:bg-blue-500" >
                             Cerrar
                         </button>
