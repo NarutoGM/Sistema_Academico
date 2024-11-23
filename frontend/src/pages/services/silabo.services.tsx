@@ -1,4 +1,5 @@
 import { isAuthenticated } from '@/utils/auth'; // Importa tu función isAuthenticated
+import { Escuela } from './rolesyusuarios.services';
 
 // Definición de la URL de la API directamente
 const apiUrl = 'http://127.0.0.1:8000/api'; // Cambia esta URL a la que necesites
@@ -14,12 +15,42 @@ export interface Docente {
     nombre: string;
 }
 
+export interface RegimenCurso {
+    idRegimenCurso: number;
+    nomRegimen: string;
+}
+
+
 export interface Curso {
     idCurso: number;
     name: string;
     estado_silabo: string;
     documento: string;
+    area?: Area; 
+    facultad?: Facultad;
+    departamento?: Departamento;
+    creditos?: string; 
+    tipo_curso?: TipoCurso;
+    regimen_curso?: R;
 
+}
+export interface Area {
+    idArea: number;
+    nomArea: string;
+}
+export interface TipoCurso {
+    idTipoCurso: number;
+    descripcion: string;
+}
+
+
+export interface Facultad {
+    idFacultad: number;
+    nomFacultad: string;
+}
+export interface Departamento {
+    idDepartamento: number;
+    nomDepartamento: string;
 }
 
 export interface Filial {
@@ -30,6 +61,8 @@ export interface Filial {
 export interface Semestre_academico {
     idSemestreAcademico: number;
     nomSemestre: string;
+    fInicio:string;
+    fTermino:string;
     // Añade aquí otras propiedades que pueda tener un curso
 }
 
@@ -48,6 +81,9 @@ export interface CargaDocente {
     curso?: Curso; // Campo opcional que hace referencia a un objeto de tipo Curso
     filial?: Filial; 
     semestre_academico?: Semestre_academico; 
+    escuela?: Escuela; // Campo opcional que hace referencia a un objeto de tipo Curso
+    ciclo: string;
+    prerequisitos: string;
 
 }
 

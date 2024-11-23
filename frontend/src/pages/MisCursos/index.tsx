@@ -3,6 +3,7 @@ import { getMisCursos, CargaDocente } from '@/pages/services/silabo.services';
 import './estilos.css';
 import LogoCrear from '../../images/logo/crearsilabo.png';
 import LogoReutilizar from '../../images/logo/reutilizarsilabo.png';
+import moment from 'moment'; // O cualquier otra librería de manejo de fechas que prefieras
 
 const Index: React.FC = () => {
     const [cargaDocente, setCargaDocente] = useState<CargaDocente[]>([]);
@@ -15,8 +16,6 @@ const Index: React.FC = () => {
 
     const [selectedCarga, setSelectedCarga] = useState<CargaDocente>();
 
-    const [modalContent, setModalContent] = useState<string>(''); // Contenido del modal
-    const [cargaDocente2, setCargaDocente2] = useState<CargaDocente>();
 
     const itemsPerPage = 5;
     const [currentPage, setCurrentPage] = useState(1);
@@ -36,13 +35,11 @@ const Index: React.FC = () => {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
 
-    const openModal = (content: string) => {
-        setModalContent(content);
+    const openModal = () => {
         setIsModalOpen(true);
     };
 
-    const openModal2 = (carga: CargaDocente | undefined) => {
-        setCargaDocente2(carga);
+    const openModal2 = () => {
         setIsModalOpen2(true);
     };
 
@@ -55,20 +52,60 @@ const Index: React.FC = () => {
 
     const [currentStep, setCurrentStep] = useState(0);
 
-    const steps = [
-        { label: "Paso 1", content: "Contenido del Paso 1" },
-        { label: "Paso 2", content: "Contenido del Paso 2" },
-        { label: "Paso 3", content: "Contenido del Paso 3" },
-    ];
+
+
+
+
 
     const nextStep = () => {
-        if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+        if (validateStep()) {
+            setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+        }
     };
 
     const prevStep = () => {
-        if (currentStep > 0) setCurrentStep(currentStep - 1);
+        setCurrentStep((prev) => Math.max(prev - 1, 0));
     };
 
+
+    const handleChange = (step, field, value) => {
+        setFormData((prev) => ({
+            ...prev,
+            [step]: { ...prev[step], [field]: value },
+        }));
+    };
+
+    const steps = [
+        { label: "Datos Básicos", content: "" },
+        { label: "Sumilla", content: "Escriba la sumilla requerida." },
+        { label: "Competencia", content: "Defina la competencia asociada." },
+        // Agregar más pasos según sea necesario...
+    ];
+    const [formData, setFormData] = useState({
+        sumilla: { descripcion: "" },
+        competencia: { detalle: "" },
+    });
+    const [errors, setErrors] = useState({});
+
+    const validateStep = () => {
+        const newErrors = {};
+        if (currentStep === 0) {
+        }
+        if (currentStep === 1) {
+            if (!formData.sumilla.descripcion) newErrors.descripcion = "La sumilla es obligatoria";
+        }
+        if (currentStep === 2) {
+            if (!formData.competencia.detalle) newErrors.detalle = "La competencia es obligatoria";
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const formatDate = (dateString: string) => {
+        if (!dateString) return ''; // Manejar caso de fecha vacía
+        const date = new Date(dateString);
+        return moment(date).format('YYYY-MM-DD'); // Formato año-mes-día
+    };
 
     return (
         <div className="card-container">
@@ -125,7 +162,7 @@ const Index: React.FC = () => {
                         {/* Opción: Crear un nuevo sílabo */}
                         <div
                             onClick={() =>
-                                openModal('Crear un nuevo sílabo para el curso ' + selectedCarga?.curso?.name)
+                                openModal()
                             }
                             className="flex flex-col items-center bg-white border rounded-lg shadow-lg p-6 w-96 cursor-pointer transition transform hover:scale-105 hover:shadow-xl relative"
                         >
@@ -137,8 +174,8 @@ const Index: React.FC = () => {
                         {/* Opción: Reutilizar un sílabo */}
                         <div
                             onClick={() =>
-                                
-                                openModal2(selectedCarga)
+
+                                openModal2()
                             }
                             className="flex flex-col items-center bg-white border rounded-lg shadow-lg p-6 w-96 cursor-pointer transition transform hover:scale-105 hover:shadow-xl relative"
                         >
@@ -175,10 +212,9 @@ const Index: React.FC = () => {
 
 
             {isModalOpen && (
-
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white p-8 rounded-lg shadow-2xl max-w-3xl w-full">
-                        <h2 className="text-3xl font-bold mb-6 text-center">Información</h2>
+                <div className="fixed inset-0 flex items-center justify-center   z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-2xl max-w-7xl w-full">
+                        <h2 className="text-3xl font-bold mb-6 text-center">Gestión de Silabo</h2>
 
                         {/* Tabs Header */}
                         <div className="flex justify-between items-center mb-6 border-b pb-4">
@@ -187,7 +223,7 @@ const Index: React.FC = () => {
                                     key={index}
                                     className={`flex-1 text-center cursor-pointer ${index <= currentStep ? "text-blue-600 font-bold" : "text-gray-400"
                                         }`}
-                                    onClick={() => setCurrentStep(index)}
+                                    onClick={() => index <= currentStep && setCurrentStep(index)}
                                 >
                                     <div
                                         className={`w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center ${index <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200"
@@ -201,8 +237,191 @@ const Index: React.FC = () => {
                         </div>
 
                         {/* Content */}
-                        <div className="mb-6 text-center">
+                        <div className="mb-6 text-center overflow-y-auto max-h-96">
                             <p className="text-xl">{steps[currentStep].content}</p>
+                            {currentStep === 0 && (
+
+
+                                <div className="space-y-4">
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Área:</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Área:"
+                                            value={selectedCarga?.curso?.area?.nomArea || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Facultad:</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Facultad:"
+                                            value={selectedCarga?.curso?.facultad?.nomFacultad || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Departamento Academico:</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Departamento Academico:"
+                                            value={selectedCarga?.curso?.departamento?.nomDepartamento || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Programa de estudios:</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Programa de estudios:"
+                                            value={selectedCarga?.escuela?.name || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Sede:</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Sede"
+                                            value={selectedCarga?.filial?.name || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Ciclo:</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ciclo"
+                                            value={selectedCarga?.ciclo || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Código de la experiencia curricular :</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Código de la experiencia curricular"
+                                            value={selectedCarga?.curso?.idCurso || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Sección o grupo :</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Sección o grupo"
+                                            value={selectedCarga?.grupo || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Créditos :</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Créditos"
+                                            value={selectedCarga?.curso?.creditos || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Requisitos :</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Requisitoso"
+                                            value={selectedCarga?.prerequisitos || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Inicio - Termino :</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Inicio - Termino"
+                                            value={
+                                                formatDate(selectedCarga?.semestre_academico?.fInicio ?? '') + ' al ' +
+                                                formatDate(selectedCarga?.semestre_academico?.fTermino ?? '') || ""
+                                            } readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Tipo :</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Tipo"
+                                            value={selectedCarga?.curso?.tipo_curso?.descripcion || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Regimen :</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Tipo"
+                                            value={selectedCarga?.curso?.regimen_curso?.nomRegimen || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
+                                    
+                                </div>
+
+
+                            )}
+                            {currentStep === 1 && (
+                                <div>
+                                    <textarea
+                                        placeholder="Sumilla"
+                                        value={formData.sumilla.descripcion}
+                                        onChange={(e) =>
+                                            handleChange("sumilla", "descripcion", e.target.value)
+                                        }
+                                        className="border p-2 w-full"
+                                    />
+                                    {errors.descripcion && (
+                                        <p className="text-red-500">{errors.descripcion}</p>
+                                    )}
+                                </div>
+                            )}
+                            {currentStep === 2 && (
+                                <div>
+                                    <input
+                                        type="text"
+                                        placeholder="Competencia"
+                                        value={formData.competencia.detalle}
+                                        onChange={(e) =>
+                                            handleChange("competencia", "detalle", e.target.value)
+                                        }
+                                        className="border p-2 w-full"
+                                    />
+                                    {errors.detalle && (
+                                        <p className="text-red-500">{errors.detalle}</p>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Navigation Buttons */}
@@ -217,7 +436,9 @@ const Index: React.FC = () => {
                             </button>
                             <button
                                 onClick={nextStep}
-                                className={`px-4 py-2 text-white bg-blue-600 rounded-lg ${currentStep === steps.length - 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-500"
+                                className={`px-4 py-2 text-white bg-blue-600 rounded-lg ${currentStep === steps.length - 1
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : "hover:bg-blue-500"
                                     }`}
                                 disabled={currentStep === steps.length - 1}
                             >
@@ -234,9 +455,10 @@ const Index: React.FC = () => {
                         </button>
                     </div>
                 </div>
-
-
             )}
+
+
+
         </div>
     );
 };
