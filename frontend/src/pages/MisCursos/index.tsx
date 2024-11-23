@@ -39,6 +39,24 @@ const Index: React.FC = () => {
         setIsModalOpen(false);
     };
 
+
+    const [currentStep, setCurrentStep] = useState(0);
+
+    const steps = [
+      { label: "Paso 1", content: "Contenido del Paso 1" },
+      { label: "Paso 2", content: "Contenido del Paso 2" },
+      { label: "Paso 3", content: "Contenido del Paso 3" },
+    ];
+  
+    const nextStep = () => {
+      if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+    };
+  
+    const prevStep = () => {
+      if (currentStep > 0) setCurrentStep(currentStep - 1);
+    };
+
+
     return (
         <div className="card-container">
 
@@ -126,18 +144,69 @@ const Index: React.FC = () => {
 
             {/* Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-0 z-50">
-                    <div className="bg-white p-16 rounded-lg shadow-2xl max-w-full text-center">
-                        <h2 className="text-6xl font-bold mb-12">Información</h2>
-                        <p className="text-2xl mb-8">{modalContent}</p>
-                        <button
-                            onClick={closeModal}
-                            className="px-8 py-4 bg-blue-600 text-white text-2xl rounded-lg hover:bg-blue-500"
-                        >
-                            Cerrar
-                        </button>
+
+
+                isModalOpen && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                        <div className="bg-white p-8 rounded-lg shadow-2xl max-w-3xl w-full">
+                            <h2 className="text-3xl font-bold mb-6 text-center">Información</h2>
+
+                            {/* Tabs Header */}
+                            <div className="flex justify-between items-center mb-6 border-b pb-4">
+                                {steps.map((step, index) => (
+                                    <div
+                                        key={index}
+                                        className={`flex-1 text-center cursor-pointer ${index <= currentStep ? "text-blue-600 font-bold" : "text-gray-400"
+                                            }`}
+                                        onClick={() => setCurrentStep(index)}
+                                    >
+                                        <div
+                                            className={`w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center ${index <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200"
+                                                }`}
+                                        >
+                                            {index < currentStep ? "✓" : index + 1}
+                                        </div>
+                                        {step.label}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Content */}
+                            <div className="mb-6 text-center">
+                                <p className="text-xl">{steps[currentStep].content}</p>
+                            </div>
+
+                            {/* Navigation Buttons */}
+                            <div className="flex justify-between">
+                                <button
+                                    onClick={prevStep}
+                                    className={`px-4 py-2 text-white bg-blue-600 rounded-lg ${currentStep === 0 ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-500"
+                                        }`}
+                                    disabled={currentStep === 0}
+                                >
+                                    Anterior
+                                </button>
+                                <button
+                                    onClick={nextStep}
+                                    className={`px-4 py-2 text-white bg-blue-600 rounded-lg ${currentStep === steps.length - 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-500"
+                                        }`}
+                                    disabled={currentStep === steps.length - 1}
+                                >
+                                    Siguiente
+                                </button>
+                            </div>
+
+                            {/* Close Button */}
+                            <button
+                                onClick={closeModal}
+                                className="mt-6 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 w-full"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )
+
             )}
         </div>
     );
