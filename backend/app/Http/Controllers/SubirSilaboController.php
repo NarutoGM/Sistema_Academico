@@ -95,6 +95,7 @@ class SubirSilaboController extends Controller
                         $carga->nomdocente = $user->name;
                         $carga->apedocente = $user->lastname;
                         $carga->email = $user->email;
+                        $carga->profesion = $user->profesion;
 
                         return $carga;
                     });
@@ -163,6 +164,7 @@ class SubirSilaboController extends Controller
 
                                 } elseif ($silabo->estado == 2 && $silabo->activo == true) {
                                     $carga->curso->estado_silabo = "Rechazado";
+                                    
                                     $carga->curso->observaciones = $silabo->observaciones;
 
                                 }

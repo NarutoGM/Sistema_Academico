@@ -214,7 +214,7 @@ const Index: React.FC = () => {
             {isModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center   z-50">
                     <div className="bg-white p-8 rounded-lg shadow-2xl max-w-7xl w-full">
-                        <h2 className="text-3xl font-bold mb-6 text-center">Gestión de Silabo</h2>
+                        <h2 className="text-3xl font-bold mb-6 text-center">{selectedCarga?.curso?.name}</h2>
 
                         {/* Tabs Header */}
                         <div className="flex justify-between items-center mb-6 border-b pb-4">
@@ -345,7 +345,7 @@ const Index: React.FC = () => {
                                         <label className="w-1/4 text-gray-700">Requisitos :</label>
                                         <input
                                             type="text"
-                                            placeholder="Requisitoso"
+                                            placeholder="Requisitos"
                                             value={selectedCarga?.prerequisitos || ""}
                                             readOnly
                                             className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
@@ -375,47 +375,132 @@ const Index: React.FC = () => {
                                         />
                                     </div>
 
+
+
                                     <div className="flex items-center space-x-4">
                                         <label className="w-1/4 text-gray-700">Regimen :</label>
                                         <input
                                             type="text"
-                                            placeholder="Tipo"
+                                            placeholder="Regimen"
                                             value={selectedCarga?.curso?.regimen_curso?.nomRegimen || ""}
                                             readOnly
                                             className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
                                         />
                                     </div>
 
-                                    
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Horas Teoricas :</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Horas Teoricas"
+                                            value={selectedCarga?.curso?.hTeoricas || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Horas Practicas :</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Horas Practicas"
+                                            value={selectedCarga?.curso?.hPracticas || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Horas de laboratorio :</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Horas de laboratorio"
+                                            value={selectedCarga?.curso?.hLaboratorio || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Horas de Retrolaimentacion :</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Horas de retroalimentacion"
+                                            value={selectedCarga?.curso?.hRetroalimentacion || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Apellidos y nombres del docente :</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Apellidos y nombres del docente :"
+                                            value={selectedCarga?.nomdocente + ' ' + selectedCarga?.apedocente || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Profesión :</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Profesión"
+                                            value={selectedCarga?.profesion || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
+
+
+
+
+                                    <div className="flex items-center space-x-4">
+                                        <label className="w-1/4 text-gray-700">Correo institucional :</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Correo institucional"
+                                            value={selectedCarga?.email || ""}
+                                            readOnly
+                                            className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
+                                        />
+                                    </div>
+
                                 </div>
 
 
                             )}
                             {currentStep === 1 && (
+                                
                                 <div>
                                     <textarea
-                                        placeholder="Sumilla"
+                                        placeholder="Escribir aqui la información de la Sumilla"
                                         value={formData.sumilla.descripcion}
                                         onChange={(e) =>
                                             handleChange("sumilla", "descripcion", e.target.value)
                                         }
-                                        className="border p-2 w-full"
+                                        className="border text-justify  text-xl p-2 w-full h-80 resize-y"
                                     />
                                     {errors.descripcion && (
                                         <p className="text-red-500">{errors.descripcion}</p>
                                     )}
                                 </div>
+
                             )}
                             {currentStep === 2 && (
                                 <div>
                                     <input
                                         type="text"
-                                        placeholder="Competencia"
+                                        placeholder="Escribir aqui la información de las competencias del curso"
                                         value={formData.competencia.detalle}
                                         onChange={(e) =>
                                             handleChange("competencia", "detalle", e.target.value)
                                         }
-                                        className="border p-2 w-full"
+                                        className="border text-justify p-2 w-full h-80 resize-y"
                                     />
                                     {errors.detalle && (
                                         <p className="text-red-500">{errors.detalle}</p>

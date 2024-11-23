@@ -31,8 +31,11 @@ export interface Curso {
     departamento?: Departamento;
     creditos?: string; 
     tipo_curso?: TipoCurso;
-    regimen_curso?: R;
-
+    regimen_curso?: RegimenCurso;
+    hTeoricas: string;
+    hPracticas: string;
+    hLaboratorio: string;
+    hRetroalimentacion: string;
 }
 export interface Area {
     idArea: number;
@@ -104,6 +107,7 @@ export interface CargaDocente {
     nomdocente: string;
     apedocente: string;
     email: string;
+    profesion: string;
 
 }
 
