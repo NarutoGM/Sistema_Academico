@@ -51,4 +51,14 @@ class Silabo extends Model
     {
         return $this->belongsTo(DirectorEscuela::class, 'idDirector', 'idDirector');
     }
+
+    public function semana()
+    {
+        return $this->hasMany(Semana::class, 'idCargaDocente', 'idCargaDocente')
+                    ->where('idFilial', $this->idFilial)
+                    ->where('idDocente', $this->idDocente);
+    }
+    
+    
+
 }

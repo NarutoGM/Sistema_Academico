@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use App\Models\Docente;
 use App\Models\Horario;
 use App\Models\PlanCursoAcademico;
+use App\Models\Semana;
 use App\Models\Silabo;
 
 class SubirSilaboController extends Controller
@@ -46,32 +47,25 @@ class SubirSilaboController extends Controller
                     ->get()
                     ->map(function ($carga) {
                         $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
-                            ->where('idFilial', $carga->idFilial)
-                            ->where('idDocente', $carga->idDocente)
-
-                            ->first();
+                        ->where('idFilial', $carga->idFilial)
+                        ->where('idDocente', $carga->idDocente)
+                        ->first();
 
 
                         if (!$silabo) {
-                            $carga->curso->estado_silabo = "No hay silabo";
-
-                            $carga->curso->documento = "";
+                            $carga->silabo = null;
                         } else {
-                            $carga->curso->observaciones = $silabo->observaciones;
+                                $carga->silabo = $silabo;
 
-                            $carga->curso->documento = $silabo->documento;
-
-                            if ($silabo->activo == false) {
-                                $carga->curso->estado_silabo = "Inactivo";
-                            } elseif ($silabo->estado == 0 && $silabo->activo = true) {
-                                $carga->curso->estado_silabo = "Confirmar envio de silabo";
-                            } elseif ($silabo->estado == 1 && $silabo->activo = true) {
-                                $carga->curso->estado_silabo = "En espera de aprobación";
-                            } elseif ($silabo->estado == 2 && $silabo->activo = true) {
-                                $carga->curso->estado_silabo = "Rechazado";
-                            } elseif ($silabo->estado == 3 && $silabo->activo = true) {
-                                $carga->curso->estado_silabo = "Aprobado";
-                            }
+                                // Obtén las semanas relacionadas manualmente
+                                $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
+                                    ->where('idFilial', $silabo->idFilial)
+                                    ->where('idDocente', $silabo->idDocente)
+                                    ->get();
+                            
+                                // Agrega las semanas al silabo como un atributo
+                                $carga->silabo->semanas = $semanas;
+                            
                         }
                         return $carga;
                     })

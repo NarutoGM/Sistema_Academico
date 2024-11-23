@@ -87,27 +87,39 @@ export interface CargaDocente {
     escuela?: Escuela; // Campo opcional que hace referencia a un objeto de tipo Curso
     ciclo: string;
     prerequisitos: string;
+    email: string;
+    profesion: string;
+    silabo?: Silabo;
+    nomdocente: string;
+    apedocente: string;
 
 }
 
 
-// En silabo.services.ts o en el archivo donde esté definida
-export interface CargaDocente {
+
+export interface Silabo {
     idCargaDocente: number;
     idFilial: number;
     idDocente: number;
-    fAsignacion: string;
-    estado: boolean;
-    grupo: string;
-    idSemestreAcademico: number;
-    idMalla: number;
-    idCurso: number;
-    idEscuela: number;
-    idDirector: number;
-    nomdocente: string;
-    apedocente: string;
-    email: string;
-    profesion: string;
+    documento?: string;
+    sumilla?: string;
+    unidadcompetencia?: string;
+    competenciasgenerales?: string;
+    capacidadesterminales1?: string;
+    capacidadesterminales2?: string;
+    capacidadesterminales3?: string;
+    resultados?: string;
+    resultadosaprendizajes1?: string; // Campo opcional que hace referencia a un objeto de tipo Curso
+    estado?: boolean; 
+    sistemaevaluacion?: string; 
+    infosistemaevaluacion?: string; // Campo opcional que hace referencia a un objeto de tipo Curso
+    activo?: boolean; 
+    fEnvio?: Date; 
+    tutoria?: string; // Campo opcional que hace referencia a un objeto de tipo Curso
+    observaciones?: string; // Campo opcional que hace referencia a un objeto de tipo Curso
+
+    referencias?: string;
+    
 
 }
 

@@ -68,35 +68,57 @@ const Index: React.FC = () => {
     };
 
 
-    const handleChange = (step, field, value) => {
-        setFormData((prev) => ({
-            ...prev,
-            [step]: { ...prev[step], [field]: value },
-        }));
-    };
 
     const steps = [
         { label: "Datos Básicos", content: "" },
         { label: "Sumilla", content: "Escriba la sumilla requerida." },
-        { label: "Competencia", content: "Defina la competencia asociada." },
-        // Agregar más pasos según sea necesario...
+        { label: "Competencias", content: "Defina las competencia asociada a cada Contexto." },
+        { label: "Semanas", content: "Defina aquí la programación academica del curso" },
     ];
-    const [formData, setFormData] = useState({
-        sumilla: { descripcion: "" },
-        competencia: { detalle: "" },
-    });
-    const [errors, setErrors] = useState({});
+
+
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>, field: string) => {
+        const newValue = e.target.value;
+
+        setSelectedCarga((prevCarga) => ({
+            ...prevCarga,
+            silabo: {
+                ...prevCarga.silabo,
+                [field]: newValue, // Actualiza dinámicamente el campo correspondiente
+            },
+        }));
+    };
+
+    interface Errors {
+        sumilla?: string;
+        competenciasgenerales?: string;
+        unidadcompetencia?:string;
+        resultados?:string;
+    }
+
+    const [errors, setErrors] = useState<Errors>({});
 
     const validateStep = () => {
-        const newErrors = {};
+        const newErrors: Errors = {};
+
+
         if (currentStep === 0) {
         }
         if (currentStep === 1) {
-            if (!formData.sumilla.descripcion) newErrors.descripcion = "La sumilla es obligatoria";
+            if (!selectedCarga?.silabo?.sumilla) newErrors.sumilla = "La sumilla es obligatoria";
         }
         if (currentStep === 2) {
-            if (!formData.competencia.detalle) newErrors.detalle = "La competencia es obligatoria";
+            if (!selectedCarga?.silabo?.unidadcompetencia) newErrors.unidadcompetencia = "La competencia es obligatoria";
         }
+        if (currentStep === 2) {
+            if (!selectedCarga?.silabo?.competenciasgenerales) newErrors.competenciasgenerales = "La competencia es obligatoria";
+        }
+        if (currentStep === 2) {
+            if (!selectedCarga?.silabo?.resultados) newErrors.resultados = "La competencia es obligatoria";
+        }
+
+        
+        
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -110,7 +132,7 @@ const Index: React.FC = () => {
     return (
         <div className="card-container">
 
-            <div className={`card ${isFlipped ? 'flipped' : ''}`}>
+            <div className={`card rounded-xl ${isFlipped ? 'flipped' : ''}`}>
                 {/* Front Face */}
                 <div className="card-face front p-10  ">
                     <h1 className="text-2xl font-bold mb-4">Mis cursos:</h1>
@@ -152,7 +174,7 @@ const Index: React.FC = () => {
                 </div>
 
                 {/* Back Face */}
-                <div className="card-face back bg-gray-100 shadow-lg rounded-lg flex flex-col  items-center p-6">
+                <div className="card-face back bg-gray-100 shadow-lg rounded-lg  flex flex-col  items-center p-6">
 
                     <h3 className="text-2xl font-bold text-gray-700 mb-2">Curso Seleccionado</h3>
                     <p className="text-gray-600 text-center text-4xl font-bold mb-6">
@@ -475,37 +497,53 @@ const Index: React.FC = () => {
 
                             )}
                             {currentStep === 1 && (
-                                
                                 <div>
                                     <textarea
                                         placeholder="Escribir aqui la información de la Sumilla"
-                                        value={formData.sumilla.descripcion}
-                                        onChange={(e) =>
-                                            handleChange("sumilla", "descripcion", e.target.value)
-                                        }
-                                        className="border text-justify  text-xl p-2 w-full h-80 resize-y"
+                                        value={selectedCarga?.silabo?.sumilla}
+                                        onChange={(e) => handleChange(e, "sumilla")} // Especifica el campo a actualizar
+                                        className="border text-justify text-xl p-2 w-full h-80 resize-y"
                                     />
-                                    {errors.descripcion && (
-                                        <p className="text-red-500">{errors.descripcion}</p>
-                                    )}
-                                </div>
+                                    {errors.sumilla && <p className="text-red-500">{errors.sumilla}</p>}
 
+                                </div>
                             )}
                             {currentStep === 2 && (
                                 <div>
-                                    <input
-                                        type="text"
-                                        placeholder="Escribir aqui la información de las competencias del curso"
-                                        value={formData.competencia.detalle}
-                                        onChange={(e) =>
-                                            handleChange("competencia", "detalle", e.target.value)
-                                        }
-                                        className="border text-justify p-2 w-full h-80 resize-y"
+                                    <label className='text-3xl font-bold'>Unidad de Competencia:</label>
+                                    <textarea
+                                        placeholder="Escribir aqui la información de la Unidad de Competencia"
+                                        value={selectedCarga?.silabo?.unidadcompetencia}
+                                        onChange={(e) => handleChange(e, "unidadcompetencia")} // Especifica el campo a actualizar
+                                        className="border text-justify text-xl p-2 w-full h-50 resize-y"
                                     />
-                                    {errors.detalle && (
-                                        <p className="text-red-500">{errors.detalle}</p>
+                                    {errors.unidadcompetencia && (
+                                        <p className="text-red-500">{errors.unidadcompetencia}</p>
+                                    )}
+
+                                    <label className='text-3xl font-bold'>Competencias Generales:</label>
+                                    <textarea
+                                        placeholder="Escribir aqui la información de las Competencias Generales"
+                                        value={selectedCarga?.silabo?.competenciasgenerales}
+                                        onChange={(e) => handleChange(e, "competenciasgenerales")} // Especifica el campo a actualizar
+                                        className="border text-justify text-xl p-2 w-full h-25 resize-y"
+                                    />
+                                    {errors.competenciasgenerales && (
+                                        <p className="text-red-500">{errors.competenciasgenerales}</p>
+                                    )}
+
+                                    <label className='text-3xl font-bold'>Resultados:</label>
+                                    <textarea
+                                        placeholder="Escribir aqui la información de los Resultados Esperados"
+                                        value={selectedCarga?.silabo?.resultados}
+                                        onChange={(e) => handleChange(e, "resultados")} // Especifica el campo a actualizar
+                                        className="border text-justify text-xl p-2 w-full h-60 resize-y"
+                                    />
+                                    {errors.resultados && (
+                                        <p className="text-red-500">{errors.resultados}</p>
                                     )}
                                 </div>
+
                             )}
                         </div>
 
