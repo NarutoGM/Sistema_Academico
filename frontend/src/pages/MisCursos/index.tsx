@@ -631,13 +631,16 @@ const Index: React.FC = () => {
                                     <label className='text-xl font-bold'>Resultados de Aprendizajes</label>
                                     <textarea
                                         placeholder="Escribir aqui la información de la Unidad de Competencia"
-                                        value={selectedCarga?.silabo?.resultadosaprendizajes2}
-                                        onChange={(e) => handleChange(e, "resultadosaprendizajes2")} // Especifica el campo a actualizar
+                                        value={selectedCarga?.silabo?.resultadosaprendizajes1}
+                                        onChange={(e) => handleChange(e, "resultadosaprendizajes1")} // Especifica el campo a actualizar
                                         className="border text-justify text-xl p-2 w-full h-40 resize-y"
                                     />
-                                    {errors.resultadosaprendizajes2 && (
-                                        <p className="text-red-500">{errors.resultadosaprendizajes2}</p>
+                                    {errors.resultadosaprendizajes1 && (
+                                        <p className="text-red-500">{errors.resultadosaprendizajes1}</p>
                                     )}
+
+
+
                                     <label className='text-3xl font-bold'>Unidad II</label>
                                     <br />
                                     <label className='text-xl font-bold'>Capacidades Terminales</label>
@@ -655,12 +658,15 @@ const Index: React.FC = () => {
                                     <textarea
                                         placeholder="Escribir aqui la información de la Unidad de Competencia"
                                         value={selectedCarga?.silabo?.resultadosaprendizajes2}
-                                        onChange={(e) => handleChange(e, "unidadcompetencia")} // Especifica el campo a actualizar
+                                        onChange={(e) => handleChange(e, "resultadosaprendizajes2")} // Especifica el campo a actualizar
                                         className="border text-justify text-xl p-2 w-full h-40 resize-y"
                                     />
                                     {errors.resultadosaprendizajes2 && (
                                         <p className="text-red-500">{errors.resultadosaprendizajes2}</p>
                                     )}
+
+
+
                                     <label className='text-3xl font-bold'>Unidad III</label>
                                     <br />
                                     <label className='text-xl font-bold'>Capacidades Terminales</label>
