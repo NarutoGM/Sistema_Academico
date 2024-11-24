@@ -47,25 +47,24 @@ class SubirSilaboController extends Controller
                     ->get()
                     ->map(function ($carga) {
                         $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
-                        ->where('idFilial', $carga->idFilial)
-                        ->where('idDocente', $carga->idDocente)
-                        ->first();
+                            ->where('idFilial', $carga->idFilial)
+                            ->where('idDocente', $carga->idDocente)
+                            ->first();
 
 
                         if (!$silabo) {
                             $carga->silabo = null;
                         } else {
-                                $carga->silabo = $silabo;
+                            $carga->silabo = $silabo;
 
-                                // Obtén las semanas relacionadas manualmente
-                                $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
-                                    ->where('idFilial', $silabo->idFilial)
-                                    ->where('idDocente', $silabo->idDocente)
-                                    ->get();
-                            
-                                // Agrega las semanas al silabo como un atributo
-                                $carga->silabo->semanas = $semanas;
-                            
+                            // Obtén las semanas relacionadas manualmente
+                            $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
+                                ->where('idFilial', $silabo->idFilial)
+                                ->where('idDocente', $silabo->idDocente)
+                                ->get();
+
+                            // Agrega las semanas al silabo como un atributo
+                            $carga->silabo->semanas = $semanas;
                         }
                         return $carga;
                     })
@@ -155,12 +154,10 @@ class SubirSilaboController extends Controller
                                 } elseif ($silabo->estado == 3 && $silabo->activo == true) {
                                     $carga->curso->estado_silabo = "Aprobado";
                                     $carga->curso->observaciones = $silabo->observaciones;
-
                                 } elseif ($silabo->estado == 2 && $silabo->activo == true) {
                                     $carga->curso->estado_silabo = "Rechazado";
-                                    
-                                    $carga->curso->observaciones = $silabo->observaciones;
 
+                                    $carga->curso->observaciones = $silabo->observaciones;
                                 }
                                 return $carga; // Solo devuelve las cargas con un sílabo
                             }
@@ -309,103 +306,127 @@ class SubirSilaboController extends Controller
     public function gestionarsilabo(Request $request)
     {
         try {
-            // Log para verificar el número recibido
-            Log::info('Recibido número: ' . $request->numero);
+            // Log inicial para depuración
+            Log::info("Datos recibidos: ", $request->all());
 
-            // Verificar si el número es 1 y procesar el contenido HTML
-            if ($request->numero == 1) {
-                // Log para verificar que hemos entrado en el caso número 1
-                Log::info('Procesando contenido HTML para número: 1');
+            // Validar los datos del request
+            $validatedData = $request->validate([
+                'idCargaDocente' => 'required|integer',
+                'idFilial' => 'required|integer',
+                'idDocente' => 'required|integer',
+                'silabo.observaciones' => 'nullable|string',
+                'silabo.fEnvio' => 'nullable|date',
+                'silabo.sumilla' => 'nullable|string',
+                'silabo.unidadcompetencia' => 'nullable|string',
+                'silabo.competenciasgenerales' => 'nullable|string',
+                'silabo.resultados' => 'nullable|string',
+                'silabo.capacidadesterminales1' => 'nullable|string',
+                'silabo.capacidadesterminales2' => 'nullable|string',
+                'silabo.capacidadesterminales3' => 'nullable|string',
+                'silabo.resultadosaprendizajes1' => 'nullable|string',
+                'silabo.resultadosaprendizajes2' => 'nullable|string',
+                'silabo.resultadosaprendizajes3' => 'nullable|string',
+                'silabo.sistemaevaluacion' => 'nullable|string',
+                'silabo.infosistemaevaluacion' => 'nullable|string',
+                'silabo.tutoria' => 'nullable|string',
+                'silabo.referencias' => 'nullable|string',
+                'silabo.semanas' => 'nullable|array',
+                'silabo.semanas.*.organizacion' => 'nullable|string',
+                'silabo.semanas.*.estrategias' => 'nullable|string',
+                'silabo.semanas.*.evidencias' => 'nullable|string',
+                'silabo.semanas.*.instrumentos' => 'nullable|string',
+                'silabo.semanas.*.nomSem' => 'nullable|string',
+            ]);
 
-                // Verificar si se ha recibido el contenido HTML
-                if ($request->has('documentoHtml')) {
-                    $htmlContent = $request->input('documentoHtml');
-
-                    // Log para verificar el contenido HTML que se está recibiendo
-                    Log::info('Contenido HTML recibido: ' . substr($htmlContent, 0, 100)); // Solo mostramos los primeros 100 caracteres para evitar exceso de log
-                    
-                    $conditions = [
-                        'idCargaDocente' => $request->idCargaDocente,
-                        'idDocente' => $request->idDocente,
-                        'idFilial' => $request->idFilial,
-                    ];
-                
-                    // Guardar o actualizar el registro
-                    $silabo = Silabo::updateOrCreate(
-                        $conditions, // Condiciones para buscar
-                        [ // Valores para crear o actualizar
-                            'documento' =>  $htmlContent,
-                            'activo' => 1, // Puedes cambiar estos valores si es necesario
-                            'estado' => 1,
-                            'idDirector' => $request->idDirector,
-                        ]
-                    );
 
 
-            
 
-                    // Log para confirmar que el sílabo se ha creado correctamente
-                    Log::info('Sílabo creado con ID: ' . $silabo->id);
+            // Buscar el sílabo existente
+            $silabo = Silabo::where('idCargaDocente', $request->idCargaDocente)
+                ->where('idFilial', $request->idFilial)
+                ->where('idDocente', $request->idDocente)
+                ->first();
 
-                    // Retornar una respuesta de éxito
-                    return response()->json([
-                        'message' => 'El sílabo se creó correctamente.',
-                        'silabo' => $silabo,
-                    ], 201);
-                } else {
-                    Log::warning('No se ha recibido un documento HTML');
-                    return response()->json([
-                        'message' => 'No se ha recibido un documento HTML.',
-                    ], 400);
+            if ($silabo) {
+                // Actualizar el registro existente
+                $silabo->update($validatedData['silabo']);
+                $silaboData = $validatedData['silabo'];
+
+                // Actualizar o crear 16 semanas académicas
+                Semana::where('idCargaDocente', $request->idCargaDocente)
+                    ->where('idFilial', $request->idFilial)
+                    ->where('idDocente', $request->idDocente)
+                    ->delete();
+
+                if (!empty($silaboData['semanas']) && count($silaboData['semanas']) >= 16) {
+                    for ($idSemana = 1; $idSemana <= 16; $idSemana++) {
+                        $semanaData = $silaboData['semanas'][$idSemana - 1] ?? [];
+                        Semana::create(array_merge([
+                            'idSemana' => $idSemana,
+                            'idCargaDocente' => $request->idCargaDocente,
+                            'idFilial' => $request->idFilial,
+                            'idDocente' => $request->idDocente,
+                        ], $semanaData));
+                    }
                 }
+
+                $message = 'El sílabo se actualizó correctamente.';
+                Log::info("Sílabo actualizado: ", $silabo->toArray());
+            } else {
+                // Crear un nuevo registro si no existe
+                $silabo = Silabo::create(array_merge(
+                    [
+                        'idCargaDocente' => $request->idCargaDocente,
+                        'idFilial' => $request->idFilial,
+                        'idDocente' => $request->idDocente,
+                        'idDirector' => $request->idDirector,
+                        'activo' => true // Valor booleano directamente
+                    ],
+                    $validatedData['silabo']
+                ));
+
+
+                $silaboData = $validatedData['silabo'];
+
+                // Crear 16 semanas académicas
+                if (!empty($silaboData['semanas']) && count($silaboData['semanas']) >= 16) {
+                    for ($idSemana = 1; $idSemana <= 16; $idSemana++) {
+                        $semanaData = $silaboData['semanas'][$idSemana - 1] ?? [];
+                        Semana::create(array_merge([
+                            'idSemana' => $idSemana,
+                            'idCargaDocente' => $request->idCargaDocente,
+                            'idFilial' => $request->idFilial,
+                            'idDocente' => $request->idDocente,
+                        ], $semanaData));
+                    }
+                }
+
+                // Mensaje de éxito
+                $message = 'El sílabo se creó correctamente, junto con sus 16 semanas académicas.';
+                Log::info("Sílabo creado: ", $silabo->toArray());
+
+                $message = 'El sílabo se creó correctamente. + sus 16 semanas academicas';
+                Log::info("Sílabo creado: ", $silabo->toArray());
             }
 
-            // Procesar los otros casos de número
-            if ($request->numero == 11) {
-                // Rechazar el sílabo
-                Log::info('Rechazando sílabo con ID de carga docente: ' . $request->idCargaDocente);
-
-                Silabo::where('idCargaDocente', $request->idCargaDocente)
-                    ->where('idFilial', $request->idFilial)
-                    ->where('idDocente', $request->idDocente)
-                    ->update([
-                        'estado' => 2,
-                        'observaciones' => $request->observaciones,
-                    ]);
-
-                return response()->json([
-                    'message' => 'El sílabo se rechazó correctamente.',
-                ], 201);
-            }
-
-            if ($request->numero == 12) {
-                // Aprobar el sílabo
-                Log::info('Aprobando sílabo con ID de carga docente: ' . $request->idCargaDocente);
-
-                Silabo::where('idCargaDocente', $request->idCargaDocente)
-                    ->where('idFilial', $request->idFilial)
-                    ->where('idDocente', $request->idDocente)
-                    ->update([
-                        'estado' => 3,
-                        'observaciones' => $request->observaciones,
-                    ]);
-
-                return response()->json([
-                    'message' => 'El sílabo se aprobó correctamente.',
-                ], 201);
-            }
+            // Retornar respuesta exitosa
+            return response()->json([
+                'message' => $message,
+                'silabo' => $silabo,
+            ], 200);
         } catch (\Exception $e) {
             // Log del error
-            Log::error('Error al crear el sílabo: ' . $e->getMessage());
+            Log::error('Error al procesar el sílabo: ' . $e->getMessage());
             Log::error('Detalles del error: ' . $e->getTraceAsString());
 
-            // Retornar una respuesta de error si algo sale mal
+            // Retornar respuesta de error
             return response()->json([
-                'message' => 'Hubo un error al crear el sílabo.',
+                'message' => 'Hubo un error al procesar el sílabo.',
                 'error' => $e->getMessage(),
             ], 500);
         }
     }
+
 
 
 

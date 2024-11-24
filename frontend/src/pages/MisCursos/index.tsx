@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { getMisCursos, CargaDocente } from '@/pages/services/silabo.services';
+import { getMisCursos, CargaDocente,enviarinfoSilabo } from '@/pages/services/silabo.services';
 import './estilos.css';
 import LogoCrear from '../../images/logo/crearsilabo.png';
+import Silabos from '../../images/logo/silabos.jpg';
+
 import LogoReutilizar from '../../images/logo/reutilizarsilabo.png';
 import moment from 'moment'; // O cualquier otra librería de manejo de fechas que prefieras
 
@@ -20,15 +22,21 @@ const Index: React.FC = () => {
     const itemsPerPage = 5;
     const [currentPage, setCurrentPage] = useState(1);
 
+
+    const fetchCursos = async () => {
+        try {
+            const data = await getMisCursos();
+            setCargaDocente(data.cargadocente);
+            setFilteredData(data.cargadocente);
+        } catch (error) {
+            setError(error.message);
+        }
+    };
+    
+
+
     useEffect(() => {
-        getMisCursos()
-            .then((data) => {
-                setCargaDocente(data.cargadocente);
-                setFilteredData(data.cargadocente);
-            })
-            .catch((error) => {
-                setError(error.message);
-            });
+        fetchCursos();
     }, []);
 
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -52,7 +60,24 @@ const Index: React.FC = () => {
 
     const [currentStep, setCurrentStep] = useState(0);
 
+    const [showModal, setShowModal] = useState(false);
 
+    const handleCreateSilabo = async () => {
+        try {
+            console.log("Sílabo enviado correctamente:", selectedCarga);
+    
+            const response = await enviarinfoSilabo(selectedCarga);
+            console.log("Sílabo enviado correctamente:", response);
+    
+            // Refrescar los datos directamente
+            await fetchCursos();
+          //  closeModal();
+          //  setIsFlipped(false);
+        } catch (error) {
+            console.error("Error al enviar el sílabo:", error);
+        }
+        setShowModal(false);
+    };
 
 
 
@@ -74,7 +99,11 @@ const Index: React.FC = () => {
         { label: "Sumilla Academica", content: "Escriba la sumilla requerida." },
         { label: "Competencias academicas", content: "Defina las competencia asociada a cada Contexto." },
         { label: "Capacidades Terminales y Resultados de Aprendizajes", content: "Defina aquí la programación academica del curso" },
-        { label: "Semanas programadas", content: "Defina aquí el contenido de cada semana asi como tambien los metodos de evaluación" },
+        { label: "Semanas programadas", content: "Defina aquí el contenido de cada semana del curso" },
+        { label: "Evaluacion academica", content: "Defina aquí el la formula q se usara para calificar cada unidad en el curso" },
+        { label: "Tutoria", content: "Defina aquí el horario de tutorías" },
+        { label: "Referencias Bibliograficas", content: "Defina aquí las referencias bibliograficas del curso" },
+        { label: "Generar silabo", content: "En este apartado usted podra generar su silabo y actualizar la información del mismo en caso ya tenga uno" },
 
     ];
 
@@ -112,6 +141,7 @@ const Index: React.FC = () => {
     };
 
 
+
     interface Errors {
         sumilla?: string;
         competenciasgenerales?: string;
@@ -139,6 +169,74 @@ const Index: React.FC = () => {
         sem14organizacion?: string;
         sem15organizacion?: string;
         sem16organizacion?: string;
+        sem1estrategias?: string;
+        sem2estrategias?: string;
+        sem3estrategias?: string;
+        sem4estrategias?: string;
+        sem5estrategias?: string;
+        sem6estrategias?: string;
+        sem7estrategias?: string;
+        sem8estrategias?: string;
+        sem9estrategias?: string;
+        sem10estrategias?: string;
+        sem11estrategias?: string;
+        sem12estrategias?: string;
+        sem13estrategias?: string;
+        sem14estrategias?: string;
+        sem15estrategias?: string;
+        sem16estrategias?: string;
+        sem1evidencias?: string;
+        sem2evidencias?: string;
+        sem3evidencias?: string;
+        sem42evidencias?: string;
+        sem5evidencias?: string;
+        sem6evidencias?: string;
+        sem7evidencias?: string;
+        sem8evidencias?: string;
+        sem9evidencias?: string;
+        sem10evidencias?: string;
+        sem11evidencias?: string;
+        sem12evidencias?: string;
+        sem13evidencias?: string;
+        sem14evidencias?: string;
+        sem15evidencias?: string;
+        sem16evidencias?: string;
+        sem1instrumentos?: string;
+        sem2instrumentos?: string;
+        sem3instrumentos?: string;
+        sem4instrumentos?: string;
+        sem5instrumentos?: string;
+        sem6instrumentos?: string;
+        sem7instrumentos?: string;
+        sem8instrumentos?: string;
+        sem9instrumentos?: string;
+        sem10instrumentos?: string;
+        sem11instrumentos?: string;
+        sem12instrumentos?: string;
+        sem13instrumentos?: string;
+        sem14instrumentos?: string;
+        sem15instrumentos?: string;
+        sem16instrumentos?: string;
+        sem1nomSem?: string;
+        sem2nomSem?: string;
+        sem3nomSem?: string;
+        sem4nomSem?: string;
+        sem5nomSem?: string;
+        sem6nomSem?: string;
+        sem7nomSem?: string;
+        sem8nomSem?: string;
+        sem9nomSem?: string;
+        sem10nomSem?: string;
+        sem11nomSem?: string;
+        sem12nomSem?: string;
+        sem13nomSem?: string;
+        sem14nomSem?: string;
+        sem15nomSem?: string;
+        sem16nomSem?: string;
+        sistemaevaluacion?: string;
+        infosistemaevaluacion?: string;
+        tutoria?: string;
+        referencias?: string;
 
     }
 
@@ -154,13 +252,13 @@ const Index: React.FC = () => {
             if (!selectedCarga?.silabo?.sumilla) newErrors.sumilla = "La sumilla es obligatoria";
         }
         if (currentStep === 2) {
-            if (!selectedCarga?.silabo?.unidadcompetencia) newErrors.unidadcompetencia = "La competencia es obligatoria";
+            if (!selectedCarga?.silabo?.unidadcompetencia) newErrors.unidadcompetencia = "La unidadcompetencia es obligatoria";
         }
         if (currentStep === 2) {
             if (!selectedCarga?.silabo?.competenciasgenerales) newErrors.competenciasgenerales = "La competencia es obligatoria";
         }
         if (currentStep === 2) {
-            if (!selectedCarga?.silabo?.resultados) newErrors.resultados = "La competencia es obligatoria";
+            if (!selectedCarga?.silabo?.resultados) newErrors.resultados = "Los resultados son obligatorios";
         }
         if (currentStep === 3) {
             if (!selectedCarga?.silabo?.resultadosaprendizajes1) newErrors.resultadosaprendizajes1 = "El resultado de aprendizaje de la unidad I es obligatorio";
@@ -172,18 +270,53 @@ const Index: React.FC = () => {
 
         }
         if (currentStep === 4) {
+
             const newErrors: { [key: string]: string } = {}; // Declarar newErrors con un tipo explícito
-            const semanas = selectedCarga?.silabo?.semanas || [];
 
             for (let i = 0; i < 16; i++) {
-                if (!semanas[i]?.organizacion) {
+
+                // Asegurarse de que el índice existe en el array
+                const semana = selectedCarga?.silabo?.semanas?.[i] || {};
+
+                if (!semana.organizacion) {
                     newErrors[`sem${i + 1}organizacion`] = `El resultado de aprendizaje o capacidades terminales de la semana ${i + 1} es obligatorio`;
                 }
+
+                if (!semana.estrategias) {
+                    newErrors[`sem${i + 1}estrategias`] = `Las estrategias de la semana ${i + 1} son obligatorias`;
+                }
+
+                if (!semana.evidencias) {
+                    newErrors[`sem${i + 1}evidencias`] = `Las evidencias de la semana ${i + 1} son obligatorias`;
+                }
+
+                if (!semana.instrumentos) {
+                    newErrors[`sem${i + 1}instrumentos`] = `Los instrumentos de la semana ${i + 1} son obligatorios`;
+                }
+
+                if (!semana.nomSem) {
+                    newErrors[`sem${i + 1}nomSem`] = `El nombre de la semana ${i + 1} es obligatorio`;
+                }
+                setErrors(newErrors);
+
+                // Si hay errores, impedir avanzar
+                return Object.keys(newErrors).length === 0;
             }
 
+        }
+        if (currentStep === 5) {
+            if (!selectedCarga?.silabo?.sistemaevaluacion) newErrors.sistemaevaluacion = "Debe especificar el la formula q se palicada para evaluar  a los estudiantes";
+            if (!selectedCarga?.silabo?.infosistemaevaluacion) newErrors.infosistemaevaluacion = "Aqui debe especificar el significado de cada variable usada en la formula";
 
         }
 
+        
+        if (currentStep === 6) {
+            if (!selectedCarga?.silabo?.tutoria) newErrors.tutoria = "Debe especificar la informacion de las reuniones para tutorias academicas";
+        }
+        if (currentStep === 7) {
+            if (!selectedCarga?.silabo?.referencias) newErrors.referencias = "Debe especificar las referencias bibliograficas que se relacionan con la asignatura";
+        }
 
 
         setErrors(newErrors);
@@ -195,6 +328,38 @@ const Index: React.FC = () => {
         const date = new Date(dateString);
         return moment(date).format('YYYY-MM-DD'); // Formato año-mes-día
     };
+
+
+    const [newReference, setNewReference] = useState<string>("");
+
+    const addReference = () => {
+        // Validar que la nueva referencia no esté vacía
+        if (!newReference.trim()) {
+            setErrors((prevErrors) => ({
+                ...prevErrors,
+                newReference: "La referencia no puede estar vacía",
+            }));
+            return;
+        }
+
+        // Obtener las referencias actuales o un string vacío si no existen
+        const currentReferences = selectedCarga?.silabo?.referencias || "";
+
+        // Construir las referencias actualizadas con un doble salto de línea
+        const updatedReferences = currentReferences
+            ? `${currentReferences}\n\n${newReference}` // Si hay referencias previas, agrega doble salto de línea
+            : newReference; // Si no hay referencias previas, solo usa la nueva referencia
+
+        // Actualizar el atributo 'referencias'
+        handleChange({ target: { value: updatedReferences } }, "referencias");
+
+        // Limpiar el campo temporal y errores
+        setNewReference(""); // Vaciar el input de nueva referencia
+        setErrors((prevErrors) => ({ ...prevErrors, newReference: undefined })); // Eliminar cualquier error previo
+    };
+
+
+
 
     return (
         <div className="card-container">
@@ -623,7 +788,7 @@ const Index: React.FC = () => {
                                         placeholder="Escribir aqui la información de la Unidad de Competencia"
                                         value={selectedCarga?.silabo?.capacidadesterminales1}
                                         onChange={(e) => handleChange(e, "capacidadesterminales1")} // Especifica el campo a actualizar
-                                        className="border text-justify text-xl p-2 w-full h-20 resize-y"
+                                        className="border text-justify text-xl p-2 w-full h-60 resize-y"
                                     />
                                     {errors.capacidadesterminales1 && (
                                         <p className="text-red-500">{errors.capacidadesterminales1}</p>
@@ -633,7 +798,7 @@ const Index: React.FC = () => {
                                         placeholder="Escribir aqui la información de la Unidad de Competencia"
                                         value={selectedCarga?.silabo?.resultadosaprendizajes1}
                                         onChange={(e) => handleChange(e, "resultadosaprendizajes1")} // Especifica el campo a actualizar
-                                        className="border text-justify text-xl p-2 w-full h-40 resize-y"
+                                        className="border text-justify text-xl p-2 w-full h-60 resize-y"
                                     />
                                     {errors.resultadosaprendizajes1 && (
                                         <p className="text-red-500">{errors.resultadosaprendizajes1}</p>
@@ -649,7 +814,7 @@ const Index: React.FC = () => {
                                         placeholder="Escribir aqui la información de la Unidad de Competencia"
                                         value={selectedCarga?.silabo?.capacidadesterminales2}
                                         onChange={(e) => handleChange(e, "capacidadesterminales2")} // Especifica el campo a actualizar
-                                        className="border text-justify text-xl p-2 w-full h-20 resize-y"
+                                        className="border text-justify text-xl p-2 w-full h-60 resize-y"
                                     />
                                     {errors.capacidadesterminales2 && (
                                         <p className="text-red-500">{errors.capacidadesterminales2}</p>
@@ -659,7 +824,7 @@ const Index: React.FC = () => {
                                         placeholder="Escribir aqui la información de la Unidad de Competencia"
                                         value={selectedCarga?.silabo?.resultadosaprendizajes2}
                                         onChange={(e) => handleChange(e, "resultadosaprendizajes2")} // Especifica el campo a actualizar
-                                        className="border text-justify text-xl p-2 w-full h-40 resize-y"
+                                        className="border text-justify text-xl p-2 w-full h-60 resize-y"
                                     />
                                     {errors.resultadosaprendizajes2 && (
                                         <p className="text-red-500">{errors.resultadosaprendizajes2}</p>
@@ -675,7 +840,7 @@ const Index: React.FC = () => {
                                         placeholder="Escribir aqui la información de la Unidad de Competencia"
                                         value={selectedCarga?.silabo?.capacidadesterminales3}
                                         onChange={(e) => handleChange(e, "capacidadesterminales3")} // Especifica el campo a actualizar
-                                        className="border text-justify text-xl p-2 w-full h-20 resize-y"
+                                        className="border text-justify text-xl p-2 w-full h-60 resize-y"
                                     />
                                     {errors.capacidadesterminales3 && (
                                         <p className="text-red-500">{errors.capacidadesterminales3}</p>
@@ -685,7 +850,7 @@ const Index: React.FC = () => {
                                         placeholder="Escribir aqui la información de la Unidad de Competencia"
                                         value={selectedCarga?.silabo?.resultadosaprendizajes3}
                                         onChange={(e) => handleChange(e, "resultadosaprendizajes3")} // Especifica el campo a actualizar
-                                        className="border text-justify text-xl p-2 w-full h-40 resize-y"
+                                        className="border text-justify text-xl p-2 w-full h-60 resize-y"
                                     />
                                     {errors.resultadosaprendizajes3 && (
                                         <p className="text-red-500">{errors.resultadosaprendizajes3}</p>
@@ -697,30 +862,259 @@ const Index: React.FC = () => {
 
                             {currentStep === 4 && (
                                 <div>
-                                    <label className='text-3xl font-bold'>Semana 1</label>
-                                    <br />
-                                    <label className='text-xl font-bold'>Organización de Unidades de Contenidos </label>
-                                    <label className='text-xl font-bold'>Estrategias Didáctica </label>
-                                    <label className='text-xl font-bold'>Evidencias de Desempeño </label>
-                                    <label className='text-xl font-bold'>Instrumentos de Evaluación </label>
-                                    <label className='text-xl font-bold'>Semana </label>
+                                    <table className="table-auto border-collapse border border-gray-400 w-full text-left">
+                                        <thead className="sticky top-0 bg-blue-600 z-10">
+                                            <tr>
+                                                <th className="border border-gray-400 px-4 py-2 text-slate-100">Semana</th>
+                                                <th className="border border-gray-400 px-4 py-2 text-slate-100">Organización de Unidades de Contenidos</th>
+                                                <th className="border border-gray-400 px-4 py-2 text-slate-100">Estrategias Didácticas</th>
+                                                <th className="border border-gray-400 px-4 py-2 text-slate-100">Evidencias de Desempeño</th>
+                                                <th className="border border-gray-400 px-4 py-2 text-slate-100">Instrumentos de Evaluación</th>
+                                                <th className="border border-gray-400 px-4 py-2 text-slate-100">Nombre Semana</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {Array.from({ length: 16 }).map((_, index) => (
+                                                <tr
+                                                    key={index}
+                                                    className={`hover:bg-cyan-100 transition-colors ${errors[`sem${index + 1}organizacion`] ||
+                                                        errors[`sem${index + 1}estrategias`] ||
+                                                        errors[`sem${index + 1}evidencias`] ||
+                                                        errors[`sem${index + 1}instrumentos`] ||
+                                                        errors[`sem${index + 1}nomSem`]
+                                                        ? "bg-red-100"
+                                                        : ""
+                                                        }`}
+                                                >
+                                                    <td className="border w-10 border-gray-400 px-4 py-2 text-center">
+                                                        Semana {index + 1}
+                                                    </td>
+                                                    <td className="border w-70 border-gray-400 px-4 py-2">
+                                                        <textarea
+                                                            placeholder="Escribir aquí"
+                                                            value={selectedCarga?.silabo?.semanas?.[index]?.organizacion || ''}
+                                                            onChange={(e) => handleChange2(e, index, "organizacion")}
+                                                            className="border w-full p-2 h-65 resize-y text-justify"
+                                                        />
+                                                        {errors[`sem${index + 1}organizacion`] && (
+                                                            <p className="text-red-500">{errors[`sem${index + 1}organizacion`]}</p>
+                                                        )}
+                                                    </td>
+                                                    <td className="border border-gray-400 px-4 py-2">
+                                                        <textarea
+                                                            placeholder="Escribir aquí"
+                                                            value={selectedCarga?.silabo?.semanas?.[index]?.estrategias || ''}
+                                                            onChange={(e) => handleChange2(e, index, "estrategias")}
+                                                            className="border w-full p-2 h-65 resize-y text-justify"
+                                                        />
+                                                        {errors[`sem${index + 1}estrategias`] && (
+                                                            <p className="text-red-500">{errors[`sem${index + 1}estrategias`]}</p>
+                                                        )}
+                                                    </td>
+                                                    <td className="border w-50 border-gray-400 px-4 py-2">
+                                                        <textarea
+                                                            placeholder="Escribir aquí"
+                                                            value={selectedCarga?.silabo?.semanas?.[index]?.evidencias || ''}
+                                                            onChange={(e) => handleChange2(e, index, "evidencias")}
+                                                            className="border w-full p-2 h-65 resize-y text-justify"
+                                                        />
+                                                        {errors[`sem${index + 1}evidencias`] && (
+                                                            <p className="text-red-500">{errors[`sem${index + 1}evidencias`]}</p>
+                                                        )}
+                                                    </td>
+                                                    <td className="border w-40 border-gray-400 px-4 py-2">
+                                                        <textarea
+                                                            placeholder="Escribir aquí"
+                                                            value={selectedCarga?.silabo?.semanas?.[index]?.instrumentos || ''}
+                                                            onChange={(e) => handleChange2(e, index, "instrumentos")}
+                                                            className="border w-full p-2 h-65 resize-y text-justify"
+                                                        />
+                                                        {errors[`sem${index + 1}instrumentos`] && (
+                                                            <p className="text-red-500">{errors[`sem${index + 1}instrumentos`]}</p>
+                                                        )}
+                                                    </td>
+                                                    <td className="border w-35 border-gray-400 px-4 py-2">
+                                                        <textarea
+                                                            placeholder="Escribir aquí"
+                                                            value={selectedCarga?.silabo?.semanas?.[index]?.nomSem || ''}
+                                                            onChange={(e) => handleChange2(e, index, "nomSem")}
+                                                            className="border w-full py-2 h-65 resize-y text-justify"
+                                                        />
+                                                        {errors[`sem${index + 1}nomSem`] && (
+                                                            <p className="text-red-500">{errors[`sem${index + 1}nomSem`]}</p>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
 
-                                    <textarea
-                                        placeholder="Escribir aquí la información de la Unidad de Competencia"
-                                        value={selectedCarga?.silabo?.semanas?.[0]?.organizacion || ''}
-                                        onChange={(e) => handleChange2(e, 0, "organizacion")} // Se pasa el índice (0) y el campo ("organizacion")
-                                        className="border text-justify text-xl p-2 w-full h-20 resize-y"
-                                    />
-                                    {errors.sem1organizacion && (
-                                        <p className="text-red-500">{errors.sem1organizacion}</p>
-                                    )}
 
-
-
+                                    </table>
 
                                 </div>
-
                             )}
+
+                            {currentStep === 5 && (
+                                <div>
+                                    <label className="text-3xl font-bold">Metodología de Evaluación</label>
+                                    <br />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {/* Columna 1 */}
+                                        <div>
+                                            <label className="text-xl font-bold">Capacidades Terminales</label>
+                                            <textarea
+                                                placeholder="Escribir aqui la información de la Unidad de Competencia"
+                                                value={selectedCarga?.silabo?.sistemaevaluacion}
+                                                onChange={(e) => handleChange(e, "sistemaevaluacion")}
+                                                className="border text-justify text-xl p-2 w-full h-70 resize-y"
+                                            />
+                                            {errors.sistemaevaluacion && (
+                                                <p className="text-red-500">{errors.sistemaevaluacion}</p>
+                                            )}
+                                        </div>
+
+                                        {/* Columna 2 */}
+                                        <div>
+                                            <label className="text-xl font-bold">Resultados de Aprendizajes</label>
+                                            <textarea
+                                                placeholder="Escribir aqui la información de la Unidad de Competencia"
+                                                value={selectedCarga?.silabo?.infosistemaevaluacion}
+                                                onChange={(e) => handleChange(e, "infosistemaevaluacion")}
+                                                className="border text-justify text-xl p-2 w-full h-70 resize-y"
+                                            />
+                                            {errors.infosistemaevaluacion && (
+                                                <p className="text-red-500">{errors.infosistemaevaluacion}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            {currentStep === 6 && (
+                                <div>
+                                    <textarea
+                                        placeholder="Especificar aqui la informacion de las tutorias"
+                                        value={selectedCarga?.silabo?.tutoria}
+                                        onChange={(e) => handleChange(e, "tutoria")} // Especifica el campo a actualizar
+                                        className="border text-justify text-xl p-2 w-full h-40 resize-y"
+                                    />
+                                    {errors.tutoria && <p className="text-red-500">{errors.tutoria}</p>}
+
+                                </div>
+                            )}
+                            {currentStep === 7 && (
+                                <div>
+                                    <br />
+
+                                    {/* Sticky: Botón para añadir referencias */}
+                                    <div className="sticky top-4 bg-white shadow-md p-4 rounded w-full">
+                                        <label className="text-lg font-bold">Añadir Nueva Referencia</label>
+                                        <div className="flex items-center space-x-2 mt-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Escribe la referencia en formato APA"
+                                                value={newReference}
+                                                onChange={(e) => setNewReference(e.target.value)}
+                                                className="border text-xl p-2 w-full"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={addReference}
+                                                className="text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded"
+                                            >
+                                                Añadir
+                                            </button>
+                                        </div>
+
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-4">
+                                        {/* Columna 1 (Referencias Bibliográficas) */}
+                                        <div className="w-full">
+                                            <label className="text-xl font-bold">Referencias Bibliográficas</label>
+                                            <textarea
+                                                placeholder="Escribir aquí las referencias en formato APA"
+                                                value={selectedCarga?.silabo?.referencias || ""}
+                                                onChange={(e) => handleChange(e, "referencias")}
+                                                className="border text-justify text-xl p-2 w-full h-70 resize-y"
+                                            />
+                                            {errors.referencias && (
+                                                <p className="text-red-500">{errors.referencias}</p>
+                                            )}
+                                        </div>
+
+
+                                    </div>
+                                </div>
+                            )}
+
+
+                            {currentStep === 8 && (
+                                <div>
+                                    {/* Botón para Crear el Sílabo Académico */}
+                                    <div className="flex flex-col items-center mt-8">
+                                        <img
+                                            src={Silabos}
+                                            alt="Logo Crear"
+                                            className="w-40 h-40 mb-4 mt-2"
+                                        />
+                                        <button
+                                            onClick={() => setShowModal(true)} // Muestra el modal al hacer clic
+                                            className="flex items-center text-white bg-green-500 hover:bg-green-600 px-8 py-4 rounded-full shadow-lg font-bold text-xl transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300"
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className="h-6 w-6 mr-2"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M5 13l4 4L19 7"
+                                                />
+                                            </svg>
+                                            Listo... Crear mi Sílabo Académico
+                                        </button>
+                                    </div>
+
+                                    {/* Modal de Confirmación */}
+                                    {showModal && (
+                                        <div className="fixed inset-0  flex justify-center items-center z-50">
+                                            <div className="bg-white p-8 border rounded-lg shadow-2xl w-[90%] max-w-lg transform transition-transform animate-fadeIn">
+                                                <h2 className="text-2xl font-bold mb-4 text-center text-green-600">
+                                                    Confirmar Creación
+                                                </h2>
+                                                <p className="mb-6 text-center text-gray-600">
+                                                    ¿Estás seguro de que deseas crear el sílabo académico con la información actual?
+                                                </p>
+                                                <div className="flex justify-center space-x-4">
+                                                    <button
+                                                        onClick={() => setShowModal(false)} // Cierra el modal
+                                                        className="text-gray-700 bg-gray-100 border border-gray-300 px-6 py-3 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-4 focus:ring-gray-300"
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                    <button
+                                                        onClick={handleCreateSilabo} // Llama a la función de confirmación
+                                                        className="text-white bg-green-500 hover:bg-green-600 px-6 py-3 rounded-full shadow-md focus:outline-none focus:ring-4 focus:ring-green-300"
+                                                    >
+                                                        Confirmar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+
+
+
+
+
+
                         </div>
 
                         {/* Navigation Buttons */}

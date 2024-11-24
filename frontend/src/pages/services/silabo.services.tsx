@@ -201,49 +201,29 @@ export const getMisSilabos = async (): Promise<any> => {
     return data;
 };
 
-
-export const enviarinfoSilabo = async (silaboData: any): Promise<any> => {
+export const enviarinfoSilabo = async (selectedCarga: any): Promise<any> => {
     const authData = isAuthenticated();
-    console.log("hola si se esta enviando");
+    console.log("Iniciando envío del sílabo...");
 
     if (!authData || !authData.token) {
-        throw new Error('User is not authenticated or token is missing');
-    }
-
-    // Crear un objeto FormData
-    const formData = new FormData();
-    console.log("Contenido HTML: ", silaboData);
-
-    // Agregar campos de texto (campos de datos adicionales)
-    formData.append("idCargaDocente", silaboData.idCargaDocente.toString());
-    formData.append("idDocente", silaboData.idDocente.toString());
-    formData.append("idFilial", silaboData.idFilial.toString());
-    formData.append("idDirector", silaboData.idDirector?.toString() || ""); // Maneja null o undefined
-    formData.append("numero", silaboData.numero.toString() || ""); // Convertir el número a string
-    if(silaboData.observaciones){
-    formData.append("observaciones", silaboData.observaciones.toString() || ""); // Convertir el número a string
-    }
-
-    // Enviar el contenido HTML (ya no el PDF)
-    if (silaboData.documentoHtml) {
-        // Verificar que el contenido HTML se va a enviar correctamente
-        console.log("Contenido HTML: ", silaboData.documentoHtml);
-        formData.append("documentoHtml", silaboData.documentoHtml);  // Enviar el HTML como texto
+        throw new Error('El usuario no está autenticado o falta el token');
     }
 
     try {
-        // Realizar la solicitud POST con FormData
+        // Realizar la solicitud POST directamente con JSON
         const response = await fetch(`${apiUrl}/gestionarsilabo`, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${authData.token}`,
-                // No necesitamos Content-Type porque fetch lo maneja automáticamente con FormData
+                'Content-Type': 'application/json', // Indica que los datos enviados son JSON
+                Authorization: `Bearer ${authData.token}`, // Incluimos el token
             },
-            body: formData, // Enviamos el FormData que contiene los datos y el HTML
+            body: JSON.stringify(selectedCarga), // Envía el objeto directamente como JSON
         });
 
         // Verificar si la respuesta es exitosa
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Error en la respuesta del servidor:", errorText);
             throw new Error('Error al enviar los datos del sílabo');
         }
 
@@ -253,9 +233,10 @@ export const enviarinfoSilabo = async (silaboData: any): Promise<any> => {
         return data; // Retornar los datos recibidos del servidor
     } catch (error) {
         console.error("Error al enviar los datos del sílabo:", error);
-        throw error; // Re-lanzamos el error para manejarlo fuera de esta función
+        throw error; // Re-lanzar el error para manejarlo fuera de esta función
     }
 };
+
 
 
 

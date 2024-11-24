@@ -22,13 +22,27 @@ class Silabo extends Model
         'idCargaDocente',
         'idFilial',
         'idDocente',
-        'documento',
         'estado',
         'activo',
         'observaciones',
         'idDirector',
         'fEnvio',
+        'sumilla',
+        'unidadcompetencia',
+        'competenciasgenerales',
+        'resultados',
+        'capacidadesterminales1',
+        'capacidadesterminales2',
+        'capacidadesterminales3',
+        'resultadosaprendizajes1',
+        'resultadosaprendizajes2',
+        'resultadosaprendizajes3',
+        'sistemaevaluacion',
+        'infosistemaevaluacion',
+        'tutoria',
+        'referencias',
     ];
+    
 
     // Relaciones
 

@@ -10,8 +10,8 @@ class Semana extends Model
     use HasFactory;
 
     protected $table = 'semana';
-    protected $primaryKey = 'idSemana';
-    public $incrementing = false;
+    protected $primaryKey = null;
+    public $incrementing = false; // No es autoincremental    public $incrementing = false;
     public $timestamps = false;
 
     protected $fillable = [
