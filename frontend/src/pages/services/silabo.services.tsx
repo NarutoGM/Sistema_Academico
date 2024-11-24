@@ -95,6 +95,19 @@ export interface CargaDocente {
 
 }
 
+export interface Semana {
+    idSemana: number;
+    idCargaDocente: number;
+    idFilial: number;
+    idDocente: number;
+    organizacion: string;
+    estrategias: string;
+    evidencias: string;
+    instrumentos: string;
+    nomSem: string;
+ 
+
+}
 
 
 export interface Silabo {
@@ -110,6 +123,9 @@ export interface Silabo {
     capacidadesterminales3?: string;
     resultados?: string;
     resultadosaprendizajes1?: string; // Campo opcional que hace referencia a un objeto de tipo Curso
+    resultadosaprendizajes2?: string; // Campo opcional que hace referencia a un objeto de tipo Curso
+    resultadosaprendizajes3?: string; // Campo opcional que hace referencia a un objeto de tipo Curso
+
     estado?: boolean; 
     sistemaevaluacion?: string; 
     infosistemaevaluacion?: string; // Campo opcional que hace referencia a un objeto de tipo Curso
@@ -119,7 +135,8 @@ export interface Silabo {
     observaciones?: string; // Campo opcional que hace referencia a un objeto de tipo Curso
 
     referencias?: string;
-    
+    semanas?: Semana[];
+
 
 }
 

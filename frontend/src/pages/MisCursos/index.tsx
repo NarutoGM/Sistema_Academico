@@ -71,9 +71,11 @@ const Index: React.FC = () => {
 
     const steps = [
         { label: "Datos Básicos", content: "" },
-        { label: "Sumilla", content: "Escriba la sumilla requerida." },
-        { label: "Competencias", content: "Defina las competencia asociada a cada Contexto." },
-        { label: "Semanas", content: "Defina aquí la programación academica del curso" },
+        { label: "Sumilla Academica", content: "Escriba la sumilla requerida." },
+        { label: "Competencias academicas", content: "Defina las competencia asociada a cada Contexto." },
+        { label: "Capacidades Terminales y Resultados de Aprendizajes", content: "Defina aquí la programación academica del curso" },
+        { label: "Semanas programadas", content: "Defina aquí el contenido de cada semana asi como tambien los metodos de evaluación" },
+
     ];
 
 
@@ -89,11 +91,55 @@ const Index: React.FC = () => {
         }));
     };
 
+    const handleChange2 = (e: React.ChangeEvent<HTMLTextAreaElement>, index: number, field: string) => {
+        const newValue = e.target.value;
+
+        setSelectedCarga((prevCarga) => {
+            const updatedSemanas = [...(prevCarga.silabo?.semanas || [])]; // Copiar el arreglo de semanas existente
+            if (!updatedSemanas[index]) {
+                updatedSemanas[index] = {}; // Asegurarse de que el objeto en el índice exista
+            }
+            updatedSemanas[index][field] = newValue; // Actualizar dinámicamente el campo en el índice
+
+            return {
+                ...prevCarga,
+                silabo: {
+                    ...prevCarga.silabo,
+                    semanas: updatedSemanas, // Actualizar el arreglo de semanas
+                },
+            };
+        });
+    };
+
+
     interface Errors {
         sumilla?: string;
         competenciasgenerales?: string;
-        unidadcompetencia?:string;
-        resultados?:string;
+        unidadcompetencia?: string;
+        resultados?: string;
+        resultadosaprendizajes1?: string;
+        resultadosaprendizajes2?: string;
+        resultadosaprendizajes3?: string;
+        capacidadesterminales1?: string;
+        capacidadesterminales2?: string;
+        capacidadesterminales3?: string;
+        sem1organizacion?: string;
+        sem2organizacion?: string;
+        sem3organizacion?: string;
+        sem4organizacion?: string;
+        sem5organizacion?: string;
+        sem6organizacion?: string;
+        sem7organizacion?: string;
+        sem8organizacion?: string;
+        sem9organizacion?: string;
+        sem10organizacion?: string;
+        sem11organizacion?: string;
+        sem12organizacion?: string;
+        sem13organizacion?: string;
+        sem14organizacion?: string;
+        sem15organizacion?: string;
+        sem16organizacion?: string;
+
     }
 
     const [errors, setErrors] = useState<Errors>({});
@@ -116,9 +162,30 @@ const Index: React.FC = () => {
         if (currentStep === 2) {
             if (!selectedCarga?.silabo?.resultados) newErrors.resultados = "La competencia es obligatoria";
         }
+        if (currentStep === 3) {
+            if (!selectedCarga?.silabo?.resultadosaprendizajes1) newErrors.resultadosaprendizajes1 = "El resultado de aprendizaje de la unidad I es obligatorio";
+            if (!selectedCarga?.silabo?.resultadosaprendizajes2) newErrors.resultadosaprendizajes2 = "El resultado de aprendizaje de la unidad II es obligatorio";
+            if (!selectedCarga?.silabo?.resultadosaprendizajes3) newErrors.resultadosaprendizajes3 = "El resultado de aprendizaje de la unidad III es obligatorio";
+            if (!selectedCarga?.silabo?.capacidadesterminales1) newErrors.capacidadesterminales1 = "Las capacidades terminales de la unidad I es obligatorio";
+            if (!selectedCarga?.silabo?.capacidadesterminales2) newErrors.capacidadesterminales2 = "Las capacidades terminales de la unidad II es obligatorio";
+            if (!selectedCarga?.silabo?.capacidadesterminales3) newErrors.capacidadesterminales3 = "Las capacidades terminales de la unidad III es obligatorio";
 
-        
-        
+        }
+        if (currentStep === 4) {
+            const newErrors: { [key: string]: string } = {}; // Declarar newErrors con un tipo explícito
+            const semanas = selectedCarga?.silabo?.semanas || [];
+
+            for (let i = 0; i < 16; i++) {
+                if (!semanas[i]?.organizacion) {
+                    newErrors[`sem${i + 1}organizacion`] = `El resultado de aprendizaje o capacidades terminales de la semana ${i + 1} es obligatorio`;
+                }
+            }
+
+
+        }
+
+
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -542,6 +609,109 @@ const Index: React.FC = () => {
                                     {errors.resultados && (
                                         <p className="text-red-500">{errors.resultados}</p>
                                     )}
+                                </div>
+
+                            )}
+
+                            {currentStep === 3 && (
+                                <div>
+                                    <label className='text-3xl font-bold'>Unidad I</label>
+                                    <br />
+                                    <label className='text-xl font-bold'>Capacidades Terminales</label>
+
+                                    <textarea
+                                        placeholder="Escribir aqui la información de la Unidad de Competencia"
+                                        value={selectedCarga?.silabo?.capacidadesterminales1}
+                                        onChange={(e) => handleChange(e, "capacidadesterminales1")} // Especifica el campo a actualizar
+                                        className="border text-justify text-xl p-2 w-full h-20 resize-y"
+                                    />
+                                    {errors.capacidadesterminales1 && (
+                                        <p className="text-red-500">{errors.capacidadesterminales1}</p>
+                                    )}
+                                    <label className='text-xl font-bold'>Resultados de Aprendizajes</label>
+                                    <textarea
+                                        placeholder="Escribir aqui la información de la Unidad de Competencia"
+                                        value={selectedCarga?.silabo?.resultadosaprendizajes2}
+                                        onChange={(e) => handleChange(e, "resultadosaprendizajes2")} // Especifica el campo a actualizar
+                                        className="border text-justify text-xl p-2 w-full h-40 resize-y"
+                                    />
+                                    {errors.resultadosaprendizajes2 && (
+                                        <p className="text-red-500">{errors.resultadosaprendizajes2}</p>
+                                    )}
+                                    <label className='text-3xl font-bold'>Unidad II</label>
+                                    <br />
+                                    <label className='text-xl font-bold'>Capacidades Terminales</label>
+
+                                    <textarea
+                                        placeholder="Escribir aqui la información de la Unidad de Competencia"
+                                        value={selectedCarga?.silabo?.capacidadesterminales2}
+                                        onChange={(e) => handleChange(e, "capacidadesterminales2")} // Especifica el campo a actualizar
+                                        className="border text-justify text-xl p-2 w-full h-20 resize-y"
+                                    />
+                                    {errors.capacidadesterminales2 && (
+                                        <p className="text-red-500">{errors.capacidadesterminales2}</p>
+                                    )}
+                                    <label className='text-xl font-bold'>Resultados de Aprendizajes</label>
+                                    <textarea
+                                        placeholder="Escribir aqui la información de la Unidad de Competencia"
+                                        value={selectedCarga?.silabo?.resultadosaprendizajes2}
+                                        onChange={(e) => handleChange(e, "unidadcompetencia")} // Especifica el campo a actualizar
+                                        className="border text-justify text-xl p-2 w-full h-40 resize-y"
+                                    />
+                                    {errors.resultadosaprendizajes2 && (
+                                        <p className="text-red-500">{errors.resultadosaprendizajes2}</p>
+                                    )}
+                                    <label className='text-3xl font-bold'>Unidad III</label>
+                                    <br />
+                                    <label className='text-xl font-bold'>Capacidades Terminales</label>
+
+                                    <textarea
+                                        placeholder="Escribir aqui la información de la Unidad de Competencia"
+                                        value={selectedCarga?.silabo?.capacidadesterminales3}
+                                        onChange={(e) => handleChange(e, "capacidadesterminales3")} // Especifica el campo a actualizar
+                                        className="border text-justify text-xl p-2 w-full h-20 resize-y"
+                                    />
+                                    {errors.capacidadesterminales3 && (
+                                        <p className="text-red-500">{errors.capacidadesterminales3}</p>
+                                    )}
+                                    <label className='text-xl font-bold'>Resultados de Aprendizajes</label>
+                                    <textarea
+                                        placeholder="Escribir aqui la información de la Unidad de Competencia"
+                                        value={selectedCarga?.silabo?.resultadosaprendizajes3}
+                                        onChange={(e) => handleChange(e, "resultadosaprendizajes3")} // Especifica el campo a actualizar
+                                        className="border text-justify text-xl p-2 w-full h-40 resize-y"
+                                    />
+                                    {errors.resultadosaprendizajes3 && (
+                                        <p className="text-red-500">{errors.resultadosaprendizajes3}</p>
+                                    )}
+
+                                </div>
+
+                            )}
+
+                            {currentStep === 4 && (
+                                <div>
+                                    <label className='text-3xl font-bold'>Semana 1</label>
+                                    <br />
+                                    <label className='text-xl font-bold'>Organización de Unidades de Contenidos </label>
+                                    <label className='text-xl font-bold'>Estrategias Didáctica </label>
+                                    <label className='text-xl font-bold'>Evidencias de Desempeño </label>
+                                    <label className='text-xl font-bold'>Instrumentos de Evaluación </label>
+                                    <label className='text-xl font-bold'>Semana </label>
+
+                                    <textarea
+                                        placeholder="Escribir aquí la información de la Unidad de Competencia"
+                                        value={selectedCarga?.silabo?.semanas?.[0]?.organizacion || ''}
+                                        onChange={(e) => handleChange2(e, 0, "organizacion")} // Se pasa el índice (0) y el campo ("organizacion")
+                                        className="border text-justify text-xl p-2 w-full h-20 resize-y"
+                                    />
+                                    {errors.sem1organizacion && (
+                                        <p className="text-red-500">{errors.sem1organizacion}</p>
+                                    )}
+
+
+
+
                                 </div>
 
                             )}
