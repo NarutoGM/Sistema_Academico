@@ -71,8 +71,8 @@ const Index: React.FC = () => {
     
             // Refrescar los datos directamente
             await fetchCursos();
-          //  closeModal();
-          //  setIsFlipped(false);
+            closeModal();
+            setIsFlipped(false);
         } catch (error) {
             console.error("Error al enviar el sílabo:", error);
         }
