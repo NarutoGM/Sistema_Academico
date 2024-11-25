@@ -88,6 +88,7 @@ Route::apiResource('facultades', FacultadController::class);
 Route::get('/generate-token', [TokenController::class, 'generateAccessToken']);
 Route::get('/miscursos', [SubirSilaboController::class, 'index']); 
 Route::get('/versilabos', [SubirSilaboController::class, 'versilabos']); 
+Route::get('/reportesilabos', [SubirSilaboController::class, 'reportesilabos']); 
 
 Route::apiResource('condiciones', CondicionController::class);  
 Route::apiResource('regimenes', RegimenController::class);  

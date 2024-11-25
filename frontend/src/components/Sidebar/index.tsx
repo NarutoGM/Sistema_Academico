@@ -303,7 +303,94 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
                     Gestión de Sílabos
                   </NavLink>
+
+                  
                 
+              </li>
+                  
+              <li>
+                <SidebarLinkGroup
+                  activeCondition={pathname.includes('reportes')}
+                >
+                  {(handleClick, open) => (
+                    <>
+                      <button
+                        className={`group relative flex w-full items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                          pathname.includes('reportes') &&
+                          'bg-graydark dark:bg-meta-4'
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleClick();
+                        }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="1.5"
+                          stroke="currentColor"
+                          className="size-6"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+                          />
+                        </svg>
+                        Reportes
+                        <svg
+                          className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current ${
+                            open && 'rotate-180'
+                          }`}
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path d="M7.95 11.02a.75.75 0 0 1-1.06 0L3.22 7.34a.75.75 0 1 1 1.06-1.06L7.5 9.51l3.22-3.23a.75.75 0 1 1 1.06 1.06l-3.83 3.68z" />
+                        </svg>
+                      </button>
+                      <div className={`${!open && 'hidden'}`}>
+                        <ul className="mt-1.5 ml-5 flex flex-col gap-1.5">
+                          <li>
+                            <NavLink
+                              to="/reportes/1"
+                              className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                                pathname.includes('reportes/1') &&
+                                'bg-graydark dark:bg-meta-4'
+                              }`}
+                            >
+                              Reporte 1
+                            </NavLink>
+                          </li>
+                          <li>
+                            <NavLink
+                              to="/reportes/financieros"
+                              className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                                pathname.includes('reportes/financieros') &&
+                                'bg-graydark dark:bg-meta-4'
+                              }`}
+                            >
+                              Financieros
+                            </NavLink>
+                          </li>
+                          <li>
+                            <NavLink
+                              to="/reportes/logistica"
+                              className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                                pathname.includes('reportes/logistica') &&
+                                'bg-graydark dark:bg-meta-4'
+                              }`}
+                            >
+                              Logística
+                            </NavLink>
+                          </li>
+                        </ul>
+                      </div>
+                    </>
+                  )}
+                </SidebarLinkGroup>
               </li>
 
               {/* <!-- Menu Item Settings --> */}

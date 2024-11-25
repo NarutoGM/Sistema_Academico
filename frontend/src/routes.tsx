@@ -18,6 +18,7 @@ import Silabo from './pages/Silabo/index';
 import MisCursos from './pages/MisCursos/index';
 import Versilabos from './pages/VerSilabos/index';
 import GestionarHorarios from './pages/GestionarHorarios/index';
+import Reporte1 from './pages/Reportes/index';
 
 
 
@@ -260,6 +261,15 @@ const router = createBrowserRouter([
                     <ProtectedRoute>
                         <PageTitle title="GestionarHorarios | TailAdmin - Tailwind CSS Admin Dashboard Template" />
                         <GestionarHorarios/>
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path:'/reportes/1',
+                element: (
+                    <ProtectedRoute>
+                        <PageTitle title="academicos | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+                        <Reporte1/>
                     </ProtectedRoute>
                 ),
             }

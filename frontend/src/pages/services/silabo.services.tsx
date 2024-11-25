@@ -63,6 +63,7 @@ export interface Semestre_academico {
     nomSemestre: string;
     fInicio:string;
     fTermino:string;
+    fLimiteSilabo:string;
     // Añade aquí otras propiedades que pueda tener un curso
 }
 
@@ -152,6 +153,30 @@ export const getMisSilabos = async (): Promise<any> => {
     }
 
     const response = await fetch(`${apiUrl}/versilabos`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${authData.token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error('Error al obtener los sílabos asignados');
+    }
+
+    const data = await response.json();
+    console.log("Sílabos recibidos:", data);
+    return data;
+};
+
+export const getReporte = async (): Promise<any> => {
+    const authData = isAuthenticated();
+
+    if (!authData || !authData.token) {
+        throw new Error('User is not authenticated or token is missing');
+    }
+
+    const response = await fetch(`${apiUrl}/reportesilabos`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${authData.token}`,

@@ -35,7 +35,7 @@ class SubirSilaboController extends Controller
 
                 $cargadocente = CargaDocente::with([
                     'filial',
-                    'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio', // Selecciona solo los campos necesarios
+                    'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio, fLimiteSilabo', // Selecciona solo los campos necesarios
                     'curso' => function ($query) {
                         $query->with(['departamento', 'facultad', 'area', 'regimenCurso', 'tipoCurso']);
                     },
@@ -211,6 +211,98 @@ class SubirSilaboController extends Controller
         }
     }
 
+        public function reportesilabos()
+    {
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+        if ($userId) {
+
+            $directorescuela = DirectorEscuela::where('id', $userId)->first();
+            if ($directorescuela) {
+                if ($directorescuela) {
+
+
+
+
+
+                    $cargadocente = CargaDocente::with([
+                        'filial',
+                        'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio,fLimiteSilabo', // Selecciona solo los campos necesarios
+                        'curso',
+                        'escuela:idEscuela,name',
+                    ])
+                        ->where('idDirector', $directorescuela->idDirector)
+                        ->get()
+                        ->map(function ($carga) {
+                            $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
+                                ->where('idFilial', $carga->idFilial)
+                                ->where('idDocente', $carga->idDocente)
+                                ->where('estado', '!=', 0)
+                                ->first();
+                            $carga->curso->documento = "";
+
+                            if ($silabo) {
+
+                                $carga->curso->documento = $silabo->documento;
+
+                                if ($silabo->activo == false) {
+                                    $carga->curso->estado_silabo = "Inactivo";
+                                } elseif ($silabo->estado == 1 && $silabo->activo == true) {
+                                    $carga->curso->estado_silabo = "En espera de aprobación";
+                                } elseif ($silabo->estado == 3 && $silabo->activo == true) {
+                                    $carga->curso->estado_silabo = "Aprobado";
+                                    $carga->curso->observaciones = $silabo->observaciones;
+
+                                } elseif ($silabo->estado == 2 && $silabo->activo == true) {
+                                    $carga->curso->estado_silabo = "Rechazado";
+                                    $carga->curso->observaciones = $silabo->observaciones;
+
+                                }
+                                return $carga; // Solo devuelve las cargas con un sílabo
+                            }
+
+                            return null; // Omite las cargas sin sílabo
+                        })
+                        ->filter() // Filtra para eliminar las cargas nulas (sin sílabo)
+                        ->map(function ($carga) {
+
+                            $docente = Docente::where('idDocente', $carga->idDocente)
+                                ->where('idDocente', $carga->idDocente)
+                                ->first();
+
+                            $docenteuser = User::where('id', $docente->id)
+                                ->first();
+
+                            $carga->nomdocente = $docenteuser->name;
+                            $carga->apedocente = $docenteuser->lastname;
+
+                            return $carga;
+                        });
+
+
+
+
+                    return response()->json([
+                        'cargadocente' => $cargadocente,
+                        'message' => 'Docente encontrado',
+                    ]);
+                } else {
+                    return response()->json([
+                        'message' => 'Director de escuela no encontrado',
+                    ], 404);
+                }
+            } else {
+                return response()->json([
+                    'message' => 'Director de escuela no encontrado',
+                ], 404);
+            }
+        } else {
+            return response()->json([
+                'message' => 'Usuario no autenticado',
+            ], 401);
+        }
+    }
+
     public function infohorario()
     {
         $user = auth()->user();
@@ -226,7 +318,7 @@ class SubirSilaboController extends Controller
 
                 $cargadocente = CargaDocente::with([
                     'filial',
-                    'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio', // Selecciona solo los campos necesarios
+                    'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio,fLimiteSilabo', // Selecciona solo los campos necesarios
                     'curso' => function ($query) {
                         $query->with(['departamento', 'facultad', 'area', 'regimenCurso', 'tipoCurso']);
                     },
