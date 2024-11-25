@@ -16,8 +16,10 @@ use App\Http\Controllers\RegimenController;
 use App\Http\Controllers\CategoriaController; 
 use App\Http\Controllers\FilialController;
 use App\Http\Controllers\HorarioController;
+use App\Http\Controllers\HorariosController;
 use App\Http\Controllers\SubirSilaboController;
 use App\Http\Controllers\TokenController;
+use App\Models\Horario;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -95,13 +97,12 @@ Route::apiResource('regimenes', RegimenController::class);
 Route::apiResource('categorias', CategoriaController::class);
 Route::apiResource('filiales', FilialController::class);  
 Route::get('/filiales/{idFilial}/docentes', [FilialController::class, 'getDocentes']);
-Route::get('/cargadocentexciclo', [HorarioController::class, 'index']); // Obtener todos los permisos
-Route::get('/listarhorarios', [HorarioController::class, 'listarhorarios']); // Obtener todos los permisos
 Route::post('gestionarsilabo', [SubirSilaboController::class, 'gestionarsilabo']);
 Route::get('/obtenerMisPermisos', [UserController::class, 'obtenerMisPermisos']); // Obtener todos los permisos
 Route::post('/gestionarhorarios', [SubirSilaboController::class, 'gestionarhorarios']);
 
 
 
+Route::get('/verhorarios', [HorariosController::class, 'verhorarios']); 
 
 });

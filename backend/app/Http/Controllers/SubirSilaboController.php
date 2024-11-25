@@ -136,36 +136,6 @@ class SubirSilaboController extends Controller
                         ->where('idDirector', $directorescuela->idDirector)
                         ->get()
                         ->map(function ($carga) {
-                            $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
-                                ->where('idFilial', $carga->idFilial)
-                                ->where('idDocente', $carga->idDocente)
-                                ->where('estado', '!=', 0)
-                                ->first();
-                            $carga->curso->documento = "";
-
-                            if ($silabo) {
-
-                                $carga->curso->documento = $silabo->documento;
-
-                                if ($silabo->activo == false) {
-                                    $carga->curso->estado_silabo = "Inactivo";
-                                } elseif ($silabo->estado == 1 && $silabo->activo == true) {
-                                    $carga->curso->estado_silabo = "En espera de aprobación";
-                                } elseif ($silabo->estado == 3 && $silabo->activo == true) {
-                                    $carga->curso->estado_silabo = "Aprobado";
-                                    $carga->curso->observaciones = $silabo->observaciones;
-                                } elseif ($silabo->estado == 2 && $silabo->activo == true) {
-                                    $carga->curso->estado_silabo = "Rechazado";
-
-                                    $carga->curso->observaciones = $silabo->observaciones;
-                                }
-                                return $carga; // Solo devuelve las cargas con un sílabo
-                            }
-
-                            return null; // Omite las cargas sin sílabo
-                        })
-                        ->filter() // Filtra para eliminar las cargas nulas (sin sílabo)
-                        ->map(function ($carga) {
 
                             $docente = Docente::where('idDocente', $carga->idDocente)
                                 ->where('idDocente', $carga->idDocente)
@@ -178,7 +148,43 @@ class SubirSilaboController extends Controller
                             $carga->apedocente = $docenteuser->lastname;
 
                             return $carga;
+                        })
+                        ->map(function ($carga) {
+                            $plancursoacademico = PlanCursoAcademico::where('idMalla', $carga->idMalla)
+                                ->where('idCurso', $carga->idCurso)
+                                ->where('idEscuela', $carga->idEscuela)
+                                ->first();
+    
+                            // Verificar si existe el PlanCursoAcademico y asignar el ciclo
+                            if ($plancursoacademico) {
+                                $carga->ciclo = $plancursoacademico->ciclo;
+                                $carga->prerequisitos = $plancursoacademico->prerequisitos;
+                            }
+    
+                            return $carga;
+                        })
+                        ->map(function ($carga) {
+                            $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
+                                ->where('idFilial', $carga->idFilial)
+                                ->where('idDocente', $carga->idDocente)
+                                ->where('estado', '!=', 0)
+                                ->first();
+
+
+
+                                if ($silabo) {
+    
+                                    $carga->silabo = $silabo;
+                                    $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
+                                    ->where('idFilial', $silabo->idFilial)
+                                    ->where('idDocente', $silabo->idDocente)
+                                    ->get();
+                                 
+                                    $carga->silabo->semanas = $semanas;
+                                }
+                            return $carga; // Omite las cargas sin sílabo
                         });
+
 
 
 
@@ -472,7 +478,9 @@ class SubirSilaboController extends Controller
                         'idFilial' => $request->idFilial,
                         'idDocente' => $request->idDocente,
                         'idDirector' => $request->idDirector,
-                        'activo' => true // Valor booleano directamente
+                        'activo' => true, // Valor booleano directamente
+                        'estado' => 1 // Valor booleano directamente
+
                     ],
                     $validatedData['silabo']
                 ));

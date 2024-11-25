@@ -420,6 +420,9 @@ const Index: React.FC = () => {
                     Semestre
                   </th>
                   <th className="px-4 py-2 border-b font-medium text-white">
+                    Ciclo
+                  </th>
+                  <th className="px-4 py-2 border-b font-medium text-white">
                     Acciones
                   </th>
                   <th className="px-4 py-2 border-b font-medium text-white">
@@ -444,6 +447,9 @@ const Index: React.FC = () => {
                       {carga.semestre_academico?.nomSemestre}
                     </td>
                     <td className="px-4 py-2 border-b text-center">
+                      {carga.ciclo}
+                    </td>
+                    <td className="px-4 py-2 border-b text-center">
                       <button
                         onClick={() => {
                           setSelectedCarga(carga);
@@ -457,7 +463,7 @@ const Index: React.FC = () => {
                     {/* Botón para Generar PDF */}
                     <td className="px-4 py-2 border-b text-center">
                       <button
-                        onClick={() => generarSilaboPDF(carga)}
+                        onClick={() => generarSilaboPDF(carga,1)}
                         disabled={!carga.silabo?.sumilla} // Deshabilitar si no hay sumilla
                         className={`px-2 py-2 rounded-full ${
                           carga.silabo?.sumilla

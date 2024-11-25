@@ -126,11 +126,11 @@ export interface Silabo {
     resultadosaprendizajes1?: string; // Campo opcional que hace referencia a un objeto de tipo Curso
     resultadosaprendizajes2?: string; // Campo opcional que hace referencia a un objeto de tipo Curso
     resultadosaprendizajes3?: string; // Campo opcional que hace referencia a un objeto de tipo Curso
+    activo?: boolean; 
 
-    estado?: boolean; 
+    estado?: number; 
     sistemaevaluacion?: string; 
     infosistemaevaluacion?: string; // Campo opcional que hace referencia a un objeto de tipo Curso
-    activo?: boolean; 
     fEnvio?: Date; 
     tutoria?: string; // Campo opcional que hace referencia a un objeto de tipo Curso
     observaciones?: string; // Campo opcional que hace referencia a un objeto de tipo Curso

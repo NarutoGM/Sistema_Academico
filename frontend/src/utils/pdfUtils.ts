@@ -1,6 +1,8 @@
 import { jsPDF } from "jspdf";
 
-export const generarSilaboPDF = (silabo: any) => {
+
+
+export const generarSilaboPDF = (silabo: any,numero: number) => {
     const doc = new jsPDF();
 
     // Título
@@ -41,5 +43,11 @@ export const generarSilaboPDF = (silabo: any) => {
     doc.text(silabo.silabo.sumilla || "No disponible", 10, y + 20, { maxWidth: 190 });
 
     // Guardar el archivo
-    doc.save(`${silabo.curso.name}_silabo.pdf`);
+
+    if (numero === 1) {
+        doc.save(`${silabo.curso.name}_silabo.pdf`);
+    } else if (numero === 2) {
+        return doc.output("datauristring");
+    }
+    
 };
