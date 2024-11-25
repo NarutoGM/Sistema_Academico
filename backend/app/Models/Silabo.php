@@ -22,13 +22,27 @@ class Silabo extends Model
         'idCargaDocente',
         'idFilial',
         'idDocente',
-        'documento',
         'estado',
         'activo',
         'observaciones',
         'idDirector',
         'fEnvio',
+        'sumilla',
+        'unidadcompetencia',
+        'competenciasgenerales',
+        'resultados',
+        'capacidadesterminales1',
+        'capacidadesterminales2',
+        'capacidadesterminales3',
+        'resultadosaprendizajes1',
+        'resultadosaprendizajes2',
+        'resultadosaprendizajes3',
+        'sistemaevaluacion',
+        'infosistemaevaluacion',
+        'tutoria',
+        'referencias',
     ];
+    
 
     // Relaciones
 
@@ -51,4 +65,14 @@ class Silabo extends Model
     {
         return $this->belongsTo(DirectorEscuela::class, 'idDirector', 'idDirector');
     }
+
+    public function semana()
+    {
+        return $this->hasMany(Semana::class, 'idCargaDocente', 'idCargaDocente')
+                    ->where('idFilial', $this->idFilial)
+                    ->where('idDocente', $this->idDocente);
+    }
+    
+    
+
 }
