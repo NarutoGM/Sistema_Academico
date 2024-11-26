@@ -17,7 +17,6 @@ import SubirArchivo from './pages/SubirArchivo/index';
 import Silabo from './pages/Silabo/index';
 import MisCursos from './pages/MisCursos/index';
 import Versilabos from './pages/VerSilabos/index';
-import GestionarHorarios from './pages/GestionarHorarios/index';
 import Reporte1 from './pages/Reportes/index';
 
 
@@ -255,15 +254,7 @@ const router = createBrowserRouter([
                     </ProtectedRoute>
                 ),
             },
-            {
-                path:'/GestionarHorarios',
-                element: (
-                    <ProtectedRoute>
-                        <PageTitle title="GestionarHorarios | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-                        <GestionarHorarios/>
-                    </ProtectedRoute>
-                ),
-            },
+           
             {
                 path:'/reportes/1',
                 element: (

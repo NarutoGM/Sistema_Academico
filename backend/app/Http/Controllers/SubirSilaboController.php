@@ -43,7 +43,6 @@ class SubirSilaboController extends Controller
                     'escuela:idEscuela,name',
                 ])
                     ->where('idDocente', $docente->idDocente)
-                    ->where('estado', true)
                     ->get()
                     ->map(function ($carga) {
                         $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
@@ -130,41 +129,13 @@ class SubirSilaboController extends Controller
                     $cargadocente = CargaDocente::with([
                         'filial',
                         'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio', // Selecciona solo los campos necesarios
-                        'curso',
+                        'curso' => function ($query) {
+                            $query->with(['departamento', 'facultad', 'area', 'regimenCurso', 'tipoCurso']);
+                        },
                         'escuela:idEscuela,name',
                     ])
                         ->where('idDirector', $directorescuela->idDirector)
                         ->get()
-                        ->map(function ($carga) {
-                            $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
-                                ->where('idFilial', $carga->idFilial)
-                                ->where('idDocente', $carga->idDocente)
-                                ->where('estado', '!=', 0)
-                                ->first();
-                            $carga->curso->documento = "";
-
-                            if ($silabo) {
-
-                                $carga->curso->documento = $silabo->documento;
-
-                                if ($silabo->activo == false) {
-                                    $carga->curso->estado_silabo = "Inactivo";
-                                } elseif ($silabo->estado == 1 && $silabo->activo == true) {
-                                    $carga->curso->estado_silabo = "En espera de aprobación";
-                                } elseif ($silabo->estado == 3 && $silabo->activo == true) {
-                                    $carga->curso->estado_silabo = "Aprobado";
-                                    $carga->curso->observaciones = $silabo->observaciones;
-                                } elseif ($silabo->estado == 2 && $silabo->activo == true) {
-                                    $carga->curso->estado_silabo = "Rechazado";
-
-                                    $carga->curso->observaciones = $silabo->observaciones;
-                                }
-                                return $carga; // Solo devuelve las cargas con un sílabo
-                            }
-
-                            return null; // Omite las cargas sin sílabo
-                        })
-                        ->filter() // Filtra para eliminar las cargas nulas (sin sílabo)
                         ->map(function ($carga) {
 
                             $docente = Docente::where('idDocente', $carga->idDocente)
@@ -178,7 +149,43 @@ class SubirSilaboController extends Controller
                             $carga->apedocente = $docenteuser->lastname;
 
                             return $carga;
+                        })
+                        ->map(function ($carga) {
+                            $plancursoacademico = PlanCursoAcademico::where('idMalla', $carga->idMalla)
+                                ->where('idCurso', $carga->idCurso)
+                                ->where('idEscuela', $carga->idEscuela)
+                                ->first();
+    
+                            // Verificar si existe el PlanCursoAcademico y asignar el ciclo
+                            if ($plancursoacademico) {
+                                $carga->ciclo = $plancursoacademico->ciclo;
+                                $carga->prerequisitos = $plancursoacademico->prerequisitos;
+                            }
+    
+                            return $carga;
+                        })
+                        ->map(function ($carga) {
+                            $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
+                                ->where('idFilial', $carga->idFilial)
+                                ->where('idDocente', $carga->idDocente)
+                                ->where('estado', '!=', 0)
+                                ->first();
+
+
+
+                                if ($silabo) {
+    
+                                    $carga->silabo = $silabo;
+                                    $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
+                                    ->where('idFilial', $silabo->idFilial)
+                                    ->where('idDocente', $silabo->idDocente)
+                                    ->get();
+                                 
+                                    $carga->silabo->semanas = $semanas;
+                                }
+                            return $carga; // Omite las cargas sin sílabo
                         });
+
 
 
 
@@ -431,8 +438,6 @@ class SubirSilaboController extends Controller
                 'idCargaDocente' => 'required|integer',
                 'idFilial' => 'required|integer',
                 'idDocente' => 'required|integer',
-                'silabo.observaciones' => 'nullable|string',
-                'silabo.fEnvio' => 'nullable|date',
                 'silabo.sumilla' => 'nullable|string',
                 'silabo.unidadcompetencia' => 'nullable|string',
                 'silabo.competenciasgenerales' => 'nullable|string',
@@ -466,7 +471,26 @@ class SubirSilaboController extends Controller
 
             if ($silabo) {
                 // Actualizar el registro existente
-                $silabo->update($validatedData['silabo']);
+                Silabo::where('idCargaDocente', $request->idCargaDocente)
+                    ->where('idFilial', $request->idFilial)
+                    ->where('idDocente', $request->idDocente)
+                    ->delete();
+
+
+                    $silabo = Silabo::create(array_merge(
+                        [
+                            'idCargaDocente' => $request->idCargaDocente,
+                            'idFilial' => $request->idFilial,
+                            'idDocente' => $request->idDocente,
+                            'idDirector' => $request->idDirector,
+                            'activo' => true, // Valor booleano directamente
+                            'estado' => 1 // Valor booleano directamente
+    
+                        ],
+                        $validatedData['silabo']
+                    ));
+
+
                 $silaboData = $validatedData['silabo'];
 
                 // Actualizar o crear 16 semanas académicas
@@ -497,7 +521,9 @@ class SubirSilaboController extends Controller
                         'idFilial' => $request->idFilial,
                         'idDocente' => $request->idDocente,
                         'idDirector' => $request->idDirector,
-                        'activo' => true // Valor booleano directamente
+                        'activo' => true, // Valor booleano directamente
+                        'estado' => 1 // Valor booleano directamente
+
                     ],
                     $validatedData['silabo']
                 ));
@@ -545,6 +571,49 @@ class SubirSilaboController extends Controller
     }
 
 
+    public function gestionarsilabodirector(Request $request)
+    {
+        try {
+            // Validar la solicitud
+            $validatedData = $request->validate([
+                'idCargaDocente' => 'required|integer',
+                'idFilial' => 'required|integer',
+                'idDocente' => 'required|integer',
+                'numero' => 'required|integer',
+                'observaciones' => 'nullable|string',
+            ]);
+            $numero=$request->numero + 1;
+            // Actualizar el sílabo directamente en la base de datos
+            $updatedRows = Silabo::where('idCargaDocente', $validatedData['idCargaDocente'])
+                ->where('idFilial', $validatedData['idFilial'])
+                ->where('idDocente', $validatedData['idDocente'])
+                ->update([
+                    'estado' => $numero,
+                    'observaciones' => $validatedData['observaciones'] ?? null,
+                ]);
+    
+            // Verificar si se actualizó algún registro
+            if ($updatedRows === 0) {
+                return response()->json([
+                    'message' => 'Sílabo no encontrado o no se realizaron cambios.',
+                ], 404);
+            }
+    
+            return response()->json([
+                'message' => 'Sílabo actualizado correctamente.',
+            ], 200);
+        } catch (\Exception $e) {
+            // Log del error
+            Log::error('Error al procesar el sílabo: ' . $e->getMessage());
+            Log::error('Detalles del error: ' . $e->getTraceAsString());
+    
+            // Retornar respuesta de error
+            return response()->json([
+                'message' => 'Hubo un error al procesar el sílabo.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
 
     public function gestionarhorarios(Request $request)

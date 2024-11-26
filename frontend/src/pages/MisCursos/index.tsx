@@ -420,6 +420,9 @@ const Index: React.FC = () => {
                     Semestre
                   </th>
                   <th className="px-4 py-2 border-b font-medium text-white">
+                    Ciclo
+                  </th>
+                  <th className="px-4 py-2 border-b font-medium text-white">
                     Acciones
                   </th>
                   <th className="px-4 py-2 border-b font-medium text-white">
@@ -444,6 +447,9 @@ const Index: React.FC = () => {
                       {carga.semestre_academico?.nomSemestre}
                     </td>
                     <td className="px-4 py-2 border-b text-center">
+                      {carga.ciclo}
+                    </td>
+                    <td className="px-4 py-2 border-b text-center">
                       <button
                         onClick={() => {
                           setSelectedCarga(carga);
@@ -457,7 +463,7 @@ const Index: React.FC = () => {
                     {/* Botón para Generar PDF */}
                     <td className="px-4 py-2 border-b text-center">
                       <button
-                        onClick={() => generarSilaboPDF(carga)}
+                        onClick={() => generarSilaboPDF(carga, 3)}
                         disabled={!carga.silabo?.sumilla} // Deshabilitar si no hay sumilla
                         className={`px-2 py-2 rounded-full ${
                           carga.silabo?.sumilla
@@ -510,7 +516,7 @@ const Index: React.FC = () => {
                 className="w-20 h-20 mb-4 mt-2"
               />
               <h3 className="text-xl font-bold text-gray-700">
-                Crear un nuevo sílabo
+                Crear un nuevo sílabo y/o actualizar 
               </h3>
             </div>
 
@@ -527,6 +533,21 @@ const Index: React.FC = () => {
               />
               <h3 className="text-xl font-bold text-gray-700">
                 Utilizar un sílabo ya creado
+              </h3>
+            </div>
+
+            <div
+              onClick={() => openModal2()}
+              className="flex flex-col items-center bg-white border rounded-lg shadow-lg p-6 w-96 cursor-pointer transition transform hover:scale-105 hover:shadow-xl relative"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-red-500 rounded-t-lg"></div>
+              <img
+                src={LogoReutilizar}
+                alt="Logo Reutilizar"
+                className="w-20 h-20 mb-4 mt-2"
+              />
+              <h3 className="text-xl font-bold text-gray-700">
+                Previsualizar estado de silabo
               </h3>
             </div>
           </div>
@@ -1283,7 +1304,7 @@ const Index: React.FC = () => {
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
-                      Listo... Crear mi Sílabo Académico
+                      Listo... Crear y/o actualizar mi Sílabo Actual para revisión
                     </button>
                   </div>
 
@@ -1292,10 +1313,10 @@ const Index: React.FC = () => {
                     <div className="fixed inset-0  flex justify-center items-center z-50">
                       <div className="bg-white p-8 border rounded-lg shadow-2xl w-[90%] max-w-lg transform transition-transform animate-fadeIn">
                         <h2 className="text-2xl font-bold mb-4 text-center text-green-600">
-                          Confirmar Creación
+                          Confirmar Registro
                         </h2>
                         <p className="mb-6 text-center text-gray-600">
-                          ¿Estás seguro de que deseas crear el sílabo académico
+                          ¿Estás seguro de que deseas enviar estos registros
                           con la información actual?
                         </p>
                         <div className="flex justify-center space-x-4">

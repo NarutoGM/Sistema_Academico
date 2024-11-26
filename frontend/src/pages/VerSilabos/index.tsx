@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import { getMisSilabos, CargaDocente ,enviarinfoSilabo} from '@/pages/services/silabo.services';
+import { getMisSilabos, CargaDocente, enviarinfoSilabodirector } from '@/pages/services/silabo.services';
 import "quill/dist/quill.snow.css";
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic'; // Asegúrate de importar CKEditor
+import { generarSilaboPDF } from '@/utils/pdfUtils';
 
 const Index: React.FC = () => {
     const [cargaDocente, setCargaDocente] = useState<CargaDocente[]>([]);
     const [filteredData, setFilteredData] = useState<CargaDocente[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5;
+    const itemsPerPage = 8;
 
     // Filtros
     const [codigoCurso, setCodigoCurso] = useState('');
@@ -60,9 +60,28 @@ const Index: React.FC = () => {
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
+
+
     const modal = (carga: CargaDocente, numero: number) => {
         const isEditable = numero === 1;
-        const observacionesText = numero === 2 ? carga.curso?.observaciones || "" : "";
+        const observacionesText = numero === 2 ? carga.silabo?.observaciones || "" : "";
+    
+        const getEstadoSilabo = (carga: CargaDocente) => {
+            if (carga.estado === false) {
+                return 'Inactivo';
+            } else if (carga.silabo == null) {
+                return 'Aún no envió silabo';
+            } else {
+                switch (carga.silabo.estado) {
+                    case 1: return 'Por Revisar';
+                    case 2: return 'Rechazado';
+                    case 3: return 'Visado';
+                    default: return 'Estado Desconocido';
+                }
+            }
+        };
+    
+        const estadoSilabo = getEstadoSilabo(carga);
     
         Swal.fire({
             title: "Detalles del Sílabo",
@@ -74,12 +93,13 @@ const Index: React.FC = () => {
                         <p><strong>Docente:</strong> ${carga.nomdocente} ${carga.apedocente}</p>
                         <p><strong>Filial:</strong> ${carga.filial?.name}</p>
                         <p><strong>Semestre Académico:</strong> ${carga.semestre_academico?.nomSemestre}</p>
-                        <p><strong>Estado del Sílabo:</strong> ${carga.curso?.estado_silabo}</p>
-                        ${
-                            numero === 2 
-                                ? `<p><strong>Observaciones:</strong> ${carga.curso?.observaciones || "Sin observaciones registradas"}</p>`
-                                : ""
+                        ${numero === 2
+                            ? `<p><strong>Observaciones:</strong> ${carga.silabo?.observaciones || "Sin observaciones registradas"}</p>`
+                            : ""
                         }
+                        <p>
+                            <strong>Estado del Sílabo:</strong> ${estadoSilabo}
+                        </p>
                         <textarea 
                             id="observaciones" 
                             placeholder="Escribe las observaciones aquí..." 
@@ -87,12 +107,12 @@ const Index: React.FC = () => {
                             ${!isEditable ? "disabled" : ""}
                         >${observacionesText}</textarea>
                     </div>
-                    <div style="flex: 2; border: 1px solid #ccc; border-radius: 4px; overflow-y: auto; height: 600px; padding: 10px;">
-                        ${carga.curso?.documento}
+                    <div id="pdf-container" style="flex: 2; border: 1px solid #ccc; border-radius: 4px; overflow-y: auto; height: 600px; padding: 10px;">
+                        <p>Cargando PDF...</p>
                     </div>
                 </div>
             `,
-            width: 1000,
+            width: 1300,
             showCancelButton: true,
             showDenyButton: isEditable,
             showConfirmButton: isEditable,
@@ -100,73 +120,63 @@ const Index: React.FC = () => {
             denyButtonText: "Rechazar",
             cancelButtonText: "Cancelar",
             focusConfirm: false,
-        }).then(async (result) => {
-            if (isEditable) {
-                if (result.isConfirmed) {
-                    const observaciones = (document.getElementById("observaciones") as HTMLTextAreaElement)?.value || "";
-                    await SubmitCarga(carga, 1, observaciones);
-                    Swal.fire(
-                        "Aceptado",
-                        "El sílabo ha sido aceptado correctamente.",
-                        "success"
-                    );
-                } else if (result.isDenied) {
-                    const observaciones = (document.getElementById("observaciones") as HTMLTextAreaElement)?.value || "";
-                    if (!observaciones) {
-                        Swal.fire("Error", "Debe proporcionar observaciones para rechazar el sílabo.", "error");
-                        return;
-                    }
-                    await SubmitCarga(carga, 0, observaciones);
-                    Swal.fire(
-                        "Rechazado",
-                        "El sílabo ha sido rechazado correctamente.",
-                        "success"
-                    );
+            didOpen: () => {
+                // Generar el PDF y cargarlo en el iframe
+                const pdfContainer = document.getElementById("pdf-container");
+                if (pdfContainer) {
+                    const pdfDataUri = generarSilaboPDF(carga, 2);
+                    pdfContainer.innerHTML = `
+                        <iframe 
+                            src="${pdfDataUri}" 
+                            style="width: 100%; height: 100%; border: none;" 
+                            title="Sílabo PDF"
+                        ></iframe>
+                    `;
                 }
+            },
+            preConfirm: () => {
+                // Obtener el texto de las observaciones
+                const observaciones = (document.getElementById("observaciones") as HTMLTextAreaElement)?.value || "";
+                return { observaciones };
+            },
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                // Si apruebas, llama a SubmitCarga con numero = 1
+                const observaciones = result.value?.observaciones || "";
+                await SubmitCarga(carga, 1, observaciones);
+                Swal.fire("Éxito", "El sílabo ha sido aprobado.", "success");
+            } else if (result.isDenied) {
+                // Si desapruebas, llama a SubmitCarga con numero = 0
+                const observaciones = (document.getElementById("observaciones") as HTMLTextAreaElement)?.value || "";
+                await SubmitCarga(carga, 0, observaciones);
+                Swal.fire("Rechazado", "El sílabo ha sido rechazado.", "error");
             }
         });
     };
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
 
     const SubmitCarga = async (carga: CargaDocente, numero: number, observaciones: string) => {
-        console.log('observaciones:', observaciones);
-
-        if (numero==0){
-            const silaboData = {
-                idCargaDocente: carga.idCargaDocente, // Asumiendo que `carga` tiene un `id`
-                idDocente: carga.idDocente, // Información del docente
-                idFilial: carga.idFilial, // Información del curso
-                numero: 11,
-                observaciones:observaciones,
-            };
-            const response = await enviarinfoSilabo(silaboData);
-            console.log("Información del sílabo enviada correctamente:", response);
-
-            setShouldUpdate((prev) => !prev); // Cambiar el estado para disparar el useEffect
-
-        }else{
-            if(numero==1){
-                const silaboData = {
-                    idCargaDocente: carga.idCargaDocente, // Asumiendo que `carga` tiene un `id`
-                    idDocente: carga.idDocente, // Información del docente
-                    idFilial: carga.idFilial, // Información del curso
-                    numero: 12,
-                    observaciones:observaciones,
-                };
-                const response = await enviarinfoSilabo(silaboData);
-                console.log("Información del sílabo enviada correctamente:", response);
+        const silaboData = {
+            idCargaDocente: carga.idCargaDocente,
+            idDocente: carga.idDocente,
+            idFilial: carga.idFilial,
+            numero: numero === 0 ? 1 : 2, // Establece el número basado en el valor de 'numero'
+            observaciones: observaciones,
+        };
     
-                setShouldUpdate((prev) => !prev); // Cambiar el estado para disparar el useEffect
-    
-            }
+        try {
+            const response = await enviarinfoSilabodirector(silaboData);
+            console.log("Información del sílabo enviada correctamente al director:", response);
+            setShouldUpdate((prev) => !prev); // Cambia el estado para disparar el useEffect
+        } catch (error) {
+            console.error("Error al enviar la información del sílabo:", error);
         }
-
     };
 
     return (
@@ -244,7 +254,9 @@ const Index: React.FC = () => {
                             <th className="px-4 py-2 border-b font-medium text-white">Docente</th>
                             <th className="px-4 py-2 border-b font-medium text-white">Filial</th>
                             <th className="px-4 py-2 border-b font-medium text-white">Semestre</th>
-                            <th className="px-4 py-2 border-b font-medium text-white">Proceso Sílabos</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Ciclo</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Estado</th>
+
                             <th className="px-4 py-2 border-b font-medium text-white">Acciones</th>
                         </tr>
                     </thead>
@@ -256,33 +268,53 @@ const Index: React.FC = () => {
                                 <td className="px-4 py-2 border-b text-center">{`${carga.nomdocente} ${carga.apedocente}`}</td>
                                 <td className="px-4 py-2 border-b text-center">{carga.filial?.name}</td>
                                 <td className="px-4 py-2 border-b text-center">{carga.semestre_academico?.nomSemestre}</td>
-                                <td className="px-4 py-2 border-b text-center">{carga.curso?.estado_silabo}</td>
+
+                                <td className="px-4 py-2 border-b text-center">{carga.ciclo}</td>
+
                                 <td className="px-4 py-2 border-b text-center">
-                                    <button
-                                        className={`px-2 py-1 rounded text-white 
-        ${carga.curso?.estado_silabo === "Rechazado" ? "bg-red-500 hover:bg-red-600" : ""}
-        ${carga.curso?.estado_silabo === "Aprobado" ? "bg-green-500 hover:bg-green-600" : ""}
-        ${carga.curso?.estado_silabo === "En espera de aprobación" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`
+                                    {
+                                        carga.estado === false
+                                            ? 'Inactivo'
+                                            : (
+                                                carga.silabo == null
+                                                    ? 'Aún no envió silabo' // Verifica si silabo es null o undefined
+                                                    : (
+                                                        carga.silabo.estado === 1 ? 'Aún falta revisar'
+                                                            : carga.silabo.estado === 2 ? 'Rechazado'
+                                                                : carga.silabo.estado === 3 ? 'Aceptado'
+                                                                    : 'Estado desconocido'
+                                                    )
+                                            )
+                                    }
+                                </td>
+
+
+
+
+
+                                <td className="px-4 py-2 border-b text-center">
+
+                                    
+                                    <button onClick={() => {
+                                        // Si carga.silabo es null, pasa carga, 2
+                                        if (carga.silabo === null) {
+                                            modal(carga, 2);
+                                        } else if (carga.silabo?.estado === 1) {
+                                            // Si el estado de carga.silabo es 1, pasa carga, 1
+                                            modal(carga, 1);
+                                        } else {
+                                            // Para otros casos, pasa carga, 2
+                                            modal(carga, 2);
                                         }
-                                        onClick={() => {
-                                            if (carga.curso?.estado_silabo === "En espera de aprobación") {
-                                                // Abrir modal para observar el sílabo
-                                                modal(carga, 1);
-                                            } else if (
-                                                carga.curso?.estado_silabo === "Aprobado" ||
-                                                carga.curso?.estado_silabo === "Rechazado"
-                                            ) {
-                                                // Abrir modal para ver el sílabo
-                                                modal(carga, 2);
-                                            }
-                                        }}
-                                    >
-                                        {carga.curso?.estado_silabo === "En espera de aprobación" && "Observar Sílabo"}
-                                        {carga.curso?.estado_silabo === "Aprobado" && "Observar"}
-                                        {carga.curso?.estado_silabo === "Rechazado" && "Observar"}
+                                    }}>
+                                        Revision Silabos
                                     </button>
 
+
                                 </td>
+
+
+
                             </tr>
                         ))}
                     </tbody>

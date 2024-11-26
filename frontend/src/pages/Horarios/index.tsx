@@ -1,1463 +1,339 @@
-import React, { useState, useEffect } from 'react';
-import { gapi } from 'gapi-script';
-import { BsSkipStartCircle } from 'react-icons/bs';
-import { StringValueElement } from 'docx';
+import React, { useEffect, useState } from 'react';
+import Swal from 'sweetalert2';
+import { getCargaHorario, CargaDocente } from '@/pages/services/horario.services';
+import "quill/dist/quill.snow.css";
+import { generarSilaboPDF } from '@/utils/pdfUtils';
 
-const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
-const SCOPES = import.meta.env.VITE_GOOGLE_SCOPES || 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
+const Index: React.FC = () => {
+    const [cargaDocente, setCargaDocente] = useState<CargaDocente[]>([]);
+    const [filteredData, setFilteredData] = useState<CargaDocente[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 8;
 
-const FileUploadComponent: React.FC = () => {
-    const [folderTitle, setFolderTitle] = useState<string>('');
-    const [isFolderCreated, setIsFolderCreated] = useState<boolean>(false);
-    const [folderId, setFolderId] = useState<string>('');
-    const [folderLink, setFolderLink] = useState<string>('');
-    const [isSheetCreated, setIsSheetCreated] = useState<boolean>(false);
-    const [sheetId, setSheetId] = useState<string>('');
+    // Filtros
+    const [codigoCurso, setCodigoCurso] = useState('');
+    const [curso, setCurso] = useState('');
+    const [filial, setFilial] = useState('');
+    const [semestre, setSemestre] = useState('');
+    const [procesoSilabo, setProcesoSilabo] = useState('');
+    const [docente, setDocente] = useState('');
+    const [shouldUpdate, setShouldUpdate] = useState(false); // Estado para controlar la actualización
 
     useEffect(() => {
-        function start() {
-            gapi.client
-                .init({
-                    apiKey: API_KEY,
-                    clientId: CLIENT_ID,
-                    scope: SCOPES,
-                })
-                .then(() => {
-                    const authInstance = gapi.auth2.getAuthInstance();
-                    if (authInstance.isSignedIn.get()) {
-                        authInstance.signOut();
-                    }
-                    console.log('Google API initialized and user signed out');
-                })
-                .catch((error) => {
-                    console.error('Error initializing Google API:', error);
-                });
-        }
+        getCargaHorario()
+            .then((data) => {
+                // Asegúrate de que TypeScript interprete correctamente los valores como CargaDocente[]
+                const docenteArray = Object.values(data.cargadocente) as CargaDocente[];
+                setCargaDocente(docenteArray);
+                console.log(docenteArray);
+                setFilteredData(docenteArray);
 
-        gapi.load('client:auth2', start);
+            })
+
+
+            
+            .catch((error) => {
+                setError(error.message);
+            });
     }, []);
 
-    const authenticateUser = async () => {
-        try {
-            const authInstance = gapi.auth2.getAuthInstance();
-            if (!authInstance.isSignedIn.get()) {
-                await authInstance.signIn();
+
+
+    useEffect(() => {
+        const filtered = cargaDocente.filter(item => {
+            const estadoSilabo = item.curso?.estado_silabo || "Curso por gestionar";
+            const nombreDocente = `${item.nomdocente} ${item.apedocente}`.toLowerCase();
+            return (
+                (codigoCurso ? item.idCurso.toString().includes(codigoCurso) : true) &&
+                (curso ? item.curso?.name.toLowerCase().includes(curso.toLowerCase()) : true) &&
+                (filial ? item.filial?.name.toLowerCase().includes(filial.toLowerCase()) : true) &&
+                (semestre ? item.semestre_academico?.nomSemestre.toLowerCase().includes(semestre.toLowerCase()) : true) &&
+                (procesoSilabo ? estadoSilabo.toLowerCase().includes(procesoSilabo.toLowerCase()) : true) &&
+                (docente ? nombreDocente.includes(docente.toLowerCase()) : true)
+            );
+        });
+        setFilteredData(filtered);
+        setCurrentPage(1);
+    }, [codigoCurso, curso, filial, semestre, procesoSilabo, docente, cargaDocente]);
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+
+
+    const modal = (carga: CargaDocente, numero: number) => {
+        const isEditable = numero === 1;
+        const observacionesText = numero === 2 ? carga.silabo?.observaciones || "" : "";
+    
+        const getEstadoSilabo = (carga: CargaDocente) => {
+            if (carga.estado === false) {
+                return 'Inactivo';
+            } else if (carga.silabo == null) {
+                return 'Aún no envió silabo';
+            } else {
+                switch (carga.silabo.estado) {
+                    case 1: return 'Por Revisar';
+                    case 2: return 'Rechazado';
+                    case 3: return 'Visado';
+                    default: return 'Estado Desconocido';
+                }
             }
-            return authInstance.currentUser.get().getAuthResponse().access_token;
-        } catch (error) {
-            console.error("Error de autenticación:", error);
-            alert(error.message);
-        }
-    };
-
-    const createSpreadsheetWithSheets = async () => {
-        const accessToken = await authenticateUser();
-        if (!accessToken) {
-            alert("Error: No se pudo obtener el token de acceso.");
-            return;
-        }
-
-        const sheetMetadata = {
-            properties: { title: folderTitle || 'Documento de Hojas' },
-            sheets: [
-                { properties: { title: 'Hoja 1' } },
-                { properties: { title: 'Hoja 2' } },
-                { properties: { title: 'Hoja 3' } },
-                { properties: { title: 'Hoja 4' } },
-                { properties: { title: 'Hoja 5' } },
-            ],
         };
-
-        const response = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
-            method: 'POST',
-            headers: new Headers({
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-            }),
-            body: JSON.stringify(sheetMetadata),
+    
+        const estadoSilabo = getEstadoSilabo(carga);
+    
+        Swal.fire({
+            title: "Detalles del Sílabo",
+            html: `
+                <div style="display: flex; gap: 20px; align-items: flex-start;">
+                    <div style="flex: 1; text-align: left; line-height: 1.5; margin-bottom: 20px; min-width: 300px;">
+                        <p><strong>ID Curso:</strong> ${carga.idCurso}</p>
+                        <p><strong>Curso:</strong> ${carga.curso?.name}</p>
+                        <p><strong>Docente:</strong> ${carga.nomdocente} ${carga.apedocente}</p>
+                        <p><strong>Filial:</strong> ${carga.filial?.name}</p>
+                        <p><strong>Semestre Académico:</strong> ${carga.semestre_academico?.nomSemestre}</p>
+                        ${numero === 2
+                            ? `<p><strong>Observaciones:</strong> ${carga.silabo?.observaciones || "Sin observaciones registradas"}</p>`
+                            : ""
+                        }
+                        <p>
+                            <strong>Estado del Sílabo:</strong> ${estadoSilabo}
+                        </p>
+                        <textarea 
+                            id="observaciones" 
+                            placeholder="Escribe las observaciones aquí..." 
+                            style="width: 100%; height: 300px; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" 
+                            ${!isEditable ? "disabled" : ""}
+                        >${observacionesText}</textarea>
+                    </div>
+                    <div id="pdf-container" style="flex: 2; border: 1px solid #ccc; border-radius: 4px; overflow-y: auto; height: 600px; padding: 10px;">
+                        <p>Cargando PDF...</p>
+                    </div>
+                </div>
+            `,
+            width: 1000,
+            showCancelButton: true,
+            showDenyButton: isEditable,
+            showConfirmButton: isEditable,
+            confirmButtonText: "Aceptar",
+            denyButtonText: "Rechazar",
+            cancelButtonText: "Cancelar",
+            focusConfirm: false,
+            didOpen: () => {
+                // Generar el PDF y cargarlo en el iframe
+                const pdfContainer = document.getElementById("pdf-container");
+                if (pdfContainer) {
+                    const pdfDataUri = generarSilaboPDF(carga,2);
+                    pdfContainer.innerHTML = `
+                        <iframe 
+                            src="${pdfDataUri}" 
+                            style="width: 100%; height: 100%; border: none;" 
+                            title="Sílabo PDF"
+                        ></iframe>
+                    `;
+                }
+            },
         });
-
-        if (response.ok) {
-            const data = await response.json();
-            setSheetId(data.spreadsheetId);
-            setIsSheetCreated(true);
-            alert("Hoja de cálculo creada exitosamente en Google Sheets.");
-            await addContentToSheets(data.spreadsheetId, accessToken);
-        } else {
-            console.error('Error al crear la hoja de cálculo:', response.statusText);
-        }
     };
+    
+    
 
-    const addContentToSheets = async (spreadsheetId: string, accessToken: string) => {
-        // Primero obtenemos la estructura del archivo para identificar los `sheetId`
-        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`, {
-            method: 'GET',
-            headers: new Headers({
-                Authorization: `Bearer ${accessToken}`,
-            }),
-        });
 
-        if (!response.ok) {
-            console.error('Error al obtener la estructura de la hoja de cálculo:', response.statusText);
-            return;
-        }
 
-        const spreadsheetData = await response.json();
-        const sheets = spreadsheetData.sheets;
 
-        // Ciclos
-        const ciclos = [
-            {
-                universidad: 'UNIVERSIDAD NACIONAL DE TRUJILLO',
-                facultad: 'FACULTAD DE INGENIERIA',
-                escuela: 'INGENIERIA DE SISTEMAS',
-                nombreCiclo: 'II',
-                seccion: 'A',
-                sede: 'TRUJILLO',
-                añoAcademico: '2024',
-                semestre: 'II',
-                fechaInicio: '09 de septiembre del 2024',
-                fechaTermino: '27 de diciembre del 2024',
-                docentes: [
-                    {
-                        nombre: 'Zoraida Yanet Vidal Melgarejo', 
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Programación Orientada a Objetos I',
-                                horasTeoricas: 2,
-                                horasPractica: 0,
-                                horasLaboratorio: 4,
-                                grupos: 4,
-                                horasTotal: 18,
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'César Arellano Salazar',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Taller de Manejo de TIC (e)',
-                                horasTeoricas: 0,
-                                horasPractica: 0,
-                                horasLaboratorio: 2,
-                                grupos: 1,
-                                horasTotal: 2
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Oscar Romel Alcántara Moreno',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Taller de Manejo de TIC (e)',
-                                horasTeoricas: 0,
-                                horasPractica: 0,
-                                horasLaboratorio: 2,
-                                grupos: 1,
-                                horasTotal: 2
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'María Elena Velásquez Alva',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Sociedad, Cultura y Ecología',
-                                horasTeoricas: 1,
-                                horasPractica: 4,
-                                horasLaboratorio: 0,
-                                grupos: 0,
-                                horasTotal: 5
-                            },
-                        ],
-                        departamento: 'Ciencias Sociales',
-                    },
-                    {
-                        nombre: 'Evans Pool Chiquez Chávez',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Cultura Investigativa y Pensamiento Crítico',
-                                horasTeoricas: 2,
-                                horasPractica: 2,
-                                horasLaboratorio: 0,
-                                grupos: 0,
-                                horasTotal: 4
-                            },
-                        ],
-                        departamento: 'Ciencias de la Eduacación',
-                    },
-                    {
-                        nombre: 'Mariela Herlinda Pollio Rojas',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Ética, Convivencia Humana y Ciudadanía',
-                                horasTeoricas: 2,
-                                horasPractica: 2,
-                                horasLaboratorio: 0,
-                                grupos: 0,
-                                horasTotal: 4
-                            },
-                        ],
-                        departamento: 'Filosofía y Arte',
-                    },
-                    {
-                        nombre: 'Segundo Valentín Guibar Obeso',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Análisis Matemático',
-                                horasTeoricas: 2,
-                                horasPractica: 4,
-                                horasLaboratorio: 0,
-                                grupos: 0,
-                                horasTotal: 6
-                            },
-                        ],
-                        departamento: 'Matemáticas',
-                    },
-                    {
-                        nombre: 'Segundo Aristides Tavara Aponte',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Fisica General',
-                                horasTeoricas: 2,
-                                horasPractica: 4,
-                                horasLaboratorio: 2,
-                                grupos: 3,
-                                horasTotal: 12
-                            },
-                        ],
-                        departamento: 'Física',
-                    },
-                ],
-            },
-            {
-                universidad: 'UNIVERSIDAD NACIONAL DE TRUJILLO',
-                facultad: 'FACULTAD DE INGENIERIA',
-                escuela: 'INGENIERIA DE SISTEMAS',
-                nombreCiclo: 'IV',
-                seccion: 'A',
-                sede: 'TRUJILLO',
-                añoAcademico: '2024',
-                semestre: 'II',
-                fechaInicio: '09 de septiembre del 2024',
-                fechaTermino: '27 de diciembre del 2024',
-                docentes: [
-                    {
-                        nombre: 'Juan Carlos Obando Roldán',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Diseño Web',
-                                horasTeoricas: 1,
-                                horasPractica: 1,
-                                horasLaboratorio: 3,
-                                grupos: 2,
-                                horasTotal: 8
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Robert Jerry Sánchez Ticona',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Computación Gráfica y Visual (e)',
-                                horasTeoricas: 1,
-                                horasPractica: 1,
-                                horasLaboratorio: 3,
-                                grupos: 1,
-                                horasTotal: 5
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'César Arellano Salazar',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Sistemas Digitales',
-                                horasTeoricas: 1,
-                                horasPractica: 2,
-                                horasLaboratorio: 2,
-                                grupos: 3,
-                                horasTotal: 9
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Marcelino Torres Villanueva',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Estructura de Datos Orientado a Objetos',
-                                horasTeoricas: 2,
-                                horasPractica: 1,
-                                horasLaboratorio: 3,
-                                grupos: 3,
-                                horasTotal: 12
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Camilo Suárez Rebaza',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Gestión de Procesos',
-                                horasTeoricas: 1,
-                                horasPractica: 2,
-                                horasLaboratorio: 2,
-                                grupos: 2,
-                                horasTotal: 7
-                            }
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Camilo Suárez Rebaza',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Plataformas Tecnologicas (e)',
-                                horasTeoricas: 2,
-                                horasPractica: 0,
-                                horasLaboratorio: 2,
-                                grupos: 2,
-                                horasTotal: 6
-                            }
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'José Alberto Gómez Ávila',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Pensamiento de diseño',
-                                horasTeoricas: 1,
-                                horasPractica: 2,
-                                horasLaboratorio: 2,
-                                grupos: 3,
-                                horasTotal: 9
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Alberto Ramiro Asmat Alva',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Economía General',
-                                horasTeoricas: 2,
-                                horasPractica: 2,
-                                horasLaboratorio: 0,
-                                grupos: 0,
-                                horasTotal: 4
-                            },
-                        ],
-                        departamento: 'Economía',
-                    },
-                ],
-            },
-            {
-                universidad: 'UNIVERSIDAD NACIONAL DE TRUJILLO',
-                facultad: 'FACULTAD DE INGENIERIA',
-                escuela: 'INGENIERIA DE SISTEMAS',
-                nombreCiclo: 'VI',
-                seccion: 'A',
-                sede: 'TRUJILLO',
-                añoAcademico: '2024',
-                semestre: 'II',
-                fechaInicio: '09 de septiembre del 2024',
-                fechaTermino: '27 de diciembre del 2024',
-                docentes: [
-                    {
-                        nombre: 'Robert Jerry Sánchez Ticona',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Ingeniería de Requerimientos',
-                                horasTeoricas: 1,
-                                horasPractica: 2,
-                                horasLaboratorio: 2,
-                                grupos: 2,
-                                horasTotal: 7
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'César Arellano Salazar',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Sistemas Operativos',
-                                horasTeoricas: 1,
-                                horasPractica: 2,
-                                horasLaboratorio: 2,
-                                grupos: 3,
-                                horasTotal: 9
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Luis Enrique Boy Chavil',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Ingeniería de Datos II',
-                                horasTeoricas: 2,
-                                horasPractica: 1,
-                                horasLaboratorio: 3,
-                                grupos: 3,
-                                horasTotal: 12
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Marcelino Torres Villanueva',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Sistemas Inteligentes',
-                                horasTeoricas: 1,
-                                horasPractica: 2,
-                                horasLaboratorio: 2,
-                                grupos: 3,
-                                horasTotal: 9
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Ana María Cuadra Midzuaray',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Finanzas Corporativas',
-                                horasTeoricas: 1,
-                                horasPractica: 2,
-                                horasLaboratorio: 2,
-                                grupos: 1,
-                                horasTotal: 5
-                            },
-                        ],
-                        departamento: 'Contabilidad y Finanzas',
-                    },
-                    {
-                        nombre: 'Joe Alexis González Vásquez',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Ingeniería Económica',
-                                horasTeoricas: 1,
-                                horasPractica: 2,
-                                horasLaboratorio: 2,
-                                grupos: 1,
-                                horasTotal: 5
-                            },
-                        ],
-                        departamento: 'Ingeniería Industrial',
-                    },
-                    {
-                        nombre: 'Juan Carlos Carrascal Cabanillas',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Gestión del Talento Humano (e)',
-                                horasTeoricas: 2,
-                                horasPractica: 2,
-                                horasLaboratorio: 0,
-                                grupos: 0,
-                                horasTotal: 4
-                            },
-                        ],
-                        departamento: 'Administración',
-                    },
-                    {
-                        nombre: '',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Ingeniería Ambiental (e)',
-                                horasTeoricas: 2,
-                                horasPractica: 2,
-                                horasLaboratorio: 0,
-                                grupos: 0,
-                                horasTotal: 4
-                            },
-                        ],
-                        departamento: 'Ingeniería Ambiental',
-                    },
-                ],
-            },
-            {
-                universidad: 'UNIVERSIDAD NACIONAL DE TRUJILLO',
-                facultad: 'FACULTAD DE INGENIERIA',
-                escuela: 'INGENIERIA DE SISTEMAS',
-                nombreCiclo: 'VIII',
-                seccion: 'A',
-                sede: 'TRUJILLO',
-                añoAcademico: '2024',
-                semestre: 'II',
-                fechaInicio: '09 de septiembre del 2024',
-                fechaTermino: '27 de diciembre del 2024',
-                docentes: [
-                    {
-                        nombre: 'Juan carlos Obando Roldan',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Arquitectura basada en Microservicios (e)',
-                                horasTeoricas: 2,
-                                horasPractica: 0,
-                                horasLaboratorio: 2,
-                                grupos: 1,
-                                horasTotal: 4
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Juan Pedro Santos Fernández',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Ingeniería de Software II',
-                                horasTeoricas: 2,
-                                horasPractica: 1,
-                                horasLaboratorio: 3,
-                                grupos: 3,
-                                horasTotal: 12
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Everson David Agreda Gamboa',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Redes y Comunicaciones II',
-                                horasTeoricas: 1,
-                                horasPractica: 1,
-                                horasLaboratorio: 3,
-                                grupos: 1,
-                                horasTotal: 5
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Alberto Carlos Mendoza De los Santos',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Seguridad de la Información',
-                                horasTeoricas: 1,
-                                horasPractica: 2,
-                                horasLaboratorio: 2,
-                                grupos: 3,
-                                horasTotal: 9
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Ricardo Darío Mendoza Rivera',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Inteligencia de Negocios',
-                                horasTeoricas: 1,
-                                horasPractica: 2,
-                                horasLaboratorio: 2,
-                                grupos: 3,
-                                horasTotal: 9
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Jose Alberto Gomez Ávila',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Internet de las Cosas',
-                                horasTeoricas: 1,
-                                horasPractica: 1,
-                                horasLaboratorio: 3,
-                                grupos: 2,
-                                horasTotal: 8
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Oscar Romel Alcántara Moreno',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Marketing y Medios Sociales',
-                                horasTeoricas: 1,
-                                horasPractica: 2,
-                                horasLaboratorio: 2,
-                                grupos: 2,
-                                horasTotal: 7
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Marco Alfonso Celi Arévalo',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Deontología y Derecho Informático (e)',
-                                horasTeoricas: 2,
-                                horasPractica: 2,
-                                horasLaboratorio: 0,
-                                grupos: 0,
-                                horasTotal: 4
-                            },
-                        ],
-                        departamento: 'Derecho',
-                    },
-                ],
-            },
-            {
-                universidad: 'UNIVERSIDAD NACIONAL DE TRUJILLO',
-                facultad: 'FACULTAD DE INGENIERIA',
-                escuela: 'INGENIERIA DE SISTEMAS',
-                nombreCiclo: 'X',
-                seccion: 'A',
-                sede: 'TRUJILLO',
-                añoAcademico: '2024',
-                semestre: 'II',
-                fechaInicio: '09 de septiembre del 2024',
-                fechaTermino: '27 de diciembre del 2024',
-                docentes: [
-                    {
-                        nombre: 'Everson David Agreda Gamboa',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Arquitectura Empresarial',
-                                horasTeoricas: 1,
-                                horasPractica: 2,
-                                horasLaboratorio: 2,
-                                grupos: 1,
-                                horasTotal: 5
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Robert Jerry Sánchez Ticona',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Aplicaciones Móviles',
-                                horasTeoricas: 1,
-                                horasPractica: 1,
-                                horasLaboratorio: 3,
-                                grupos: 2,
-                                horasTotal: 8
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Juan Pedro Santos Fernández',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Tesis II - Sección "A"',
-                                horasTeoricas: 2,
-                                horasPractica: 2,
-                                horasLaboratorio: 2,
-                                grupos: 1,
-                                horasTotal: 6
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Alberto Carlos Mendoza De los Santos',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Gobierno de TIC',
-                                horasTeoricas: 1,
-                                horasPractica: 2,
-                                horasLaboratorio: 2,
-                                grupos: 2,
-                                horasTotal: 7
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Ricardo Darío Mendoza Rivera',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Tesis II - Sección "B"',
-                                horasTeoricas: 2,
-                                horasPractica: 2,
-                                horasLaboratorio: 1,
-                                grupos: 2,
-                                horasTotal: 6
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Oscar Romel Alcántara Moreno',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Practicas Pre Profesionales',
-                                horasTeoricas: 2,
-                                horasPractica: 1,
-                                horasLaboratorio: 3,
-                                grupos: 3,
-                                horasTotal: 12
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Silvia Ana Rodríguez Aguirre',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Sistemas de Información Empresarial',
-                                horasTeoricas: 2,
-                                horasPractica: 1,
-                                horasLaboratorio: 3,
-                                grupos: 2,
-                                horasTotal: 9
-                            },
-                        ],
-                        departamento: 'Ingeniería de Sistemas',
-                    },
-                    {
-                        nombre: 'Joe Alexis González Vásquez',
-                        cursos: [
-                            {
-                                experienciaCurricular: 'Responsabilidad Social Coorporativa',
-                                horasTeoricas: 2,
-                                horasPractica: 2,
-                                horasLaboratorio: 0,
-                                grupos: 0,
-                                horasTotal: 4
-                            },
-                        ],
-                        departamento: 'Ingeniería Industrial',
-                    },
-                ],
-            },
-        ];
 
-        // Crear las solicitudes para agregar contenido en celdas específicas de cada hoja
-        const requests = ciclos.flatMap((ciclo, cicloIndex) => {
-            const sheetId = sheets[cicloIndex].properties.sheetId;
-            let startRowIndex = 0;
 
-            // Agregar el nombre de la Universidad en la primera fila
-            const universidadRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 1},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: ciclo.universidad } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-            startRowIndex += 1;
 
-            // Agregar el nombre de la facultad en la segunda fila
-            const facultadRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 2},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: ciclo.facultad } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-            startRowIndex += 2;
+    const SubmitCarga = async (carga: CargaDocente, numero: number, observaciones: string) => {
+        console.log('observaciones:', observaciones);
 
-            // Agregar el nombre de la escuela en la cuarta fila
-            const escuelaRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 0},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: 'ESCUELA:' } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 1},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: ciclo.escuela } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-            startRowIndex += 2;
+        if (numero == 0) {
+            const silaboData = {
+                idCargaDocente: carga.idCargaDocente, // Asumiendo que `carga` tiene un `id`
+                idDocente: carga.idDocente, // Información del docente
+                idFilial: carga.idFilial, // Información del curso
+                numero: 11,
+                observaciones: observaciones,
+            };
+            const response = await enviarinfoSilabo(silaboData);
+            console.log("Información del sílabo enviada correctamente:", response);
 
-            // Agregar el título del ciclo en la primera fila
-            const cicloTitleRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 0},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: 'CICLO:' } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 1},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: ciclo.nombreCiclo } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
+            setShouldUpdate((prev) => !prev); // Cambiar el estado para disparar el useEffect
 
-            // Agregar la sección en la sexta fila
-            const seccionRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 2},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: 'SECCION:' } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 3},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: ciclo.seccion } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-            startRowIndex += 2;
-
-            // Agregar la sede en la octava fila
-            const sedeRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 0},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: 'SEDE:' } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 1},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: ciclo.sede } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-            startRowIndex += 2;
-
-            // Agregar año académico en decima fila
-            const añoRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 0},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: 'AÑO ACADEMICO:' } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 1 },
-                        rows: [{ values: [{ userEnteredValue: { stringValue: ciclo.añoAcademico } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-
-            // Agregar semestre en la decima fila
-            const semestreRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 2},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: 'SEMESTRE:' } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 3},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: ciclo.semestre } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-            startRowIndex += 2;
-
-            // Agregar fecha de inicio en la doceava fila
-            const fechaInicioRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 1},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: `Inicio del ciclo: ${ciclo.fechaInicio}` } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-            startRowIndex += 1;
-
-            // Agregar fecha de termino en la treceava fila
-            const fechaTerminoRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 1},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: `Termino del ciclo: ${ciclo.fechaTermino}` } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-            startRowIndex = 0;
-
-            // Agregar cabezeras
-            const nroRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 5},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: 'N°' } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-
-            const docenteRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 6},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: 'DOCENTE' } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-
-            const experienciaCurricularRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 7},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: 'EXPERIENCIA CURRICULAR' } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-
-            const horasTeoriaRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 8},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: 'T' } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-
-            const horasPracticaRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 9},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: 'P' } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-
-            const horasLaboratorioRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 10},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: 'L' } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-
-            const gruposRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 11},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: 'G' } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-
-            const horasTotalRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 12},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: 'T. HORAS' } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-
-            const departamentoRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 13},
-                        rows: [{ values: [{ userEnteredValue: { stringValue: 'DPTO. ACAD.' } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-            startRowIndex = 1;
-
-            // Agregar lista de docentes en las filas siguientes
-            const docentesRows = ciclo.docentes.map((docente) => {
-                const request = [
-                    {
-                        updateCells: {
-                            range: { sheetId, startRowIndex, startColumnIndex: 6 }, // Columna A para nombre
-                            rows: [{ values: [{ userEnteredValue: { stringValue: docente.nombre } }] }],
-                            fields: 'userEnteredValue',
-                        },
-                    },
-                    {
-                        updateCells: {
-                            range: { sheetId, startRowIndex, startColumnIndex: 13 }, // Columna B para departamento
-                            rows: [{ values: [{ userEnteredValue: { stringValue: docente.departamento } }] }],
-                            fields: 'userEnteredValue',
-                        },
-                    },
-                ];
-
-                // Agregar información de cada curso del docente
-                const cursosRequests = docente.cursos.map((curso) => {
-                    const cursoRequest = [
-                        {
-                            updateCells: {
-                                range: { sheetId, startRowIndex, startColumnIndex: 7 },
-                                rows: [{ values: [{ userEnteredValue: { stringValue: curso.experienciaCurricular } }] }],
-                                fields: 'userEnteredValue',
-                            },
-                        },
-                        {
-                            updateCells: {
-                                range: { sheetId, startRowIndex, startColumnIndex: 8 },
-                                rows: [{ values: [{ userEnteredValue: { numberValue: curso.horasTeoricas } }] }],
-                                fields: 'userEnteredValue',
-                            },
-                        },
-                        {
-                            updateCells: {
-                                range: { sheetId, startRowIndex, startColumnIndex: 9 },
-                                rows: [{ values: [{ userEnteredValue: { numberValue: curso.horasPractica } }] }],
-                                fields: 'userEnteredValue',
-                            },
-                        },
-                        {
-                            updateCells: {
-                                range: { sheetId, startRowIndex, startColumnIndex: 10 },
-                                rows: [{ values: [{ userEnteredValue: { numberValue: curso.horasLaboratorio } }] }],
-                                fields: 'userEnteredValue',
-                            },
-                        },
-                        {
-                            updateCells: {
-                                range: { sheetId, startRowIndex, startColumnIndex: 11 },
-                                rows: [{ values: [{ userEnteredValue: { numberValue: curso.grupos } }] }],
-                                fields: 'userEnteredValue',
-                            },
-                        },
-                        {
-                            updateCells: {
-                                range: { sheetId, startRowIndex, startColumnIndex: 12 },
-                                rows: [{ values: [{ userEnteredValue: { numberValue: curso.horasTotal } }] }],
-                                fields: 'userEnteredValue',
-                            },
-                        },
-
-                    ];
-                    startRowIndex += 1;
-                    return cursoRequest;
-                });
-                return [request,...cursosRequests.flat()]
-
-            });
-            startRowIndex = 15;
-
-            // Agregar horas 1
-            const horasRow = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 0},
-                        rows: [{ 
-                            values: [
-                                { 
-                                    userEnteredValue: { stringValue: 'HORA' },
-                                    userEnteredFormat: { textFormat: { bold: true } }
-                                },
-                            ] }],
-                        fields: 'userEnteredValue, userEnteredFormat.textFormat.bold',
-                    },
-                },
-            ];
-            startRowIndex += 1;
-            let horaInicial = 7;
-            
-            for (let i = 0; i < 14; i++) {
-                const siguienteHora = (horaInicial % 12) + 1;
-
-                const intervalo = `${horaInicial} - ${siguienteHora}`;
-
-                horasRow.push({
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex:0 },
-                        rows: [{ values: [{ userEnteredValue: { stringValue: intervalo } }] }],
-                        fields: 'userEnteredValue, userEnteredFormat.textFormat.bold',
-                    },
-                });
-                startRowIndex += 1;
-                horaInicial = siguienteHora;
-            }
-
-            startRowIndex = 15;
-            // Agregar días
-            const diasRow = [
-                {
-                    updateCells: {
-                        range: {
-                            sheetId,
-                            startRowIndex,
-                            startColumnIndex:1
-                        },
-                        rows: [{
-                            values: [
-                                {
-                                    userEnteredValue: { stringValue: 'LUNES'},
-                                    userEnteredFormat: { textFormat: { bold: true } }
-                                },
-                                {
-                                    userEnteredValue: { stringValue: 'MARTES'},
-                                    userEnteredFormat: { textFormat: { bold: true } }
-                                },
-                                {
-                                    userEnteredValue: { stringValue: 'MIERCOLES'},
-                                    userEnteredFormat: { textFormat: { bold: true } }
-                                },
-                                {
-                                    userEnteredValue: { stringValue: 'JUEVES'},
-                                    userEnteredFormat: { textFormat: { bold: true } }
-                                },
-                                {
-                                    userEnteredValue: { stringValue: 'VIERNES'},
-                                    userEnteredFormat: { textFormat: { bold: true } }
-                                },
-                                {
-                                    userEnteredValue: { stringValue: 'SABADO'},
-                                    userEnteredFormat: { textFormat: { bold: true } }
-                                },
-                            ]
-                        }],
-                        fields: 'userEnteredValue, userEnteredFormat.textFormat.bold'
-                    }
-                }
-            ];
-
-            // Agregar horas 2
-            const horas2Row = [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex: 7},
-                        rows: [{ 
-                            values: [
-                                { 
-                                    userEnteredValue: { stringValue: 'HORA' },
-                                    userEnteredFormat: { textFormat: { bold: true } }
-                                },
-                            ] }],
-                        fields: 'userEnteredValue, userEnteredFormat.textFormat.bold',
-                    },
-                },
-            ];
-            startRowIndex += 1;
-            let horaInicial2 = 7;
-            
-            for (let i = 0; i < 14; i++) {
-                const siguienteHora2 = (horaInicial2 % 12) + 1;
-
-                const intervalo2 = `${horaInicial2} - ${siguienteHora2}`;
-
-                horas2Row.push({
-                    updateCells: {
-                        range: { sheetId, startRowIndex, startColumnIndex:7 },
-                        rows: [{ values: [{ userEnteredValue: { stringValue: intervalo2 } }] }],
-                        fields: 'userEnteredValue, userEnteredFormat.textFormat.bold',
-                    },
-                });
-                startRowIndex += 1;
-                horaInicial2 = siguienteHora2;
-            }
-
-            const horarioBorde = [
-                {
-                    updateCells: {
-                        range: {
-                            sheetId, 
-                            startRowIndex: 15,
-                            endRowIndex: 30,
-                            startColumnIndex: 0,
-                            endColumnIndex: 8
-                        },
-                        rows: Array(15).fill({
-                            values: Array(8).fill({
-                                userEnteredFormat: {
-                                    borders: {
-                                        top: {
-                                            style: 'SOLID',
-                                            width: 1,
-                                            color: { red: 0, green: 0, blue: 0 }
-                                        },
-                                        bottom: {
-                                            style: 'SOLID',
-                                            width: 1,
-                                            color: { red: 0, green: 0, blue: 0 }
-                                        },
-                                        left: {
-                                            style: 'SOLID',
-                                            width: 1,
-                                            color: { red: 0, green: 0, blue: 0}
-                                        },
-                                        right: {
-                                            style: 'SOLID',
-                                            width: 1,
-                                            color: { red: 0, green: 0, blue: 0}
-                                        }
-                                    }
-                                }
-                            })
-                        }),
-                        fields: 'userEnteredFormat.borders'
-                    }
-                }
-            ];
-
-            const borde1 = [
-                {
-                    updateCells: {
-                        range: {
-                            sheetId, 
-                            startRowIndex: 0,
-                            endRowIndex: 14,
-                            startColumnIndex: 5,
-                            endColumnIndex: 14
-                        },
-                        rows: Array(14).fill({
-                            values: Array(9).fill({
-                                userEnteredFormat: {
-                                    borders: {
-                                        top: {
-                                            style: 'SOLID',
-                                            width: 1,
-                                            color: { red: 0, green: 0, blue: 0 }
-                                        },
-                                        bottom: {
-                                            style: 'SOLID',
-                                            width: 1,
-                                            color: { red: 0, green: 0, blue: 0 }
-                                        },
-                                        left: {
-                                            style: 'SOLID',
-                                            width: 1,
-                                            color: { red: 0, green: 0, blue: 0}
-                                        },
-                                        right: {
-                                            style: 'SOLID',
-                                            width: 1,
-                                            color: { red: 0, green: 0, blue: 0}
-                                        }
-                                    }
-                                }
-                            })
-                        }),
-                        fields: 'userEnteredFormat.borders'
-                    }
-                }
-            ];
-
-            const borde2 = [
-                // Borde superior en la primera fila
-                {
-                    repeatCell: {
-                        range: {
-                            sheetId: sheetId,
-                            startRowIndex: 0,
-                            endRowIndex: 1,
-                            startColumnIndex: 0,
-                            endColumnIndex: 5
-                        },
-                        cell: {
-                            userEnteredFormat: {
-                                borders: {
-                                    top: { style: 'SOLID', width: 1, color: { red: 0, green: 0, blue: 0 } }
-                                }
-                            }
-                        },
-                        fields: 'userEnteredFormat.borders.top'
-                    }
-                },
-                // Borde inferior en la última fila
-                {
-                    repeatCell: {
-                        range: {
-                            sheetId: sheetId,
-                            startRowIndex: 13,
-                            endRowIndex: 14,
-                            startColumnIndex: 0,
-                            endColumnIndex: 5
-                        },
-                        cell: {
-                            userEnteredFormat: {
-                                borders: {
-                                    bottom: { style: 'SOLID', width: 1, color: { red: 0, green: 0, blue: 0 } }
-                                }
-                            }
-                        },
-                        fields: 'userEnteredFormat.borders.bottom'
-                    }
-                },
-                // Borde izquierdo en la primera columna
-                {
-                    repeatCell: {
-                        range: {
-                            sheetId: sheetId,
-                            startRowIndex: 0,
-                            endRowIndex: 14,
-                            startColumnIndex: 0,
-                            endColumnIndex: 1
-                        },
-                        cell: {
-                            userEnteredFormat: {
-                                borders: {
-                                    left: { style: 'SOLID', width: 1, color: { red: 0, green: 0, blue: 0 } }
-                                }
-                            }
-                        },
-                        fields: 'userEnteredFormat.borders.left'
-                    }
-                },
-                // Borde derecho en la última columna
-                {
-                    repeatCell: {
-                        range: {
-                            sheetId: sheetId,
-                            startRowIndex: 0,
-                            endRowIndex: 14,
-                            startColumnIndex: 4,
-                            endColumnIndex: 5
-                        },
-                        cell: {
-                            userEnteredFormat: {
-                                borders: {
-                                    right: { style: 'SOLID', width: 1, color: { red: 0, green: 0, blue: 0 } }
-                                }
-                            }
-                        },
-                        fields: 'userEnteredFormat.borders.right'
-                    }
-                }
-            ];
-            
-            return [
-                ...universidadRow,
-                ...facultadRow,
-                ...escuelaRow,
-                ...cicloTitleRow,
-                ...seccionRow,
-                ...sedeRow,
-                ...añoRow,
-                ...semestreRow,
-                ...fechaInicioRow,
-                ...fechaTerminoRow,
-                ...nroRow,
-                ...docenteRow,
-                ...experienciaCurricularRow,
-                ...horasTeoriaRow,
-                ...horasPracticaRow,
-                ...horasLaboratorioRow,
-                ...gruposRow,
-                ...horasTotalRow,
-                ...departamentoRow,
-                ...docentesRows.flat(),
-                ...horasRow,
-                ...diasRow,
-                ...horas2Row,
-                ...horarioBorde,
-                ...borde1,
-                ...borde2,
-            ];
-        });
-        //const requests = sheets.map((sheet: any, index: number) => {
-            //const sheetId = sheet.properties.sheetId;
-            /*return [
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex: 0, startColumnIndex: 0 }, // Celda A1
-                        rows: [{ values: [{ userEnteredValue: { stringValue: `Contenido en A1 de Hoja ${index + 1}` } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex: 1, startColumnIndex: 1 }, // Celda B2
-                        rows: [{ values: [{ userEnteredValue: { stringValue: `Contenido en B2 de Hoja ${index + 1}` } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-                {
-                    updateCells: {
-                        range: { sheetId, startRowIndex: 2, startColumnIndex: 2 }, // Celda C3
-                        rows: [{ values: [{ userEnteredValue: { stringValue: `Contenido en C3 de Hoja ${index + 1}` } }] }],
-                        fields: 'userEnteredValue',
-                    },
-                },
-            ];
-        }).flat();*/
-
-        // Enviar la solicitud `batchUpdate` con las referencias correctas de `sheetId`
-        const batchUpdateResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
-            method: 'POST',
-            headers: new Headers({
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-            }),
-            body: JSON.stringify({ requests }),
-        });
-
-        if (batchUpdateResponse.ok) {
-            console.log("Contenido agregado en celdas específicas de cada hoja correctamente.");
-            alert("Contenido agregado en celdas específicas de cada hoja.");
         } else {
-            console.error("Error al agregar contenido a las hojas:", await batchUpdateResponse.json());
+            if (numero == 1) {
+                const silaboData = {
+                    idCargaDocente: carga.idCargaDocente, // Asumiendo que `carga` tiene un `id`
+                    idDocente: carga.idDocente, // Información del docente
+                    idFilial: carga.idFilial, // Información del curso
+                    numero: 12,
+                    observaciones: observaciones,
+                };
+                const response = await enviarinfoSilabo(silaboData);
+                console.log("Información del sílabo enviada correctamente:", response);
+
+                setShouldUpdate((prev) => !prev); // Cambiar el estado para disparar el useEffect
+
+            }
         }
+
     };
-
-
 
     return (
-        <div className="max-w-md mx-auto p-6 bg-white border border-gray-200 rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold text-gray-700 text-center">Crear Carpeta en Google Drive</h2>
+        <div className="p-4">
+            <h1 className="text-2xl font-bold mb-4">Listado de Carga Docente</h1>
+            <h1 className="text-xl font-bold mb-4">Filtrar:</h1>
 
-            <input
-                type="text"
-                value={folderTitle}
-                onChange={(e) => setFolderTitle(e.target.value)}
-                placeholder="Introduce el título de la carpeta"
-                className="w-full mt-4 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isFolderCreated}
-            />
+            {/* Filters */}
+            <div className="flex flex-wrap gap-4 mb-4">
+                <div className="flex flex-col md:flex-row md:flex-wrap gap-4 mb-4 w-full">
+                    <input
+                        type="text"
+                        placeholder="Código de Curso"
+                        value={codigoCurso}
+                        onChange={(e) => setCodigoCurso(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Curso"
+                        value={curso}
+                        onChange={(e) => setCurso(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Filial"
+                        value={filial}
+                        onChange={(e) => setFilial(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Semestre"
+                        value={semestre}
+                        onChange={(e) => setSemestre(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Proceso Sílabos"
+                        value={procesoSilabo}
+                        onChange={(e) => setProcesoSilabo(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Docente"
+                        value={docente}
+                        onChange={(e) => setDocente(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
+                    />
+                    <button
+                        onClick={() => {
+                            setCodigoCurso('');
+                            setCurso('');
+                            setFilial('');
+                            setSemestre('');
+                            setProcesoSilabo('');
+                            setDocente('');
+                        }}
+                        className="px-4 py-2 bg-gray-500 text-white rounded bg-green-500"
+                    >
+                        Reiniciar
+                    </button>
+                </div>
+            </div>
 
-            <button
-                onClick={createSpreadsheetWithSheets}
-                className="w-full mt-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 disabled:bg-green-300"
-            >
-                Crear Hoja de Cálculo con Hojas
-            </button>
+            <div className="overflow-x-auto">
+                <table className="min-w-full bg-white border border-gray-200">
+                    <thead>
+                        <tr className='bg-blue-700'>
+                            <th className="px-4 py-2 border-b font-medium text-white">Código</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Curso</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Docente</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Filial</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Semestre</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Ciclo</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Estado</th>
 
-            {isSheetCreated && (
-                <p className="text-center mt-4 text-blue-500">
-                    <a href={`https://docs.google.com/spreadsheets/d/${sheetId}`} target="_blank" rel="noopener noreferrer">
-                        Ver hoja de cálculo en Google Sheets
-                    </a>
-                </p>
-            )}
+                            <th className="px-4 py-2 border-b font-medium text-white">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {currentData.map((carga) => (
+                            <tr key={carga.idCargaDocente} className="hover:bg-gray-100">
+                                <td className="px-4 py-2 border-b text-center">{carga.idCurso}</td>
+                                <td className="px-4 py-2 border-b text-center">{carga.curso?.name}</td>
+                                <td className="px-4 py-2 border-b text-center">{`${carga.nomdocente} ${carga.apedocente}`}</td>
+                                <td className="px-4 py-2 border-b text-center">{carga.filial?.name}</td>
+                                <td className="px-4 py-2 border-b text-center">{carga.semestre_academico?.nomSemestre}</td>
+
+                                <td className="px-4 py-2 border-b text-center">{carga.ciclo}</td>
+
+                                <td className="px-4 py-2 border-b text-center">
+                                    {
+                                        carga.estado === false
+                                            ? 'Inactivo'
+                                            : (
+                                                carga.silabo == null
+                                                    ? 'Aún no envió silabo' // Verifica si silabo es null o undefined
+                                                    : (
+                                                        carga.silabo.estado === 1 ? 'Aún falta revisar'
+                                                            : carga.silabo.estado === 2 ? 'Rechazado'
+                                                                : carga.silabo.estado === 3 ? 'Aceptado'
+                                                                    : 'Estado desconocido'
+                                                    )
+                                            )
+                                    }
+                                </td>
+
+
+
+
+
+                                <td className="px-4 py-2 border-b text-center">
+                                    <button onClick={() => {
+
+                                        modal(carga, 1)
+                                    }}>asdasds</button>
+
+
+                                </td>
+
+
+
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="flex justify-center items-center mt-4">
+                <button
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 mx-1 rounded ${currentPage === 1 ? 'bg-gray-300' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                >
+                    Anterior
+                </button>
+                <span className="mx-2">
+                    Página {currentPage} de {totalPages}
+                </span>
+                <button
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 mx-1 rounded ${currentPage === totalPages ? 'bg-gray-300' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                >
+                    Siguiente
+                </button>
+            </div>
         </div>
     );
 };
 
-export default FileUploadComponent;
+export default Index;

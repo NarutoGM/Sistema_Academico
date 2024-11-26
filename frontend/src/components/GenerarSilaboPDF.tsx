@@ -6,7 +6,7 @@ interface SilaboProps {
 
 const GenerateSilaboPDF: React.FC<SilaboProps> = ({ silabo }) => {
   const handleGeneratePDF = () => {
-    generarSilaboPDF(silabo);
+    generarSilaboPDF(silabo, 2);
   };
 
   return (
