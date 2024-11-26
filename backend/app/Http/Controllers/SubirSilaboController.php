@@ -43,7 +43,6 @@ class SubirSilaboController extends Controller
                     'escuela:idEscuela,name',
                 ])
                     ->where('idDocente', $docente->idDocente)
-                    ->where('estado', true)
                     ->get()
                     ->map(function ($carga) {
                         $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
@@ -414,8 +413,6 @@ class SubirSilaboController extends Controller
                 'idCargaDocente' => 'required|integer',
                 'idFilial' => 'required|integer',
                 'idDocente' => 'required|integer',
-                'silabo.observaciones' => 'nullable|string',
-                'silabo.fEnvio' => 'nullable|date',
                 'silabo.sumilla' => 'nullable|string',
                 'silabo.unidadcompetencia' => 'nullable|string',
                 'silabo.competenciasgenerales' => 'nullable|string',
@@ -449,7 +446,26 @@ class SubirSilaboController extends Controller
 
             if ($silabo) {
                 // Actualizar el registro existente
-                $silabo->update($validatedData['silabo']);
+                Silabo::where('idCargaDocente', $request->idCargaDocente)
+                    ->where('idFilial', $request->idFilial)
+                    ->where('idDocente', $request->idDocente)
+                    ->delete();
+
+
+                    $silabo = Silabo::create(array_merge(
+                        [
+                            'idCargaDocente' => $request->idCargaDocente,
+                            'idFilial' => $request->idFilial,
+                            'idDocente' => $request->idDocente,
+                            'idDirector' => $request->idDirector,
+                            'activo' => true, // Valor booleano directamente
+                            'estado' => 1 // Valor booleano directamente
+    
+                        ],
+                        $validatedData['silabo']
+                    ));
+
+
                 $silaboData = $validatedData['silabo'];
 
                 // Actualizar o crear 16 semanas académicas
