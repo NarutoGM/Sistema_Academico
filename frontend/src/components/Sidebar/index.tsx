@@ -308,7 +308,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 
               </li>
                   
-              <li>
+              
                 <SidebarLinkGroup
                   activeCondition={pathname.includes('reportes')}
                 >
@@ -391,7 +391,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     </>
                   )}
                 </SidebarLinkGroup>
-              </li>
+              
 
               {/* <!-- Menu Item Settings --> */}
             </ul>
