@@ -13,7 +13,7 @@ const Index: React.FC = () => {
   const [filteredData, setFilteredData] = useState<CargaDocente[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   // Filtros
   const [codigoCurso, setCodigoCurso] = useState('');
@@ -24,8 +24,9 @@ const Index: React.FC = () => {
   const [docente, setDocente] = useState('');
 
   // Información adicional para el reporte
-  const [usuario, setUsuario] = useState('Juan Pérez'); // Puedes obtener esto de tu autenticación
+  const [filiales, setFiliales] = useState<string[]>([]); // Opciones de filiales
   const [semestres, setSemestres] = useState<string[]>([]);
+  const [estados, setEstados] = useState<string[]>([]);
 
   useEffect(() => {
     getReporte()
@@ -43,6 +44,19 @@ const Index: React.FC = () => {
           ),
         );
         setSemestres(uniqueSemestres);
+
+        // Extraer las filiales únicas
+        const uniqueFiliales = Array.from(
+          new Set(docenteArray.map((item) => item.filial?.name).filter(Boolean)),
+        );
+        setFiliales(uniqueFiliales);
+
+        // Extraer las filiales únicas
+        const uniqueEstados = Array.from(
+          new Set(docenteArray.map((item) => item.curso?.estado_silabo).filter(Boolean)),
+        );
+        setEstados(uniqueEstados);
+        
       })
       .catch((error) => setError(error.message));
   }, []);
@@ -61,10 +75,8 @@ const Index: React.FC = () => {
           ? item.filial?.name.toLowerCase().includes(filial.toLowerCase())
           : true) &&
         (semestre
-          ? item.semestre_academico?.nomSemestre
-              .toLowerCase()
-              .includes(semestre.toLowerCase())
-          : true) &&
+        ? item.semestre_academico?.nomSemestre === semestre
+        : true) &&
         (procesoSilabo
           ? estadoSilabo.toLowerCase().includes(procesoSilabo.toLowerCase())
           : true) &&
@@ -104,7 +116,10 @@ const Index: React.FC = () => {
       doc.setFontSize(14);
       doc.text('Reporte de Sílabo', 14, 20);
       doc.setFontSize(10);
-      doc.text(`Generado por: ${usuario}`, 14, 30);
+      {currentData.map((carga) => (
+        doc.text(`Generado por: ${carga.name} ${carga.lastname}`, 14, 30)
+      ))}
+      
       doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 35);
 
       // Tabla
@@ -113,11 +128,12 @@ const Index: React.FC = () => {
         `${carga.nomdocente} ${carga.apedocente}` || 'N/A',
         carga.filial?.name || 'N/A',
         carga.semestre_academico?.nomSemestre || 'N/A',
+        carga.silabo?.fEnvio || 'N/A',
         carga.curso?.estado_silabo || 'N/A',
       ]);
 
       doc.autoTable({
-        head: [['Curso', 'Docente', 'Filial', 'Periodo', 'Estado Sílabo']],
+        head: [['Curso', 'Docente', 'Filial', 'Periodo', 'Fecha envio', 'Estado Sílabo']],
         body: tableData,
         startY: 50, // Inicia después del título y la imagen
       });
@@ -155,21 +171,36 @@ const Index: React.FC = () => {
                 </option>
               ))}
             </select>
-            <input
-              type="text"
-              placeholder="Filial"
+            <select
               value={filial}
               onChange={(e) => setFilial(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
-            />
+            >
+              <option value="" disabled>
+                Seleccionar Filial
+              </option>
+              {filiales.map((fil, index) => (
+                <option key={index} value={fil}>
+                  {fil}
+                </option>
+              ))}
+            </select>
           </div>
-          <input
-            type="text"
-            placeholder="Estado de Sílabo"
-            value={procesoSilabo}
-            onChange={(e) => setProcesoSilabo(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
-          />
+          <select
+              value={procesoSilabo}
+              onChange={(e) => setProcesoSilabo(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
+            >
+              <option value="" disabled>
+                Seleccionar Estado de silabo
+              </option>
+              {estados.map((est, index) => (
+                <option key={index} value={est}>
+                  {est}
+                </option>
+              ))}
+            </select>
+          
           <input
             type="text"
             placeholder="Entrega de silabo"
@@ -230,7 +261,7 @@ const Index: React.FC = () => {
                   {carga.semestre_academico?.nomSemestre}
                 </td>
                 <td className="px-4 py-2 border-b text-center">
-                  {carga.semestre_academico?.fLimiteSilabo}
+                  {carga.silabo?.fEnvio || 'N/A'}
                 </td>
                 <td className="px-4 py-2 border-b text-center">
                   {carga.curso?.estado_silabo}

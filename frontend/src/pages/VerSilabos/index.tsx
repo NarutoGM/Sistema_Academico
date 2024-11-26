@@ -18,24 +18,22 @@ const Index: React.FC = () => {
     const [semestre, setSemestre] = useState('');
     const [procesoSilabo, setProcesoSilabo] = useState('');
     const [docente, setDocente] = useState('');
-    const [shouldUpdate, setShouldUpdate] = useState(false); // Estado para controlar la actualización
+
+    const fetchSilabos = async () => {
+        try {
+          const data = await getMisSilabos();
+          setCargaDocente(data.cargadocente);
+          setFilteredData(data.cargadocente);
+        } catch (error) {
+          setError(error.message);
+        }
+      };
+
+
 
     useEffect(() => {
-        getMisSilabos()
-            .then((data) => {
-                // Asegúrate de que TypeScript interprete correctamente los valores como CargaDocente[]
-                const docenteArray = Object.values(data.cargadocente) as CargaDocente[];
-                setCargaDocente(docenteArray);
-                console.log(docenteArray);
-                setFilteredData(docenteArray);
-
-            })
-            .catch((error) => {
-                setError(error.message);
-            });
-    }, []);
-
-
+        fetchSilabos();
+      }, []);
 
     useEffect(() => {
         const filtered = cargaDocente.filter(item => {
@@ -116,7 +114,7 @@ const Index: React.FC = () => {
             showCancelButton: true,
             showDenyButton: isEditable,
             showConfirmButton: isEditable,
-            confirmButtonText: "Aceptar",
+            confirmButtonText: "Visar",
             denyButtonText: "Rechazar",
             cancelButtonText: "Cancelar",
             focusConfirm: false,
@@ -169,11 +167,12 @@ const Index: React.FC = () => {
             numero: numero === 0 ? 1 : 2, // Establece el número basado en el valor de 'numero'
             observaciones: observaciones,
         };
-    
+
         try {
             const response = await enviarinfoSilabodirector(silaboData);
             console.log("Información del sílabo enviada correctamente al director:", response);
-            setShouldUpdate((prev) => !prev); // Cambia el estado para disparar el useEffect
+            await fetchSilabos();
+
         } catch (error) {
             console.error("Error al enviar la información del sílabo:", error);
         }
@@ -271,44 +270,64 @@ const Index: React.FC = () => {
 
                                 <td className="px-4 py-2 border-b text-center">{carga.ciclo}</td>
 
+                                <td className="px-4 py-2 border-b text-center"> 
+                <span 
+                    className={`px-2 py-1 rounded-lg  
+                    ${carga.estado === false 
+                        ? "bg-gray-300 text-gray-700 border border-gray-400" 
+                        : carga.silabo?.estado === null 
+                            ? "bg-gray-100 text-gray-600 border border-gray-300" 
+                            : carga.silabo?.estado === 1 
+                                ? "bg-blue-100 text-blue-600 border border-blue-300" 
+                                : carga.silabo?.estado === 2 
+                                    ? "bg-red-100 text-red-600 border border-red-300" 
+                                    : carga.silabo?.estado === 3 
+                                        ? "bg-green-100 text-green-600 border border-green-300" 
+                                        : "bg-yellow-100 text-yellow-600 border border-yellow-300" 
+                    }`} 
+                > 
+                    {carga.estado === false 
+                        ? "Inactivo" 
+                        : carga.silabo === null 
+                            ? "Aun no envia silabo" 
+                            : carga.silabo?.estado === 1 
+                                ? "Silabo enviado para revision" 
+                                : carga.silabo?.estado === 2 
+                                    ? "Silabo rechazado" 
+                                    : carga.silabo?.estado === 3 
+                                        ? "Silabo aceptado" 
+                                        : "Estado desconocido"} 
+                </span> 
+            </td> 
+
+
+
+
                                 <td className="px-4 py-2 border-b text-center">
-                                    {
-                                        carga.estado === false
-                                            ? 'Inactivo'
-                                            : (
-                                                carga.silabo == null
-                                                    ? 'Aún no envió silabo' // Verifica si silabo es null o undefined
-                                                    : (
-                                                        carga.silabo.estado === 1 ? 'Aún falta revisar'
-                                                            : carga.silabo.estado === 2 ? 'Rechazado'
-                                                                : carga.silabo.estado === 3 ? 'Aceptado'
-                                                                    : 'Estado desconocido'
-                                                    )
-                                            )
-                                    }
-                                </td>
 
 
-
-
-
-                                <td className="px-4 py-2 border-b text-center">
-
-                                    
-                                    <button onClick={() => {
-                                        // Si carga.silabo es null, pasa carga, 2
-                                        if (carga.silabo === null) {
-                                            modal(carga, 2);
-                                        } else if (carga.silabo?.estado === 1) {
-                                            // Si el estado de carga.silabo es 1, pasa carga, 1
-                                            modal(carga, 1);
-                                        } else {
-                                            // Para otros casos, pasa carga, 2
-                                            modal(carga, 2);
-                                        }
-                                    }}>
+                                    <button
+                                        onClick={() => {
+                                            // Si carga.silabo es null, pasa carga, 2
+                                            if (carga.silabo === null) {
+                                                modal(carga, 2);
+                                            } else if (carga.silabo?.estado === 1) {
+                                                // Si el estado de carga.silabo es 1, pasa carga, 1
+                                                modal(carga, 1);
+                                            } else {
+                                                // Para otros casos, pasa carga, 2
+                                                modal(carga, 2);
+                                            }
+                                        }}
+                                        disabled={carga.silabo === null}
+                                        className={`px-4 py-2 rounded-md font-semibold transition-colors ${carga.silabo === null
+                                                ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
+                                                : 'bg-blue-500 text-white hover:bg-blue-600'
+                                            }`}
+                                    >
                                         Revision Silabos
                                     </button>
+
 
 
                                 </td>
