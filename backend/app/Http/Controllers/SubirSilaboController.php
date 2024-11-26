@@ -130,7 +130,9 @@ class SubirSilaboController extends Controller
                     $cargadocente = CargaDocente::with([
                         'filial',
                         'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio', // Selecciona solo los campos necesarios
-                        'curso',
+                        'curso' => function ($query) {
+                            $query->with(['departamento', 'facultad', 'area', 'regimenCurso', 'tipoCurso']);
+                        },
                         'escuela:idEscuela,name',
                     ])
                         ->where('idDirector', $directorescuela->idDirector)
@@ -528,6 +530,49 @@ class SubirSilaboController extends Controller
     }
 
 
+    public function gestionarsilabodirector(Request $request)
+    {
+        try {
+            // Validar la solicitud
+            $validatedData = $request->validate([
+                'idCargaDocente' => 'required|integer',
+                'idFilial' => 'required|integer',
+                'idDocente' => 'required|integer',
+                'numero' => 'required|integer',
+                'observaciones' => 'nullable|string',
+            ]);
+            $numero=$request->numero + 1;
+            // Actualizar el sílabo directamente en la base de datos
+            $updatedRows = Silabo::where('idCargaDocente', $validatedData['idCargaDocente'])
+                ->where('idFilial', $validatedData['idFilial'])
+                ->where('idDocente', $validatedData['idDocente'])
+                ->update([
+                    'estado' => $numero,
+                    'observaciones' => $validatedData['observaciones'] ?? null,
+                ]);
+    
+            // Verificar si se actualizó algún registro
+            if ($updatedRows === 0) {
+                return response()->json([
+                    'message' => 'Sílabo no encontrado o no se realizaron cambios.',
+                ], 404);
+            }
+    
+            return response()->json([
+                'message' => 'Sílabo actualizado correctamente.',
+            ], 200);
+        } catch (\Exception $e) {
+            // Log del error
+            Log::error('Error al procesar el sílabo: ' . $e->getMessage());
+            Log::error('Detalles del error: ' . $e->getTraceAsString());
+    
+            // Retornar respuesta de error
+            return response()->json([
+                'message' => 'Hubo un error al procesar el sílabo.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
 
     public function gestionarhorarios(Request $request)

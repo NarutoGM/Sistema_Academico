@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import { getMisSilabos, CargaDocente, enviarinfoSilabo } from '@/pages/services/silabo.services';
+import { getMisSilabos, CargaDocente, enviarinfoSilabodirector } from '@/pages/services/silabo.services';
 import "quill/dist/quill.snow.css";
 import { generarSilaboPDF } from '@/utils/pdfUtils';
 
@@ -112,7 +112,7 @@ const Index: React.FC = () => {
                     </div>
                 </div>
             `,
-            width: 1000,
+            width: 1300,
             showCancelButton: true,
             showDenyButton: isEditable,
             showConfirmButton: isEditable,
@@ -124,7 +124,7 @@ const Index: React.FC = () => {
                 // Generar el PDF y cargarlo en el iframe
                 const pdfContainer = document.getElementById("pdf-container");
                 if (pdfContainer) {
-                    const pdfDataUri = generarSilaboPDF(carga,2);
+                    const pdfDataUri = generarSilaboPDF(carga, 2);
                     pdfContainer.innerHTML = `
                         <iframe 
                             src="${pdfDataUri}" 
@@ -134,10 +134,26 @@ const Index: React.FC = () => {
                     `;
                 }
             },
+            preConfirm: () => {
+                // Obtener el texto de las observaciones
+                const observaciones = (document.getElementById("observaciones") as HTMLTextAreaElement)?.value || "";
+                return { observaciones };
+            },
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                // Si apruebas, llama a SubmitCarga con numero = 1
+                const observaciones = result.value?.observaciones || "";
+                await SubmitCarga(carga, 1, observaciones);
+                Swal.fire("Éxito", "El sílabo ha sido aprobado.", "success");
+            } else if (result.isDenied) {
+                // Si desapruebas, llama a SubmitCarga con numero = 0
+                const observaciones = (document.getElementById("observaciones") as HTMLTextAreaElement)?.value || "";
+                await SubmitCarga(carga, 0, observaciones);
+                Swal.fire("Rechazado", "El sílabo ha sido rechazado.", "error");
+            }
         });
     };
-    
-    
+
 
 
 
@@ -146,38 +162,21 @@ const Index: React.FC = () => {
 
 
     const SubmitCarga = async (carga: CargaDocente, numero: number, observaciones: string) => {
-        console.log('observaciones:', observaciones);
-
-        if (numero == 0) {
-            const silaboData = {
-                idCargaDocente: carga.idCargaDocente, // Asumiendo que `carga` tiene un `id`
-                idDocente: carga.idDocente, // Información del docente
-                idFilial: carga.idFilial, // Información del curso
-                numero: 11,
-                observaciones: observaciones,
-            };
-            const response = await enviarinfoSilabo(silaboData);
-            console.log("Información del sílabo enviada correctamente:", response);
-
-            setShouldUpdate((prev) => !prev); // Cambiar el estado para disparar el useEffect
-
-        } else {
-            if (numero == 1) {
-                const silaboData = {
-                    idCargaDocente: carga.idCargaDocente, // Asumiendo que `carga` tiene un `id`
-                    idDocente: carga.idDocente, // Información del docente
-                    idFilial: carga.idFilial, // Información del curso
-                    numero: 12,
-                    observaciones: observaciones,
-                };
-                const response = await enviarinfoSilabo(silaboData);
-                console.log("Información del sílabo enviada correctamente:", response);
-
-                setShouldUpdate((prev) => !prev); // Cambiar el estado para disparar el useEffect
-
-            }
+        const silaboData = {
+            idCargaDocente: carga.idCargaDocente,
+            idDocente: carga.idDocente,
+            idFilial: carga.idFilial,
+            numero: numero === 0 ? 1 : 2, // Establece el número basado en el valor de 'numero'
+            observaciones: observaciones,
+        };
+    
+        try {
+            const response = await enviarinfoSilabodirector(silaboData);
+            console.log("Información del sílabo enviada correctamente al director:", response);
+            setShouldUpdate((prev) => !prev); // Cambia el estado para disparar el useEffect
+        } catch (error) {
+            console.error("Error al enviar la información del sílabo:", error);
         }
-
     };
 
     return (
@@ -294,10 +293,22 @@ const Index: React.FC = () => {
 
 
                                 <td className="px-4 py-2 border-b text-center">
-                                    <button onClick={() => {
 
-                                        modal(carga, 1)
-                                    }}>asdasds</button>
+                                    
+                                    <button onClick={() => {
+                                        // Si carga.silabo es null, pasa carga, 2
+                                        if (carga.silabo === null) {
+                                            modal(carga, 2);
+                                        } else if (carga.silabo?.estado === 1) {
+                                            // Si el estado de carga.silabo es 1, pasa carga, 1
+                                            modal(carga, 1);
+                                        } else {
+                                            // Para otros casos, pasa carga, 2
+                                            modal(carga, 2);
+                                        }
+                                    }}>
+                                        Revision Silabos
+                                    </button>
 
 
                                 </td>

@@ -100,6 +100,8 @@ Route::get('/filiales/{idFilial}/docentes', [FilialController::class, 'getDocent
 Route::post('gestionarsilabo', [SubirSilaboController::class, 'gestionarsilabo']);
 Route::get('/obtenerMisPermisos', [UserController::class, 'obtenerMisPermisos']); // Obtener todos los permisos
 Route::post('/gestionarhorarios', [SubirSilaboController::class, 'gestionarhorarios']);
+Route::post('gestionarsilabodirector', [SubirSilaboController::class, 'gestionarsilabodirector']);
+
 
 
 

@@ -264,31 +264,42 @@ export const enviarinfoSilabo = async (selectedCarga: any): Promise<any> => {
     }
 };
 
-
-
-
-
-export const enviarinfoHorario = async (HorarioData: any): Promise<any> => {
+export const enviarinfoSilabodirector = async (selectedCarga: any): Promise<any> => {
     const authData = isAuthenticated();
+    console.log("Iniciando envío del sílabo al director...");
 
+    // Verificar autenticación
     if (!authData || !authData.token) {
-        throw new Error('User is not authenticated or token is missing');
+        throw new Error('El usuario no está autenticado o falta el token');
     }
 
-    const response = await fetch(`${apiUrl}/gestionarhorarios`, {
-        method: 'POST', // Cambiar a POST para enviar datos
-        headers: {
-            Authorization: `Bearer ${authData.token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(HorarioData), // Agregar el cuerpo con los datos a enviar
-    });
+    try {
+        // Realizar la solicitud POST con los datos del sílabo
+        const response = await fetch(`${apiUrl}/gestionarsilabodirector`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json', // Indica que enviamos datos en formato JSON
+                Authorization: `Bearer ${authData.token}`, // Incluir el token en la cabecera
+            },
+            body: JSON.stringify(selectedCarga), // Convertir los datos a JSON
+        });
 
-    if (!response.ok) {
-        throw new Error('Error al enviar los datos del sílabo');
+        // Verificar si la respuesta es exitosa
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Error en la respuesta del servidor:", errorText);
+            throw new Error('Error al enviar los datos del sílabo al director');
+        }
+
+        // Procesar la respuesta como JSON
+        const data = await response.json();
+        console.log("Respuesta del servidor al director:", data);
+        return data; // Retornar los datos recibidos del servidor
+    } catch (error) {
+        console.error("Error al enviar los datos del sílabo al director:", error);
+        throw error; // Re-lanzar el error para manejarlo fuera de esta función
     }
-
-    const data = await response.json();
-    console.log("Respuesta del servidor:", data);
-    return data;
 };
+
+
+
