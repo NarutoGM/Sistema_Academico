@@ -464,11 +464,11 @@ const Index: React.FC = () => {
                       {carga.ciclo}
                     </td>
                     <td className="px-4 py-2 border-b text-center">
-  {carga.silabo?.fEnvio 
-    ? new Date(carga.silabo.fEnvio).toLocaleDateString('es-ES') // Convierte a un objeto Date y luego formatea
-    : 'N/A' // Si es undefined, muestra un texto por defecto
-  }
-</td>
+                      {carga.silabo?.fEnvio
+                        ? new Date(carga.silabo.fEnvio).toLocaleDateString('es-ES') // Convierte a un objeto Date y luego formatea
+                        : 'N/A' // Si es undefined, muestra un texto por defecto
+                      }
+                    </td>
 
                     <td className="px-4 py-2 border-b text-center">
                       <span
