@@ -116,7 +116,7 @@ const Index: React.FC = () => {
             showCancelButton: true,
             showDenyButton: isEditable,
             showConfirmButton: isEditable,
-            confirmButtonText: "Aceptar",
+            confirmButtonText: "Visar",
             denyButtonText: "Rechazar",
             cancelButtonText: "Cancelar",
             focusConfirm: false,

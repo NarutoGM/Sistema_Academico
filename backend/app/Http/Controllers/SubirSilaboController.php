@@ -459,8 +459,9 @@ class SubirSilaboController extends Controller
                             'idDocente' => $request->idDocente,
                             'idDirector' => $request->idDirector,
                             'activo' => true, // Valor booleano directamente
-                            'estado' => 1 // Valor booleano directamente
-    
+                            'estado' => 1 ,// Valor booleano directamente
+                            'fEnvio' => Carbon::now() // Valor booleano directamente
+
                         ],
                         $validatedData['silabo']
                     ));
@@ -497,7 +498,8 @@ class SubirSilaboController extends Controller
                         'idDocente' => $request->idDocente,
                         'idDirector' => $request->idDirector,
                         'activo' => true, // Valor booleano directamente
-                        'estado' => 1 // Valor booleano directamente
+                        'estado' => 1, // Valor booleano directamente
+                        'fEnvio' => Carbon::now() // Valor booleano directamente
 
                     ],
                     $validatedData['silabo']

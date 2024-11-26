@@ -7,6 +7,7 @@ import {
 import './estilos.css';
 import LogoCrear from '../../images/logo/crearsilabo.png';
 import Silabos from '../../images/logo/silabos.jpg';
+import visualizarenvio from '../../images/logo/visualizarenvio.png';
 
 import LogoReutilizar from '../../images/logo/reutilizarsilabo.png';
 import moment from 'moment'; // O cualquier otra librería de manejo de fechas que prefieras
@@ -20,6 +21,7 @@ const Index: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); // Controla si el modal1 está abierto
 
   const [isModalOpen2, setIsModalOpen2] = useState(false); // Controla si el modal2 está abierto
+  const [isModalOpen3, setIsModalOpen3] = useState(false); // Controla si el modal2 está abierto
 
   const [selectedCarga, setSelectedCarga] = useState<CargaDocente>();
 
@@ -52,6 +54,12 @@ const Index: React.FC = () => {
     setIsModalOpen2(true);
   };
 
+  const openModal3 = () => {
+    setIsModalOpen3(true);
+  };
+  const closeModal3 = () => {
+    setIsModalOpen3(false);
+  };
   const closeModal = () => {
     setIsModalOpen(false);
   };
@@ -423,6 +431,12 @@ const Index: React.FC = () => {
                     Ciclo
                   </th>
                   <th className="px-4 py-2 border-b font-medium text-white">
+                    Fecha de Envio
+                  </th>
+                  <th className="px-4 py-2 border-b font-medium text-white">
+                    Estado
+                  </th>
+                  <th className="px-4 py-2 border-b font-medium text-white">
                     Acciones
                   </th>
                   <th className="px-4 py-2 border-b font-medium text-white">
@@ -450,6 +464,45 @@ const Index: React.FC = () => {
                       {carga.ciclo}
                     </td>
                     <td className="px-4 py-2 border-b text-center">
+  {carga.silabo?.fEnvio 
+    ? new Date(carga.silabo.fEnvio).toLocaleDateString('es-ES') // Convierte a un objeto Date y luego formatea
+    : 'N/A' // Si es undefined, muestra un texto por defecto
+  }
+</td>
+
+                    <td className="px-4 py-2 border-b text-center">
+                      <span
+                        className={`px-2 py-1 rounded-lg 
+      ${carga.estado === false
+                            ? "bg-gray-300 text-gray-700 border border-gray-400"
+                            : carga.silabo?.estado === null
+                              ? "bg-gray-100 text-gray-600 border border-gray-300"
+                              : carga.silabo?.estado === 1
+                                ? "bg-blue-100 text-blue-600 border border-blue-300"
+                                : carga.silabo?.estado === 2
+                                  ? "bg-red-100 text-red-600 border border-red-300"
+                                  : carga.silabo?.estado === 3
+                                    ? "bg-green-100 text-green-600 border border-green-300"
+                                    : "bg-yellow-100 text-yellow-600 border border-yellow-300"
+                          }`}
+                      >
+                        {carga.estado === false
+                          ? "Inactivo"
+                          : carga.silabo?.estado === null
+                            ? "Gestiona tu silabo"
+                            : carga.silabo?.estado === 1
+                              ? "Silabo enviado"
+                              : carga.silabo?.estado === 2
+                                ? "Silabo rechazado"
+                                : carga.silabo?.estado === 3
+                                  ? "Silabo aceptado"
+                                  : "Estado desconocido"}
+                      </span>
+                    </td>
+
+
+
+                    <td className="px-4 py-2 border-b text-center">
                       <button
                         onClick={() => {
                           setSelectedCarga(carga);
@@ -465,11 +518,10 @@ const Index: React.FC = () => {
                       <button
                         onClick={() => generarSilaboPDF(carga, 3)}
                         disabled={!carga.silabo?.sumilla} // Deshabilitar si no hay sumilla
-                        className={`px-2 py-2 rounded-full ${
-                          carga.silabo?.sumilla
-                            ? 'bg-green-500 text-white hover:bg-green-600'
-                            : 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                        }`}
+                        className={`px-2 py-2 rounded-full ${carga.silabo?.sumilla
+                          ? 'bg-green-500 text-white hover:bg-green-600'
+                          : 'bg-gray-400 text-gray-700 cursor-not-allowed'
+                          }`}
                       >
                         {/* Ícono de Descarga */}
                         <svg
@@ -516,7 +568,7 @@ const Index: React.FC = () => {
                 className="w-20 h-20 mb-4 mt-2"
               />
               <h3 className="text-xl font-bold text-gray-700">
-                Crear un nuevo sílabo y/o actualizar 
+                Crear un nuevo sílabo y/o actualizar
               </h3>
             </div>
 
@@ -537,12 +589,15 @@ const Index: React.FC = () => {
             </div>
 
             <div
-              onClick={() => openModal2()}
-              className="flex flex-col items-center bg-white border rounded-lg shadow-lg p-6 w-96 cursor-pointer transition transform hover:scale-105 hover:shadow-xl relative"
+              onClick={() => selectedCarga?.silabo !== null && openModal3()}
+              className={`flex flex-col items-center bg-white border rounded-lg shadow-lg p-6 w-96 transition transform relative ${selectedCarga?.silabo !== null
+                ? 'cursor-pointer hover:scale-105 hover:shadow-xl'
+                : 'cursor-not-allowed opacity-50'
+                }`}
             >
               <div className="absolute top-0 left-0 w-full h-2 bg-red-500 rounded-t-lg"></div>
               <img
-                src={LogoReutilizar}
+                src={visualizarenvio}
                 alt="Logo Reutilizar"
                 className="w-20 h-20 mb-4 mt-2"
               />
@@ -550,6 +605,10 @@ const Index: React.FC = () => {
                 Previsualizar estado de silabo
               </h3>
             </div>
+
+
+
+
           </div>
           <button
             onClick={() => setIsFlipped(false)} // Regresa a la cara frontal
@@ -579,6 +638,50 @@ const Index: React.FC = () => {
         </div>
       )}
 
+      {isModalOpen3 && (
+
+
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-8 rounded-lg shadow-2xl max-w-4xl w-full text-center">
+            <div className="text-2xl font-bold mb-4">
+              {selectedCarga?.curso?.name || "Sin nombre"}
+            </div>
+
+            <div className="flex flex-row gap-4 h-100 ">
+              {/* Sección de Observaciones */}
+              <div className="basis-1/4 border rounded-lg p-4 overflow-auto">
+                <h3 className="text-xl font-semibold mb-2">Observaciones</h3>
+                <p className="text-gray-700">
+                  {selectedCarga?.silabo?.observaciones || "Sin observaciones"}
+                </p>
+              </div>
+
+              {/* Sección del PDF */}
+              <div
+                id="pdf-container"
+                className="basis-3/4 border rounded-lg overflow-hidden"
+              >
+                <iframe
+                  src={generarSilaboPDF(selectedCarga, 2)}
+                  style={{ width: "100%", height: "100%", border: "none" }}
+                  title="Sílabo PDF"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={closeModal3}
+              className="mt-6 px-8 py-4 bg-blue-600 text-white text-2xl rounded-lg hover:bg-blue-500"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
+
+
+
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center   z-50">
           <div className="bg-white p-8 rounded-lg shadow-2xl max-w-7xl w-full">
@@ -591,19 +694,17 @@ const Index: React.FC = () => {
               {steps.map((step, index) => (
                 <div
                   key={index}
-                  className={`flex-1 text-center cursor-pointer ${
-                    index <= currentStep
-                      ? 'text-blue-600 font-bold'
-                      : 'text-gray-400'
-                  }`}
+                  className={`flex-1 text-center cursor-pointer ${index <= currentStep
+                    ? 'text-blue-600 font-bold'
+                    : 'text-gray-400'
+                    }`}
                   onClick={() => index <= currentStep && setCurrentStep(index)}
                 >
                   <div
-                    className={`w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center ${
-                      index <= currentStep
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200'
-                    }`}
+                    className={`w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center ${index <= currentStep
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200'
+                      }`}
                   >
                     {index < currentStep ? '✓' : index + 1}
                   </div>
@@ -746,10 +847,10 @@ const Index: React.FC = () => {
                         formatDate(
                           selectedCarga?.semestre_academico?.fInicio ?? '',
                         ) +
-                          ' al ' +
-                          formatDate(
-                            selectedCarga?.semestre_academico?.fTermino ?? '',
-                          ) || ''
+                        ' al ' +
+                        formatDate(
+                          selectedCarga?.semestre_academico?.fTermino ?? '',
+                        ) || ''
                       }
                       readOnly
                       className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
@@ -842,8 +943,8 @@ const Index: React.FC = () => {
                       placeholder="Apellidos y nombres del docente :"
                       value={
                         selectedCarga?.nomdocente +
-                          ' ' +
-                          selectedCarga?.apedocente || ''
+                        ' ' +
+                        selectedCarga?.apedocente || ''
                       }
                       readOnly
                       className="border p-2 w-3/4 bg-gray-100 cursor-not-allowed"
@@ -1060,15 +1161,14 @@ const Index: React.FC = () => {
                       {Array.from({ length: 16 }).map((_, index) => (
                         <tr
                           key={index}
-                          className={`hover:bg-cyan-100 transition-colors ${
-                            errors[`sem${index + 1}organizacion`] ||
+                          className={`hover:bg-cyan-100 transition-colors ${errors[`sem${index + 1}organizacion`] ||
                             errors[`sem${index + 1}estrategias`] ||
                             errors[`sem${index + 1}evidencias`] ||
                             errors[`sem${index + 1}instrumentos`] ||
                             errors[`sem${index + 1}nomSem`]
-                              ? 'bg-red-100'
-                              : ''
-                          }`}
+                            ? 'bg-red-100'
+                            : ''
+                            }`}
                         >
                           <td className="border w-10 border-gray-400 px-4 py-2 text-center">
                             Semana {index + 1}
@@ -1344,22 +1444,20 @@ const Index: React.FC = () => {
             <div className="flex justify-between">
               <button
                 onClick={prevStep}
-                className={`px-4 py-2 text-white bg-blue-600 rounded-lg ${
-                  currentStep === 0
-                    ? 'opacity-50 cursor-not-allowed'
-                    : 'hover:bg-blue-500'
-                }`}
+                className={`px-4 py-2 text-white bg-blue-600 rounded-lg ${currentStep === 0
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-blue-500'
+                  }`}
                 disabled={currentStep === 0}
               >
                 Anterior
               </button>
               <button
                 onClick={nextStep}
-                className={`px-4 py-2 text-white bg-blue-600 rounded-lg ${
-                  currentStep === steps.length - 1
-                    ? 'opacity-50 cursor-not-allowed'
-                    : 'hover:bg-blue-500'
-                }`}
+                className={`px-4 py-2 text-white bg-blue-600 rounded-lg ${currentStep === steps.length - 1
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-blue-500'
+                  }`}
                 disabled={currentStep === steps.length - 1}
               >
                 Siguiente
