@@ -204,7 +204,7 @@ class SubirSilaboController extends Controller
         }
     }
 
-        public function reportesilabos()
+    public function reportesilabos()
     {
         $user = auth()->user();
         $userId = $user ? $user->id : null;
@@ -221,42 +221,13 @@ class SubirSilaboController extends Controller
                     $cargadocente = CargaDocente::with([
                         'filial',
                         'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio,fLimiteSilabo', // Selecciona solo los campos necesarios
-                        'curso',
+                        'curso' => function ($query) {
+                            $query->with(['departamento', 'facultad', 'area', 'regimenCurso', 'tipoCurso']);
+                        },
                         'escuela:idEscuela,name',
                     ])
                         ->where('idDirector', $directorescuela->idDirector)
                         ->get()
-                        ->map(function ($carga) {
-                            $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
-                                ->where('idFilial', $carga->idFilial)
-                                ->where('idDocente', $carga->idDocente)
-                                ->where('estado', '!=', 0)
-                                ->first();
-                            $carga->curso->documento = "";
-
-                            if ($silabo) {
-
-                                $carga->curso->documento = $silabo->documento;
-
-                                if ($silabo->activo == false) {
-                                    $carga->curso->estado_silabo = "Inactivo";
-                                } elseif ($silabo->estado == 1 && $silabo->activo == true) {
-                                    $carga->curso->estado_silabo = "En espera de aprobación";
-                                } elseif ($silabo->estado == 3 && $silabo->activo == true) {
-                                    $carga->curso->estado_silabo = "Aprobado";
-                                    $carga->curso->observaciones = $silabo->observaciones;
-
-                                } elseif ($silabo->estado == 2 && $silabo->activo == true) {
-                                    $carga->curso->estado_silabo = "Rechazado";
-                                    $carga->curso->observaciones = $silabo->observaciones;
-
-                                }
-                                return $carga; // Solo devuelve las cargas con un sílabo
-                            }
-
-                            return null; // Omite las cargas sin sílabo
-                        })
-                        ->filter() // Filtra para eliminar las cargas nulas (sin sílabo)
                         ->map(function ($carga) {
 
                             $docente = Docente::where('idDocente', $carga->idDocente)
@@ -270,7 +241,60 @@ class SubirSilaboController extends Controller
                             $carga->apedocente = $docenteuser->lastname;
 
                             return $carga;
+                        })
+                        ->map(function ($carga) {
+                            $plancursoacademico = PlanCursoAcademico::where('idMalla', $carga->idMalla)
+                                ->where('idCurso', $carga->idCurso)
+                                ->where('idEscuela', $carga->idEscuela)
+                                ->first();
+    
+                            // Verificar si existe el PlanCursoAcademico y asignar el ciclo
+                            if ($plancursoacademico) {
+                                $carga->ciclo = $plancursoacademico->ciclo;
+                                $carga->prerequisitos = $plancursoacademico->prerequisitos;
+                            }
+    
+                            return $carga;
+                        })
+                        ->map(function ($carga) {
+                            $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
+                                ->where('idFilial', $carga->idFilial)
+                                ->where('idDocente', $carga->idDocente)
+                                ->first();
+
+
+
+                                if ($silabo) {
+    
+                                    $carga->silabo = $silabo;
+                                    $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
+                                    ->where('idFilial', $silabo->idFilial)
+                                    ->where('idDocente', $silabo->idDocente)
+                                    ->get();
+                                    if ($silabo->activo == false) {
+                                        $carga->curso->estado_silabo = "Sin creación de silabo";
+                                    } elseif ($silabo->estado == 1 && $silabo->activo == true) {
+                                        $carga->curso->estado_silabo = "Esperando aprobación";
+                                    } elseif ($silabo->estado == 3 && $silabo->activo == true) {
+                                        $carga->curso->estado_silabo = "Visado";
+                                        $carga->curso->observaciones = $silabo->observaciones;
+    
+                                    } elseif ($silabo->estado == 2 && $silabo->activo == true) {
+                                        $carga->curso->estado_silabo = "Rechazado";
+                                        $carga->curso->observaciones = $silabo->observaciones;
+    
+                                    }
+    
+                                    $carga->silabo->semanas = $semanas;
+                                }
+
+                                $user = auth()->user();
+                                $carga->name = $user->name;
+                                $carga->lastname = $user->lastname;
+    
+                            return $carga; // Omite las cargas sin sílabo
                         });
+
 
 
 
@@ -295,6 +319,7 @@ class SubirSilaboController extends Controller
             ], 401);
         }
     }
+
 
     public function infohorario()
     {
