@@ -172,7 +172,7 @@ class SubirSilaboController extends Controller
                                 ->first();
 
 
-
+                                $carga->silabo=null;
                                 if ($silabo) {
     
                                     $carga->silabo = $silabo;
