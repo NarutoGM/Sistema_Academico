@@ -18,6 +18,33 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
     doc.text(texto, x, y);
   };
 
+  const agregarTextoJustificado = (
+    texto: string,
+    x: number,
+    y: number,
+    anchoMaximo: number,
+    lineHeight: number,
+    margenInferior: number,
+  ): void => {
+    const pageHeight = doc.internal.pageSize.height; // Altura de la página
+    const lineas = doc.splitTextToSize(texto, anchoMaximo); // Divide el texto en líneas ajustadas al ancho máximo
+
+    lineas.forEach((linea) => {
+      // Si la posición actual más la altura de la línea supera la altura de la página:
+      if (y + lineHeight > pageHeight - margenInferior) {
+        doc.addPage(); // Agrega una nueva página
+        y = 20; // Reinicia la posición en Y para la nueva página
+      }
+      doc.text(linea, x, y); // Dibuja la línea
+      y += lineHeight; // Incrementa la posición vertical
+    });
+  };
+
+  const imgUrl = `public/images/logo.png`; // Ruta relativa al logo en public
+  const img = new Image();
+  img.src = imgUrl;
+  doc.addImage(img, 'PNG', 10, 10, 45, 20);
+
   agregarTextoCentrado('SILABO DE LA EXPERIENCIA CURRICULAR', 40, 12);
   agregarTextoCentrado(`"${silabo.curso.name.trim()}"`, 50, 14);
 
@@ -89,7 +116,6 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
     margenes.izquierdo2,
     margenes.superior2 + 98,
   );
-  // Posición inicial en Y
 
   // Define los datos y columnas de la tabla
   const columnas = [
@@ -207,15 +233,118 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
     margin: { left: margenes.izquierdo2 + 13, right: 20 }, // Define los márgenes
   });
 
+  doc.setFont('helvetica', 'bold');
+  doc.text('II. SUMILLA', margenes.izquierdo, margenes.superior + 205);
+
+  doc.setFont('helvetica', 'normal');
+  agregarTextoJustificado(
+    silabo.silabo.sumilla, // Texto de la sumilla
+    margenes.izquierdo2, // Margen izquierdo
+    margenes.superior + 210, // Posición inicial en Y
+    160, // Ancho máximo del texto
+    5, // Altura entre líneas
+    20, // Margen inferior
+  );
+
+  doc.setFont('helvetica', 'bold');
+  doc.text(
+    'III. COMPETENCIA DE ESTUDIOS GENERALES (I - II CICLO) O DE EGRESO (III - X CICLO)',
+    margenes.izquierdo,
+    margenes.superior + 30,
+  );
+
+  const columnas2 = [
+    'Unidad de Competencia: Gestión de Infraestructura y Comunicaciones',
+  ];
+
+  const filas2 = [[`${silabo.silabo.unidadcompetencia}`]];
+
+  // Crear la tabla
+  doc.autoTable({
+    head: [columnas2], // Encabezados
+    body: filas2, // Filas de datos
+    startY: margenes.superior + 35, // Posición en Y para la tabla
+    theme: 'grid', // Tema con líneas de cuadrícula
+    styles: {
+      halign: 'normal', // Centra el texto horizontalmente
+      valign: 'middle', // Centra el texto verticalmente
+      fontSize: 10, // Tamaño de fuente para el contenido
+      lineWidth: 0.1, // Grosor de líneas
+      lineColor: [0, 0, 0], // Color negro para las líneas
+    },
+    headStyles: {
+      fillColor: [255, 255, 255], // Sin color de fondo para encabezados
+      textColor: [0, 0, 0], // Texto negro
+      fontSize: 11, // Tamaño de fuente para los encabezados
+      fontStyle: 'bold', // Encabezados en negrita
+    },
+    margin: { left: margenes.izquierdo - 5 + 13, right: 10 }, // Define los márgenes
+  });
+
+  doc.setFont('helvetica', 'bold');
+  doc.text(
+    'ARTICULACION CON LAS COMPETENCIA GENERALES DE LA UNT',
+    margenes.izquierdo + 7,
+    margenes.superior + 75,
+  );
+
+  const columnas3 = ['Competencias Generales de la UNT'];
+
+  const filas3 = [[`${silabo.silabo.competenciasgenerales}`]];
+
+  // Crear la tabla
+  doc.autoTable({
+    head: [columnas3], // Encabezados
+    body: filas3, // Filas de datos
+    startY: margenes.superior + 80, // Posición en Y para la tabla
+    theme: 'grid', // Tema con líneas de cuadrícula
+    styles: {
+      halign: 'normal', // Centra el texto horizontalmente
+      valign: 'middle', // Centra el texto verticalmente
+      fontSize: 10, // Tamaño de fuente para el contenido
+      lineWidth: 0.1, // Grosor de líneas
+      lineColor: [0, 0, 0], // Color negro para las líneas
+    },
+    headStyles: {
+      fillColor: [255, 255, 255], // Sin color de fondo para encabezados
+      textColor: [0, 0, 0], // Texto negro
+      fontSize: 11, // Tamaño de fuente para los encabezados
+      fontStyle: 'bold', // Encabezados en negrita
+    },
+    margin: { left: margenes.izquierdo - 5 + 13, right: 10 }, // Define los márgenes
+  });
+
+  doc.setFont('helvetica', 'bold');
+  doc.text(
+    'RESULTADOS DEL ESTUDIANTE QUE SON ABORDADOS POR EL CURSO',
+    margenes.izquierdo + 7,
+    margenes.superior + 108,
+  );
+
+  const filas4 = [[`${silabo.silabo.resultados}`]];
+
+  // Crear la tabla
+  doc.autoTable({
+    body: filas4, // Filas de datos
+    startY: margenes.superior + 113, // Posición en Y para la tabla
+    theme: 'grid', // Tema con líneas de cuadrícula
+    styles: {
+      halign: 'normal', // Centra el texto horizontalmente
+      valign: 'middle', // Centra el texto verticalmente
+      fontSize: 10, // Tamaño de fuente para el contenido
+      lineWidth: 0.1, // Grosor de líneas
+      lineColor: [0, 0, 0], // Color negro para las líneas
+    },
+
+    margin: { left: margenes.izquierdo - 5 + 13, right: 10 }, // Define los márgenes
+  });
+
   // Acciones según el parámetro `numero`
   if (numero === 1) {
-    // Descargar el PDF
     doc.save(`${silabo.curso.name}_silabo.pdf`);
   } else if (numero === 2) {
-    // Retornar como cadena base64
     return doc.output('datauristring');
   } else if (numero === 3) {
-    // Abrir el PDF en una nueva ventana o pestaña
     doc.output('dataurlnewwindow');
   }
 };
