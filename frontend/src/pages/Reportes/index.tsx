@@ -22,6 +22,7 @@ const Index: React.FC = () => {
   const [semestre, setSemestre] = useState('');
   const [procesoSilabo, setProcesoSilabo] = useState('');
   const [docente, setDocente] = useState('');
+  const [entregaSilabo, setEntregaSilabo] = useState('');
 
   // Información adicional para el reporte
   const [filiales, setFiliales] = useState<string[]>([]); // Opciones de filiales
@@ -51,7 +52,7 @@ const Index: React.FC = () => {
         );
         setFiliales(uniqueFiliales);
 
-        // Extraer las filiales únicas
+        // Extraer estados de silabos
         const uniqueEstados = Array.from(
           new Set(docenteArray.map((item) => item.curso?.estado_silabo).filter(Boolean)),
         );
@@ -66,6 +67,25 @@ const Index: React.FC = () => {
       const estadoSilabo = item.curso?.estado_silabo || 'Curso por gestionar';
       const nombreDocente =
         `${item.nomdocente} ${item.apedocente}`.toLowerCase();
+
+          // Procesar fechas
+      const fEnvio = item.silabo?.fEnvio ? new Date(item.silabo.fEnvio) : null;
+      const fLimiteSilabo = item.semestre_academico?.fLimiteSilabo
+        ? new Date(item.semestre_academico.fLimiteSilabo)
+        : null;
+
+      let cumpleEntrega = true; // Valor por defecto si no se selecciona filtro de entrega
+      if (entregaSilabo && fEnvio && fLimiteSilabo) {
+
+        cumpleEntrega =
+          entregaSilabo === 'aTiempo'
+            ? fEnvio <= fLimiteSilabo
+            : entregaSilabo === 'tarde'
+            ? fEnvio > fLimiteSilabo
+            : true;
+      }
+
+
       return (
         (codigoCurso ? item.idCurso.toString().includes(codigoCurso) : true) &&
         (curso
@@ -80,7 +100,7 @@ const Index: React.FC = () => {
         (procesoSilabo
           ? estadoSilabo.toLowerCase().includes(procesoSilabo.toLowerCase())
           : true) &&
-        (docente ? nombreDocente.includes(docente.toLowerCase()) : true)
+        (docente ? nombreDocente.includes(docente.toLowerCase()) : true) && cumpleEntrega
       );
     });
     setFilteredData(filtered);
@@ -92,6 +112,7 @@ const Index: React.FC = () => {
     semestre,
     procesoSilabo,
     docente,
+    entregaSilabo,
     cargaDocente,
   ]);
 
@@ -199,15 +220,17 @@ const Index: React.FC = () => {
                   {est}
                 </option>
               ))}
-            </select>
-          
-          <input
-            type="text"
-            placeholder="Entrega de silabo"
-            value={curso}
-            onChange={(e) => setCurso(e.target.value)}
+          </select>
+          <select
+            value={entregaSilabo}
+            onChange={(e) => setEntregaSilabo(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
-          />
+          >
+            <option value="">Seleccionar Entrega de sílabo</option>
+            <option value="aTiempo">A tiempo</option>
+            <option value="tarde">Tarde</option>
+          </select>
+          
           <input
             type="text"
             placeholder="Docente"
