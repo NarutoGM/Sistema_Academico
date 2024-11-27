@@ -278,9 +278,8 @@ class SubirSilaboController extends Controller
                                     ->where('idFilial', $silabo->idFilial)
                                     ->where('idDocente', $silabo->idDocente)
                                     ->get();
-                                    if ($silabo->activo == false) {
-                                        $carga->curso->estado_silabo = "Sin creación de silabo";
-                                    } elseif ($silabo->estado == 1 && $silabo->activo == true) {
+
+                                    if ($silabo->estado == 1 && $silabo->activo == true) {
                                         $carga->curso->estado_silabo = "Esperando aprobación";
                                     } elseif ($silabo->estado == 3 && $silabo->activo == true) {
                                         $carga->curso->estado_silabo = "Visado";
@@ -293,6 +292,9 @@ class SubirSilaboController extends Controller
                                     }
     
                                     $carga->silabo->semanas = $semanas;
+                                }else {
+                                    // Si no existe un sílabo
+                                    $carga->curso->estado_silabo = "Sin envio de silabo";
                                 }
 
                                 $user = auth()->user();
