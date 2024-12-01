@@ -32,6 +32,21 @@ class CargaDocente extends Model
         'idDirector'
     ];
 
+    // Sobrescribir el método para claves compuestas
+    protected function setKeysForSaveQuery($query)
+    {
+        $keys = $this->getKeyName();
+        if (!is_array($keys)) {
+            return parent::setKeysForSaveQuery($query);
+        }
+
+        foreach ($keys as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+
+        return $query;
+    }
+    
     // Relación con el modelo Filial
     public function filial()
     {

@@ -13,9 +13,15 @@ use App\Http\Controllers\RolPermisoController;
 
 use App\Http\Controllers\CondicionController;  
 use App\Http\Controllers\RegimenController;  
-use App\Http\Controllers\CategoriaController; 
-use App\Http\Controllers\FilialController;
+use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\CursoAperturadoController;
+
 use App\Http\Controllers\SubirSilaboController;
+use App\Http\Controllers\FilialController;
+use App\Http\Controllers\DirectorEscuelaController;
+use App\Http\Controllers\SemestreController;
+use App\Http\Controllers\CursoAperturadosController;
+use App\Http\Controllers\CargaDocenteController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -91,8 +97,14 @@ Route::get('/versilabos', [SubirSilaboController::class, 'versilabos']);
 Route::apiResource('condiciones', CondicionController::class);  
 Route::apiResource('regimenes', RegimenController::class);  
 Route::apiResource('categorias', CategoriaController::class);
+
+
 Route::apiResource('filiales', FilialController::class);  
 Route::get('/filiales/{idFilial}/docentes', [FilialController::class, 'getDocentes']);
-
+Route::get('/escuelas/{idEscuela}/malla', [EscuelaController::class, 'getMallaByEscuela']);
+Route::apiResource('/semestreacademico', SemestreController::class);
+Route::get('/cursosAperturados/{idEscuela}/{idMalla}/{idSemestreAcademico}', [CursoAperturadosController ::class, 'getCursosByMallaAndSemestre']);
+Route::get('/cargadocente/{idDocente}/{idFilial}/asignados',[CargaDocenteController::class, 'getCursosAsignados']);
+Route::post('/cargadocente', [CargaDocenteController::class, 'store']);
 
 });
