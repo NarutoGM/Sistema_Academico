@@ -22,6 +22,7 @@ class Escuela extends Model
     protected $fillable = [
         'name',
         'idFacultad',
+        
     ];
 
     /**

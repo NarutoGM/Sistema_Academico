@@ -1,0 +1,50 @@
+.card-container {
+  perspective: 1500px; /* Aumenta la perspectiva para un efecto 3D más amplio */
+  width: 100%; /* Se ajusta al ancho total disponible */
+  max-width: 1400px; /* Puedes ajustar este valor si necesitas un límite */
+  min-height: 70vh; /* Mantiene una altura mínima */
+  position: relative; /* Contiene las caras de las tarjetas */
+  margin: 0 auto; /* Centra el contenedor si no ocupa todo el ancho */
+}
+
+.card {
+  width: 100%; /* Asegura que la tarjeta ocupe todo el ancho del contenedor */
+  height: 100%; /* Ocupa toda la altura disponible del contenedor */
+  transition: transform 0.7s ease-in-out; /* Suaviza la rotación */
+  transform-style: preserve-3d; /* Necesario para el efecto 3D */
+  perspective: 1500px; /* Aumenta la perspectiva para un efecto 3D más amplio */
+  max-width: 1400px; /* Puedes ajustar este valor si necesitas un límite */
+  min-height: 70vh; /* Mantiene una altura mínima */
+  position: relative; /* Contiene las caras de las tarjetas */
+  margin: 0 auto; /* Centra el contenedor si no ocupa todo el ancho */
+  background: white;
+  
+}
+
+.card.flipped {
+  transform: rotateY(180deg); /* Rotación para voltear la tarjeta */
+}
+
+.card-face {
+  width: 100%; /* Las caras ocupan el 100% del ancho de la tarjeta */
+  height: 100%; /* Las caras ocupan toda la altura de la tarjeta */
+  backface-visibility: hidden; /* Oculta la cara trasera cuando no está visible */
+  position: absolute; /* Posiciona las caras encima de la tarjeta */
+  top: 0; /* Asegura que comiencen desde el borde superior */
+  left: 0; /* Asegura que comiencen desde el borde izquierdo */
+}
+
+.card-face.front {
+  z-index: 2; /* La cara frontal tiene prioridad */
+  transform: rotateY(0deg); /* Sin rotación para la cara frontal */
+}
+
+.card-face.back {
+  transform: rotateY(180deg); /* Rotación de 180° para la cara trasera */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centra el contenido horizontalmente */
+  padding: 1rem; /* Añade espacio interno para el contenido */
+  width: 100%; /* La cara trasera ocupa todo el ancho */
+  height: 100%; /* Mantiene el 100% de la altura */
+}

@@ -92,16 +92,27 @@ class UserSeeder extends Seeder
       //      "password" => bcrypt("root")
       //  ]);
 
+      //  $user = User::create([
+       //     "name" => "CARLOS DANTER",
+       //     "lastname" => "TAPIA SANCHEZ",
+       //     "dni" => "25361449",
+       //     "direccion" => "Direccion2",
+       //     "foto" => "foto",
+        //    "telefono" => "988457845",
+       //     "email" => "cdantertapia@unitru.edu.pe",
+     //       "password" => bcrypt("root")
+      //  ]);
+
         $user = User::create([
-            "name" => "CARLOS DANTER",
-            "lastname" => "TAPIA SANCHEZ",
-            "dni" => "25361449",
-            "direccion" => "Direccion2",
-            "foto" => "foto",
-            "telefono" => "988457845",
-            "email" => "cdantertapia@unitru.edu.pe",
-            "password" => bcrypt("root")
-        ]);
+          "name" => "BRUNO SAMIR",
+          "lastname" => "BOCANEGRA CHISTAMA",
+          "dni" => "70280072",
+          "direccion" => "st 780",
+          "foto" => "foto",
+          "telefono" => "963058415",
+          "email" => "T013300220@unitru.edu.pe",
+          "password" => bcrypt("root")
+      ]);
 
     }
 }

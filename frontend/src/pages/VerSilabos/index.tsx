@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import { getMisSilabos, CargaDocente } from '@/pages/services/silabo.services';
+import { getMisSilabos, CargaDocente, enviarinfoSilabodirector } from '@/pages/services/silabo.services';
+import "quill/dist/quill.snow.css";
+import { generarSilaboPDF } from '@/utils/pdfUtils';
 
 const Index: React.FC = () => {
     const [cargaDocente, setCargaDocente] = useState<CargaDocente[]>([]);
     const [filteredData, setFilteredData] = useState<CargaDocente[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5;
+    const itemsPerPage = 8;
 
     // Filtros
     const [codigoCurso, setCodigoCurso] = useState('');
@@ -17,16 +19,21 @@ const Index: React.FC = () => {
     const [procesoSilabo, setProcesoSilabo] = useState('');
     const [docente, setDocente] = useState('');
 
+    const fetchSilabos = async () => {
+        try {
+          const data = await getMisSilabos();
+          setCargaDocente(data.cargadocente);
+          setFilteredData(data.cargadocente);
+        } catch (error) {
+          setError(error.message);
+        }
+      };
+
+
+
     useEffect(() => {
-        getMisSilabos()
-            .then((data) => {
-                setCargaDocente(data.cargadocente);
-                setFilteredData(data.cargadocente);
-            })
-            .catch((error) => {
-                setError(error.message);
-            });
-    }, []);
+        fetchSilabos();
+      }, []);
 
     useEffect(() => {
         const filtered = cargaDocente.filter(item => {
@@ -53,8 +60,122 @@ const Index: React.FC = () => {
 
 
 
-    const submitCarga = (carga: CargaDocente) => {
-        console.log('Objeto carga enviado:', carga);
+    const modal = (carga: CargaDocente, numero: number) => {
+        const isEditable = numero === 1;
+        const observacionesText = numero === 2 ? carga.silabo?.observaciones || "" : "";
+    
+        const getEstadoSilabo = (carga: CargaDocente) => {
+            if (carga.estado === false) {
+                return 'Inactivo';
+            } else if (carga.silabo == null) {
+                return 'Aún no envió silabo';
+            } else {
+                switch (carga.silabo.estado) {
+                    case 1: return 'Por Revisar';
+                    case 2: return 'Rechazado';
+                    case 3: return 'Visado';
+                    default: return 'Estado Desconocido';
+                }
+            }
+        };
+    
+        const estadoSilabo = getEstadoSilabo(carga);
+    
+        Swal.fire({
+            title: "Detalles del Sílabo",
+            html: `
+                <div style="display: flex; gap: 20px; align-items: flex-start;">
+                    <div style="flex: 1; text-align: left; line-height: 1.5; margin-bottom: 20px; min-width: 300px;">
+                        <p><strong>ID Curso:</strong> ${carga.idCurso}</p>
+                        <p><strong>Curso:</strong> ${carga.curso?.name}</p>
+                        <p><strong>Docente:</strong> ${carga.nomdocente} ${carga.apedocente}</p>
+                        <p><strong>Filial:</strong> ${carga.filial?.name}</p>
+                        <p><strong>Semestre Académico:</strong> ${carga.semestre_academico?.nomSemestre}</p>
+                        ${numero === 2
+                            ? `<p><strong>Observaciones:</strong> ${carga.silabo?.observaciones || "Sin observaciones registradas"}</p>`
+                            : ""
+                        }
+                        <p>
+                            <strong>Estado del Sílabo:</strong> ${estadoSilabo}
+                        </p>
+                        <textarea 
+                            id="observaciones" 
+                            placeholder="Escribe las observaciones aquí..." 
+                            style="width: 100%; height: 300px; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" 
+                            ${!isEditable ? "disabled" : ""}
+                        >${observacionesText}</textarea>
+                    </div>
+                    <div id="pdf-container" style="flex: 2; border: 1px solid #ccc; border-radius: 4px; overflow-y: auto; height: 600px; padding: 10px;">
+                        <p>Cargando PDF...</p>
+                    </div>
+                </div>
+            `,
+            width: 1300,
+            showCancelButton: true,
+            showDenyButton: isEditable,
+            showConfirmButton: isEditable,
+            confirmButtonText: "Visar",
+            denyButtonText: "Rechazar",
+            cancelButtonText: "Cancelar",
+            focusConfirm: false,
+            didOpen: () => {
+                // Generar el PDF y cargarlo en el iframe
+                const pdfContainer = document.getElementById("pdf-container");
+                if (pdfContainer) {
+                    const pdfDataUri = generarSilaboPDF(carga, 2);
+                    pdfContainer.innerHTML = `
+                        <iframe 
+                            src="${pdfDataUri}" 
+                            style="width: 100%; height: 100%; border: none;" 
+                            title="Sílabo PDF"
+                        ></iframe>
+                    `;
+                }
+            },
+            preConfirm: () => {
+                // Obtener el texto de las observaciones
+                const observaciones = (document.getElementById("observaciones") as HTMLTextAreaElement)?.value || "";
+                return { observaciones };
+            },
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                // Si apruebas, llama a SubmitCarga con numero = 1
+                const observaciones = result.value?.observaciones || "";
+                await SubmitCarga(carga, 1, observaciones);
+                Swal.fire("Éxito", "El sílabo ha sido aprobado.", "success");
+            } else if (result.isDenied) {
+                // Si desapruebas, llama a SubmitCarga con numero = 0
+                const observaciones = (document.getElementById("observaciones") as HTMLTextAreaElement)?.value || "";
+                await SubmitCarga(carga, 0, observaciones);
+                Swal.fire("Rechazado", "El sílabo ha sido rechazado.", "error");
+            }
+        });
+    };
+
+
+
+
+
+
+
+
+    const SubmitCarga = async (carga: CargaDocente, numero: number, observaciones: string) => {
+        const silaboData = {
+            idCargaDocente: carga.idCargaDocente,
+            idDocente: carga.idDocente,
+            idFilial: carga.idFilial,
+            numero: numero === 0 ? 1 : 2, // Establece el número basado en el valor de 'numero'
+            observaciones: observaciones,
+        };
+
+        try {
+            const response = await enviarinfoSilabodirector(silaboData);
+            console.log("Información del sílabo enviada correctamente al director:", response);
+            await fetchSilabos();
+
+        } catch (error) {
+            console.error("Error al enviar la información del sílabo:", error);
+        }
     };
 
     return (
@@ -132,7 +253,9 @@ const Index: React.FC = () => {
                             <th className="px-4 py-2 border-b font-medium text-white">Docente</th>
                             <th className="px-4 py-2 border-b font-medium text-white">Filial</th>
                             <th className="px-4 py-2 border-b font-medium text-white">Semestre</th>
-                            <th className="px-4 py-2 border-b font-medium text-white">Proceso Sílabos</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Ciclo</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Estado</th>
+
                             <th className="px-4 py-2 border-b font-medium text-white">Acciones</th>
                         </tr>
                     </thead>
@@ -144,27 +267,73 @@ const Index: React.FC = () => {
                                 <td className="px-4 py-2 border-b text-center">{`${carga.nomdocente} ${carga.apedocente}`}</td>
                                 <td className="px-4 py-2 border-b text-center">{carga.filial?.name}</td>
                                 <td className="px-4 py-2 border-b text-center">{carga.semestre_academico?.nomSemestre}</td>
-                                <td className="px-4 py-2 border-b text-center">{carga.curso?.estado_silabo}</td>
+
+                                <td className="px-4 py-2 border-b text-center">{carga.ciclo}</td>
+
+                                <td className="px-4 py-2 border-b text-center"> 
+                <span 
+                    className={`px-2 py-1 rounded-lg  
+                    ${carga.estado === false 
+                        ? "bg-gray-300 text-gray-700 border border-gray-400" 
+                        : carga.silabo?.estado === null 
+                            ? "bg-gray-100 text-gray-600 border border-gray-300" 
+                            : carga.silabo?.estado === 1 
+                                ? "bg-blue-100 text-blue-600 border border-blue-300" 
+                                : carga.silabo?.estado === 2 
+                                    ? "bg-red-100 text-red-600 border border-red-300" 
+                                    : carga.silabo?.estado === 3 
+                                        ? "bg-green-100 text-green-600 border border-green-300" 
+                                        : "bg-yellow-100 text-yellow-600 border border-yellow-300" 
+                    }`} 
+                > 
+                    {carga.estado === false 
+                        ? "Inactivo" 
+                        : carga.silabo === null 
+                            ? "Aun no envia silabo" 
+                            : carga.silabo?.estado === 1 
+                                ? "Silabo enviado para revision" 
+                                : carga.silabo?.estado === 2 
+                                    ? "Silabo rechazado" 
+                                    : carga.silabo?.estado === 3 
+                                        ? "Silabo aceptado" 
+                                        : "Estado desconocido"} 
+                </span> 
+            </td> 
+
+
+
+
                                 <td className="px-4 py-2 border-b text-center">
+
+
                                     <button
-                                        className={`px-2 py-1 rounded text-white 
-                                            ${carga.curso?.estado_silabo === "Rechazado" ? "bg-red-500 hover:bg-red-600" : ""}
-                                            ${carga.curso?.estado_silabo === "Aprobado" ? "bg-green-500 hover:bg-green-600" : ""}
-                                            ${carga.curso?.estado_silabo === "En espera de aprobación" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`
-                                        }
                                         onClick={() => {
-                                            if (carga.curso?.estado_silabo === "En espera de aprobación") {
-                                                // Acción para observar el sílabo
-                                            } else if (carga.curso?.estado_silabo === "Aprobado" || carga.curso?.estado_silabo === "Rechazado") {
-                                                // Acción para ver el sílabo
+                                            // Si carga.silabo es null, pasa carga, 2
+                                            if (carga.silabo === null) {
+                                                modal(carga, 2);
+                                            } else if (carga.silabo?.estado === 1) {
+                                                // Si el estado de carga.silabo es 1, pasa carga, 1
+                                                modal(carga, 1);
+                                            } else {
+                                                // Para otros casos, pasa carga, 2
+                                                modal(carga, 2);
                                             }
                                         }}
+                                        disabled={carga.silabo === null}
+                                        className={`px-4 py-2 rounded-md font-semibold transition-colors ${carga.silabo === null
+                                                ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
+                                                : 'bg-blue-500 text-white hover:bg-blue-600'
+                                            }`}
                                     >
-                                        {carga.curso?.estado_silabo === "En espera de aprobación" && "Observar Sílabo"}
-                                        {carga.curso?.estado_silabo === "Aprobado" && "Ver"}
-                                        {carga.curso?.estado_silabo === "Rechazado" && "Ver"}
+                                        Revision Silabos
                                     </button>
+
+
+
                                 </td>
+
+
+
                             </tr>
                         ))}
                     </tbody>

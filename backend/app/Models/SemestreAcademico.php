@@ -24,6 +24,7 @@ class SemestreAcademico extends Model
         'añoAcademico',
         'numSemestre',
         'fInicio',
-        'fTermino'
+        'fTermino',
+        'fLimiteSilabo'
     ];
 }

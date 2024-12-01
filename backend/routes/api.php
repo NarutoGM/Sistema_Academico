@@ -23,6 +23,13 @@ use App\Http\Controllers\SemestreController;
 use App\Http\Controllers\CursoAperturadosController;
 use App\Http\Controllers\CargaDocenteController;
 
+
+use App\Http\Controllers\HorarioController;
+use App\Http\Controllers\HorariosController;
+
+use App\Http\Controllers\TokenController;
+use App\Models\Horario;
+
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
@@ -89,10 +96,10 @@ Route::post('/roles/guardar-roles', [RoleUserController::class, 'guardarRoles'])
 Route::apiResource('escuelas', EscuelaController::class);
 Route::apiResource('facultades', FacultadController::class);
 
-
- 
+Route::get('/generate-token', [TokenController::class, 'generateAccessToken']);
 Route::get('/miscursos', [SubirSilaboController::class, 'index']); 
 Route::get('/versilabos', [SubirSilaboController::class, 'versilabos']); 
+Route::get('/reportesilabos', [SubirSilaboController::class, 'reportesilabos']); 
 
 Route::apiResource('condiciones', CondicionController::class);  
 Route::apiResource('regimenes', RegimenController::class);  
@@ -106,5 +113,14 @@ Route::apiResource('/semestreacademico', SemestreController::class);
 Route::get('/cursosAperturados/{idEscuela}/{idMalla}/{idSemestreAcademico}', [CursoAperturadosController ::class, 'getCursosByMallaAndSemestre']);
 Route::get('/cargadocente/{idDocente}/{idFilial}/asignados',[CargaDocenteController::class, 'getCursosAsignados']);
 Route::post('/cargadocente', [CargaDocenteController::class, 'store']);
+Route::post('gestionarsilabo', [SubirSilaboController::class, 'gestionarsilabo']);
+Route::get('/obtenerMisPermisos', [UserController::class, 'obtenerMisPermisos']); // Obtener todos los permisos
+Route::post('/gestionarhorarios', [SubirSilaboController::class, 'gestionarhorarios']);
+Route::post('gestionarsilabodirector', [SubirSilaboController::class, 'gestionarsilabodirector']);
+
+
+
+
+Route::get('/verhorarios', [HorariosController::class, 'verhorarios']); 
 
 });

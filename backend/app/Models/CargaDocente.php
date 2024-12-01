@@ -88,4 +88,5 @@ class CargaDocente extends Model
     {
         return $this->belongsTo(DirectorEscuela::class, 'idDirector', 'idDirector');
     }
+
 }
