@@ -3,69 +3,148 @@ import 'jspdf-autotable';
 
 export const generarSilaboPDF = (silabo: any, numero: number) => {
   const doc = new jsPDF();
-
-  const agregarTextoCentrado = (
-    texto: string,
-    y: number,
-    size: number = 11,
-    fontStyle: string = 'bold',
-  ): void => {
-    const pageWidth = doc.internal.pageSize.getWidth();
-    doc.setFontSize(size);
-    doc.setFont('helvetica', fontStyle);
-    const textWidth = doc.getTextWidth(texto);
-    const x = (pageWidth - textWidth) / 2;
-    doc.text(texto, x, y);
-  };
-
-  const agregarTextoJustificado = (
-    texto: string,
-    x: number,
-    y: number,
-    anchoMaximo: number,
-    lineHeight: number,
-    margenInferior: number,
-  ): void => {
-    const pageHeight = doc.internal.pageSize.height; // Altura de la página
-    const lineas = doc.splitTextToSize(texto, anchoMaximo); // Divide el texto en líneas ajustadas al ancho máximo
-
-    lineas.forEach((linea) => {
-      // Si la posición actual más la altura de la línea supera la altura de la página:
-      if (y + lineHeight > pageHeight - margenInferior) {
-        doc.addPage(); // Agrega una nueva página
-        y = 20; // Reinicia la posición en Y para la nueva página
-      }
-      doc.text(linea, x, y); // Dibuja la línea
-      y += lineHeight; // Incrementa la posición vertical
-    });
-  };
-
-  const imgUrl = `public/images/logo.png`; // Ruta relativa al logo en public
-  const img = new Image();
-  img.src = imgUrl;
-  doc.addImage(img, 'PNG', 10, 10, 45, 20);
-
-  agregarTextoCentrado('SILABO DE LA EXPERIENCIA CURRICULAR', 40, 12);
-  agregarTextoCentrado(`"${silabo.curso.name.trim()}"`, 50, 14);
+  const themeFont = 'helvetica';
 
   const margenes = {
     izquierdo: 20,
     izquierdo2: 30,
     derecho: 130,
-    superior: 65,
+    superior: 45,
     superior2: 75,
-    incrementoY: 7, // Espaciado entre líneas
+    incrementoY: 7,
+    anchoMaximo: 170,
+    lineHeight: 6,
+    margenInferior: 20,
   };
 
-  // Título de la sección
-  doc.setFontSize(11);
-  doc.text('I. DATOS DE IDENTIFICACIÓN', margenes.izquierdo, margenes.superior);
+  const styleTitle = {
+    fontSize: 11,
+    fontStyle: 'bold',
+    font: themeFont,
+  };
 
-  // Configuración de la fuente normal
-  doc.setFont('helvetica', 'normal');
+  const styleCenter = {
+    fontSize: 12,
+    fontStyle: 'bold',
+    font: themeFont,
+    align: 'center' as 'center',
+  };
+
+  const styleParrafo = {
+    fontSize: 11,
+    fontStyle: 'normal',
+    font: themeFont,
+    align: 'justify' as 'justify',
+    maxWidth: 160,
+    lineHeight: 5,
+  };
+
+  const addImage = () => {
+    const imgUrl = `public/images/logo.png`;
+    const img = new Image();
+    img.src = imgUrl;
+    doc.addImage(img, 'PNG', 10, 10, 45, 20);
+  };
+
+  const addText = (
+    texto: string,
+    x: number | null,
+    y: number,
+    estilo: {
+      fontSize: number;
+      fontStyle: string;
+      font: string;
+      align?: 'justify' | 'left' | 'center' | 'right';
+      maxWidth?: number;
+      lineHeight?: number;
+    },
+  ): void => {
+    doc.setFont(estilo.font, estilo.fontStyle);
+    doc.setFontSize(estilo.fontSize);
+
+    if (estilo.align === 'justify' && estilo.maxWidth) {
+      const textLines = doc.splitTextToSize(texto, estilo.maxWidth);
+
+      const lineSpacing = estilo.lineHeight || estilo.fontSize;
+
+      textLines.forEach((line: string, index: number) => {
+        doc.text(line, x ?? 10, y + index * lineSpacing, { align: 'justify' });
+      });
+    } else if (estilo.align === 'center') {
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const textWidth = doc.getTextWidth(texto);
+      const startX = (pageWidth - textWidth) / 2;
+      doc.text(texto, startX, y);
+    } else {
+      doc.text(texto, x ?? 10, y, { align: estilo.align });
+    }
+  };
+
+  const agregarTabla = (
+    columnas: any[],
+    filas: any[][],
+    startY: number,
+    estilos: {
+      theme?: string;
+      styles?: any;
+      headStyles?: any;
+      bodyStyles?: any;
+      margin?: { left: number; right: number };
+    } = {},
+  ): void => {
+    const config: any = {
+      body: filas,
+      startY,
+      theme: estilos.theme || 'grid',
+      styles: estilos.styles || {
+        halign: 'center',
+        fontSize: 10,
+        lineWidth: 0.1,
+        lineColor: [0, 0, 0],
+        textColor: [0, 0, 0],
+      },
+      bodyStyles: estilos.bodyStyles || {
+        fillColor: [255, 255, 255],
+      },
+      margin: estilos.margin || { left: 10, right: 10 },
+    };
+
+    // Solo agregar encabezados si hay columnas
+    if (columnas.length > 0) {
+      config.head = [columnas];
+      config.headStyles = estilos.headStyles || {
+        fillColor: [255, 255, 255],
+        fontStyle: 'bold',
+      };
+    }
+
+    (doc as any).autoTable(config);
+  };
+
+  addImage();
+
+  addText(
+    'SILABO DE LA EXPERIENCIA CURRICULAR',
+    null,
+    margenes.superior,
+    styleCenter,
+  );
+  addText(
+    `"${silabo.curso.name.trim()}"`,
+    null,
+    margenes.superior + 8,
+    styleCenter,
+  );
+
+  addText(
+    'I. DATOS DE IDENTIFICACIÓN',
+    margenes.izquierdo,
+    margenes.superior + 20,
+    styleTitle,
+  );
 
   const quitarHora = (fechaHora: string): string => {
-    return fechaHora.split(' ')[0]; // Devuelve solo la parte de la fecha antes del espacio
+    return fechaHora.split(' ')[0];
   };
 
   const datosIdentificacion = [
@@ -104,20 +183,28 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
     { label: '1.14.    Régimen', value: silabo.curso.regimen_curso.nomRegimen },
   ];
 
-  let posicionY = margenes.superior2;
-
-  datosIdentificacion.forEach((dato) => {
-    doc.text(dato.label, margenes.izquierdo2, posicionY);
-    doc.text(`: ${dato.value}`, margenes.derecho, posicionY);
-    posicionY += margenes.incrementoY;
+  datosIdentificacion.map((dato: any) => {
+    addText(
+      dato.label,
+      margenes.izquierdo2,
+      margenes.superior + 30,
+      styleParrafo,
+    );
+    addText(
+      `: ${dato.value}`,
+      margenes.derecho,
+      margenes.superior + 30,
+      styleParrafo,
+    );
+    margenes.superior += margenes.incrementoY;
   });
-  doc.text(
+  addText(
     '1.15.    Organización semestral del tiempo (semanas) :',
     margenes.izquierdo2,
-    margenes.superior2 + 98,
+    margenes.superior + 30,
+    styleParrafo,
   );
 
-  // Define los datos y columnas de la tabla
   const columnas = [
     'Actividades',
     'Total de Horas',
@@ -126,7 +213,6 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
     'Unidades III',
   ];
 
-  // Datos de las categorías
   const categorias = [
     { nombre: 'Teóricas', horas: silabo.curso.hTeoricas },
     { nombre: 'Prácticas', horas: silabo.curso.hPracticas },
@@ -137,62 +223,40 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
     },
   ];
 
-  // Construcción dinámica de las filas
   const filas = categorias.map((categoria) => {
-    const totalHoras = categoria.horas * 3; // Calcula la suma de las horas
+    const totalHoras = categoria.horas * 3;
     return [
-      categoria.nombre, // Nombre de la categoría
-      `${totalHoras}`, // Total de horas
-      ...Array(3).fill(`${categoria.horas}`), // Rellena las 3 columnas de unidades con el mismo valor
+      categoria.nombre,
+      `${totalHoras}`,
+      ...Array(3).fill(`${categoria.horas}`),
     ];
   });
 
-  // Cálculo del total general y los totales por cada columna de unidades
   const totalGeneral = filas.reduce(
     (sum, fila) => sum + parseInt(fila[1], 10),
     0,
-  ); // Total de la columna 'Total de Horas'
-  const totalesPorUnidades = [2, 3, 4].map(
-    (i) => filas.reduce((sum, fila) => sum + parseInt(fila[i], 10), 0), // Suma de cada columna de Unidades I, II y III
   );
 
-  // Agregar la fila de Totales
+  const totalesPorUnidades = [2, 3, 4].map((i) =>
+    filas.reduce((sum, fila) => sum + parseInt(fila[i], 10), 0),
+  );
+
   filas.push([
-    'Total Horas', // Nombre
-    `${totalGeneral}`, // Total general
-    ...totalesPorUnidades.map((total) => `${total}`), // Totales de Unidades I, II y III
+    'Total Horas',
+    `${totalGeneral}`,
+    ...totalesPorUnidades.map((total) => `${total}`),
   ]);
 
-  // Usa autotable para agregar la tabla al PDF
-  doc.autoTable({
-    head: [columnas], // Encabezados
-    body: filas, // Datos
-    startY: margenes.superior2 + 105, // Posición inicial en el eje Y
-    theme: 'grid', // Tema de la tabla
-    styles: {
-      halign: 'center', // Alinear texto al centro
-      lineWidth: 0.1, // Grosor de líneas para todas las celdas
-      lineColor: [0, 0, 0],
-      textColor: [0, 0, 0],
-    },
-    headStyles: {
-      fillColor: false, // Sin color de fondo
-    },
-    didParseCell: (data) => {
-      if (data.row.index === filas.length - 1 && data.column.index === 0) {
-        // Aplica estilo a la celda de "Total Horas" (última fila, primera columna)
-        data.cell.styles.fontStyle = 'bold'; // Cambia el estilo a negrita
-      }
-    },
-    tableLineWidth: 0.1, // Asegurar que todas las líneas de la tabla sean visibles
-    tableLineColor: [0, 0, 0], // Color negro para las líneas de la tabla
-    margin: { left: margenes.izquierdo2 + 13, right: 20 }, // Define los márgenes
+  // Tabla de organización semestral
+  agregarTabla(columnas, filas, margenes.superior2 + 105, {
+    margin: { left: margenes.izquierdo2 + 13, right: 20 },
   });
 
-  doc.text(
+  addText(
     '1.16.    Docente / Equipo Docente(s) :',
     margenes.izquierdo2,
     margenes.superior2 + 160,
+    styleParrafo,
   );
 
   const columnas1 = [
@@ -211,135 +275,89 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
     ],
   ];
 
-  // Crear la tabla
-  doc.autoTable({
-    head: [columnas1], // Encabezados
-    body: filas1, // Filas de datos
-    startY: margenes.superior2 + 167, // Posición en Y para la tabla
-    theme: 'grid', // Tema con líneas de cuadrícula
-    styles: {
-      halign: 'center', // Centra el texto horizontalmente
-      valign: 'middle', // Centra el texto verticalmente
-      fontSize: 10, // Tamaño de fuente para el contenido
-      lineWidth: 0.1, // Grosor de líneas
-      lineColor: [0, 0, 0], // Color negro para las líneas
-    },
-    headStyles: {
-      fillColor: [255, 255, 255], // Sin color de fondo para encabezados
-      textColor: [0, 0, 0], // Texto negro
-      fontSize: 11, // Tamaño de fuente para los encabezados
-      fontStyle: 'bold', // Encabezados en negrita
-    },
-    margin: { left: margenes.izquierdo2 + 13, right: 20 }, // Define los márgenes
+  // Tabla de docente
+  agregarTabla(columnas1, filas1, margenes.superior2 + 167, {
+    margin: { left: margenes.izquierdo2 + 13, right: 20 },
   });
 
-  doc.setFont('helvetica', 'bold');
-  doc.text('II. SUMILLA', margenes.izquierdo, margenes.superior + 205);
+  doc.addPage();
+  addImage();
+  margenes.superior = 45;
+  addText('II. SUMILLA', margenes.izquierdo, margenes.superior, styleTitle);
 
-  doc.setFont('helvetica', 'normal');
-  agregarTextoJustificado(
-    silabo.silabo.sumilla, // Texto de la sumilla
-    margenes.izquierdo2, // Margen izquierdo
-    margenes.superior + 210, // Posición inicial en Y
-    160, // Ancho máximo del texto
-    5, // Altura entre líneas
-    20, // Margen inferior
+  addText(
+    silabo.silabo.sumilla,
+    margenes.izquierdo2,
+    margenes.superior + 10,
+    styleParrafo,
   );
 
-  doc.setFont('helvetica', 'bold');
-  doc.text(
+  addText(
     'III. COMPETENCIA DE ESTUDIOS GENERALES (I - II CICLO) O DE EGRESO (III - X CICLO)',
     margenes.izquierdo,
-    margenes.superior + 30,
+    margenes.superior + 90,
+    styleTitle,
   );
 
   const columnas2 = [
     'Unidad de Competencia: Gestión de Infraestructura y Comunicaciones',
   ];
 
-  const filas2 = [[`${silabo.silabo.unidadcompetencia}`]];
+  const filas2 = [
+    [`${silabo.silabo.unidadcompetencia}`], // Asegúrate de que las filas coincidan con las columnas
+  ];
 
-  // Crear la tabla
-  doc.autoTable({
-    head: [columnas2], // Encabezados
-    body: filas2, // Filas de datos
-    startY: margenes.superior + 35, // Posición en Y para la tabla
-    theme: 'grid', // Tema con líneas de cuadrícula
-    styles: {
-      halign: 'normal', // Centra el texto horizontalmente
-      valign: 'middle', // Centra el texto verticalmente
-      fontSize: 10, // Tamaño de fuente para el contenido
-      lineWidth: 0.1, // Grosor de líneas
-      lineColor: [0, 0, 0], // Color negro para las líneas
-    },
+  // Tabla unida de competencia
+  agregarTabla(columnas2, filas2, margenes.superior + 98, {
+    margin: { left: margenes.izquierdo2, right: 20 },
     headStyles: {
-      fillColor: [255, 255, 255], // Sin color de fondo para encabezados
-      textColor: [0, 0, 0], // Texto negro
-      fontSize: 11, // Tamaño de fuente para los encabezados
-      fontStyle: 'bold', // Encabezados en negrita
+      fillColor: [255, 255, 255],
+      halign: 'rigt',
     },
-    margin: { left: margenes.izquierdo - 5 + 13, right: 10 }, // Define los márgenes
+    bodyStyles: {
+      halign: 'rigt',
+    },
   });
 
-  doc.setFont('helvetica', 'bold');
-  doc.text(
+  addText(
     'ARTICULACION CON LAS COMPETENCIA GENERALES DE LA UNT',
-    margenes.izquierdo + 7,
-    margenes.superior + 75,
+    margenes.izquierdo + 6,
+    margenes.superior + 148,
+    styleTitle,
   );
 
   const columnas3 = ['Competencias Generales de la UNT'];
 
   const filas3 = [[`${silabo.silabo.competenciasgenerales}`]];
 
-  // Crear la tabla
-  doc.autoTable({
-    head: [columnas3], // Encabezados
-    body: filas3, // Filas de datos
-    startY: margenes.superior + 80, // Posición en Y para la tabla
-    theme: 'grid', // Tema con líneas de cuadrícula
-    styles: {
-      halign: 'normal', // Centra el texto horizontalmente
-      valign: 'middle', // Centra el texto verticalmente
-      fontSize: 10, // Tamaño de fuente para el contenido
-      lineWidth: 0.1, // Grosor de líneas
-      lineColor: [0, 0, 0], // Color negro para las líneas
-    },
+  // Tabla de competencias generales
+  agregarTabla(columnas3, filas3, margenes.superior + 155, {
+    margin: { left: margenes.izquierdo2, right: 20 },
     headStyles: {
-      fillColor: [255, 255, 255], // Sin color de fondo para encabezados
-      textColor: [0, 0, 0], // Texto negro
-      fontSize: 11, // Tamaño de fuente para los encabezados
-      fontStyle: 'bold', // Encabezados en negrita
+      fillColor: [255, 255, 255],
+      halign: 'rigt',
     },
-    margin: { left: margenes.izquierdo - 5 + 13, right: 10 }, // Define los márgenes
+    bodyStyles: {
+      halign: 'rigt',
+    },
   });
 
-  doc.setFont('helvetica', 'bold');
-  doc.text(
+  addText(
     'RESULTADOS DEL ESTUDIANTE QUE SON ABORDADOS POR EL CURSO',
     margenes.izquierdo + 7,
-    margenes.superior + 108,
+    margenes.superior + 185,
+    styleTitle,
   );
-
   const filas4 = [[`${silabo.silabo.resultados}`]];
 
-  // Crear la tabla
-  doc.autoTable({
-    body: filas4, // Filas de datos
-    startY: margenes.superior + 113, // Posición en Y para la tabla
-    theme: 'grid', // Tema con líneas de cuadrícula
-    styles: {
-      halign: 'normal', // Centra el texto horizontalmente
-      valign: 'middle', // Centra el texto verticalmente
-      fontSize: 10, // Tamaño de fuente para el contenido
-      lineWidth: 0.1, // Grosor de líneas
-      lineColor: [0, 0, 0], // Color negro para las líneas
+  // Tabla de resultados del estudiante
+  agregarTabla([], filas4, margenes.superior + 192, {
+    margin: { left: margenes.izquierdo2, right: 20 },
+    bodyStyles: {
+      halign: 'rigt',
     },
-
-    margin: { left: margenes.izquierdo - 5 + 13, right: 10 }, // Define los márgenes
   });
 
-  // Acciones según el parámetro `numero`
   if (numero === 1) {
     doc.save(`${silabo.curso.name}_silabo.pdf`);
   } else if (numero === 2) {
