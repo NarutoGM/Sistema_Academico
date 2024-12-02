@@ -177,6 +177,38 @@ export const getMisCursos = async (): Promise<MisCursosResponse> => {
     return data;
 };
 
+export const getSilaboPasado = async (idCurso: number): Promise<MisCursosResponse> => {
+    const authData = isAuthenticated();
+
+    if (!authData || !authData.token) {
+        throw new Error('User is not authenticated or token is missing');
+    }
+
+    // Realizamos una solicitud POST y pasamos los parámetros necesarios
+    const response = await fetch(`${apiUrl}/silaboReusar`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${authData.token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            idCurso, // Pasamos el idCurso que se usará en el controlador
+        }),
+    });
+
+    // Revisar el estado y el cuerpo de la respuesta
+    if (!response.ok) {
+        throw new Error('Error al obtener los cursos asignados');
+    }
+
+    // Leer el cuerpo de la respuesta solo una vez
+    const data = await response.json();
+    console.log("Datos recibidos:", data);
+
+    return data;
+};
+
+
 
 export const getMisSilabos = async (): Promise<any> => {
     const authData = isAuthenticated();
