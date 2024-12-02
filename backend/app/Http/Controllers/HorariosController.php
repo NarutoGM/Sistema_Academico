@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Asignacion;
 use App\Models\CargaDocente;
 use App\Models\DirectorEscuela;
 use Illuminate\Http\Request;
@@ -44,6 +45,7 @@ class HorariosController extends Controller
                         'escuela:idEscuela,name',
                     ])
                         ->where('idDirector', $directorescuela->idDirector)
+                        ->where('estado',1)
                         ->get()
                         ->map(function ($carga) {
 
@@ -72,6 +74,19 @@ class HorariosController extends Controller
                             }
     
                             return $carga;
+                        })
+                        ->map(function ($carga) {
+                            $asignacion = Asignacion::where('idDocente', $carga->idDocente)
+                            ->where('idCargaDocente', $carga->idCargaDocente)
+                            ->where('idFilial', $carga->idFilial)
+                            ->get();
+                            if ($asignacion->isNotEmpty()) {
+                                $carga->asignacion = $asignacion;
+                            } else {
+                                $carga->asignacion = "Sin horarios asignados";
+                            }
+                            $carga -> asignacion = $asignacion;
+                            return $carga;
                         });
 
 
@@ -98,5 +113,65 @@ class HorariosController extends Controller
             ], 401);
         }
     }
+
+    /*public function guardarHorarios(Request $request)
+    {
+        // Recibir los datos
+        $horarios = $request->input('horarios');
+        $idCargaDocente = $request->input('idCargaDocente');
+        $idFilial = $request->input('idFilial');
+        $idDocente = $request->input('idDocente');
+
+        // Guardar los horarios en la base de datos
+        foreach ($horarios as $horario) {
+            Asignacion::create([
+                'idCargaDocente' => $idCargaDocente['idCargaDocente'],
+                'idFilial' => $idFilial['idFilial'],
+                'idDocente' => $idDocente['idDocente'],
+                'aula' => $horario['aula'],
+                'dia' => $horario['dia'],
+                'grupo' => $horario['grupo'],
+                'horaFin' => $horario['horaFin'],
+                'horaInicio' => $horario['horaInicio'],
+                'tipoSesion' => $horario['tipoSesion'],
+            ]);
+        }
+
+        // Devolver una respuesta exitosa
+        return response()->json(['message' => 'Horarios guardados correctamente.'], 200);
+    }*/
+
+    public function guardarHorarios(Request $request) {
+    // Recibir los datos
+    $horarios = $request->input('horarios');
+    $idCargaDocente = $request->input('idCargaDocente');
+    $idFilial = $request->input('idFilial');
+    $idDocente = $request->input('idDocente');
+
+    // Eliminar los registros existentes que coincidan con idCargaDocente, idFilial e idDocente
+    Asignacion::where('idCargaDocente', $idCargaDocente)
+        ->where('idFilial', $idFilial)
+        ->where('idDocente', $idDocente)
+        ->delete();
+
+    // Guardar los nuevos horarios en la base de datos
+    foreach ($horarios as $horario) {
+        Asignacion::create([
+            'idCargaDocente' => $horario['idCargaDocente'],
+            'idFilial' => $horario['idFilial'],
+            'idDocente' => $horario['idDocente'],
+            'nombreAula' => $horario['aula'],
+            'dia' => $horario['dia'],
+            'grupo' => $horario['grupo'],
+            'horaFin' => $horario['horaFin'],
+            'horaInicio' => $horario['horaInicio'],
+            'tipoSesion' => $horario['tipoSesion'],
+        ]);
+    }
+
+    // Devolver una respuesta exitosa
+    return response()->json(['message' => 'Horarios guardados correctamente.'], 200);
+}
+
 
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import { getCargaHorario, CargaDocente } from '@/pages/services/horario.services';
+import { getCargaHorario, CargaDocente, guardarHorarios } from '@/pages/services/horario.services';
 import "quill/dist/quill.snow.css";
 import { generarSilaboPDF } from '@/utils/pdfUtils';
 
@@ -63,82 +63,298 @@ const Index: React.FC = () => {
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-
+    const manejarGuardarHorarios = async (horarios: any[], idDocente: number, idCargaDocente: number, idFilial: number) => {
+        try {
+            await guardarHorarios(horarios, idDocente, idCargaDocente, idFilial);
+            // Mostrar mensaje de éxito
+            Swal.fire('Éxito', 'Los horarios se han guardado correctamente.', 'success');
+        } catch (error) {
+            // Manejar cualquier error
+            console.error(error);
+            Swal.fire('Error', 'Hubo un problema al guardar los horarios.', 'error');
+        }
+    };
 
     const modal = (carga: CargaDocente, numero: number) => {
         const isEditable = numero === 1;
-        const observacionesText = numero === 2 ? carga.silabo?.observaciones || "" : "";
+        let horarios = carga.asignacion || [];
     
-        const getEstadoSilabo = (carga: CargaDocente) => {
-            if (carga.estado === false) {
-                return 'Inactivo';
-            } else if (carga.silabo == null) {
-                return 'Aún no envió silabo';
-            } else {
-                switch (carga.silabo.estado) {
-                    case 1: return 'Por Revisar';
-                    case 2: return 'Rechazado';
-                    case 3: return 'Visado';
-                    default: return 'Estado Desconocido';
-                }
+        // Renderiza la tabla de horarios
+        const renderTablaHorarios = () => {
+            const tabla = document.getElementById("tabla-horarios");
+            if (tabla) {
+                tabla.innerHTML = horarios
+                    .map((asignacion, index) => `
+                        <tr>
+                            <td>${asignacion.tipoSesion}</td>
+                            <td>${asignacion.grupo || "N/A"}</td>
+                            <td>${asignacion.dia}</td>
+                            <td>${asignacion.horaInicio}</td>
+                            <td>${asignacion.horaFin}</td>
+                            <td>${asignacion.aula || "N/A"}</td>
+                            <td><button class="btn-delete" data-index="${index}">Eliminar</button></td>
+                        </tr>
+                    `)
+                    .join("");
+    
+                // Agregar eventos de eliminación
+                document.querySelectorAll(".btn-delete").forEach((btn) => {
+                    btn.addEventListener("click", (e) => {
+                        const index = parseInt((e.target as HTMLElement).getAttribute("data-index"));
+                        horarios.splice(index, 1);
+                        renderTablaHorarios();
+                    });
+                });
             }
         };
     
-        const estadoSilabo = getEstadoSilabo(carga);
-    
         Swal.fire({
-            title: "Detalles del Sílabo",
+            title: "Asignar Horarios",
             html: `
-                <div style="display: flex; gap: 20px; align-items: flex-start;">
-                    <div style="flex: 1; text-align: left; line-height: 1.5; margin-bottom: 20px; min-width: 300px;">
-                        <p><strong>ID Curso:</strong> ${carga.idCurso}</p>
-                        <p><strong>Curso:</strong> ${carga.curso?.name}</p>
-                        <p><strong>Docente:</strong> ${carga.nomdocente} ${carga.apedocente}</p>
-                        <p><strong>Filial:</strong> ${carga.filial?.name}</p>
-                        <p><strong>Semestre Académico:</strong> ${carga.semestre_academico?.nomSemestre}</p>
-                        ${numero === 2
-                            ? `<p><strong>Observaciones:</strong> ${carga.silabo?.observaciones || "Sin observaciones registradas"}</p>`
-                            : ""
-                        }
-                        <p>
-                            <strong>Estado del Sílabo:</strong> ${estadoSilabo}
-                        </p>
-                        <textarea 
-                            id="observaciones" 
-                            placeholder="Escribe las observaciones aquí..." 
-                            style="width: 100%; height: 300px; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" 
-                            ${!isEditable ? "disabled" : ""}
-                        >${observacionesText}</textarea>
+                <div>
+                    <h4>Asignar Horarios</h4>
+                    <!-- Select para escoger el tipo de sesión -->
+                    <label for="tipo-sesion">Tipo de Sesión:</label>
+                    <select id="tipo-sesion" class="swal2-input">
+                        <option value="">Selecciona tipo de sesión</option>
+                        ${carga.curso?.hTeoricas ? `<option value="Teoría">Teoría</option>` : ""}
+                        ${carga.curso?.hPracticas ? `<option value="Práctica">Práctica</option>` : ""}
+                        ${carga.curso?.hLaboratorio ? `<option value="Laboratorio">Laboratorio</option>` : ""}
+                    </select>
+    
+                    <!-- Selección de día -->
+                    <label for="dia">Día de la Semana:</label>
+                    <select id="dia" class="swal2-input">
+                        <option value="Lunes">Lunes</option>
+                        <option value="Martes">Martes</option>
+                        <option value="Miércoles">Miércoles</option>
+                        <option value="Jueves">Jueves</option>
+                        <option value="Viernes">Viernes</option>
+                        <option value="Sábado">Sábado</option>
+                    </select>
+    
+                    <!-- Hora de inicio y fin -->
+                    <label for="hora-inicio">Hora de Inicio:</label>
+                    <input type="time" id="hora-inicio" class="swal2-input" style="width: 100%;" />
+                    <label for="hora-fin">Hora de Fin:</label>
+                    <input type="time" id="hora-fin" class="swal2-input" style="width: 100%;" />
+    
+                    <!-- Input para aula -->
+                    <label for="aula">Aula:</label>
+                    <input type="text" id="aula" class="swal2-input" style="width: 100%;" placeholder="Ejemplo: A101" />
+
+                    <!-- Select para elegir el grupo de laboratorio (si es necesario) -->
+                    <div id="grupo-laboratorio-container" style="display: none;">
+                        <label for="grupo-laboratorio">Grupo de Laboratorio:</label>
+                        <select id="grupo-laboratorio" class="swal2-input">
+                            ${[...Array(carga.curso?.nGrupos || 0)].map((_, index) => `<option value="Grupo ${index + 1}" ${horarios.some(h => h.grupo === `Grupo ${index + 1}`) ? 'selected' : ''}>Grupo ${index + 1}</option>`).join("")}
+                        </select>
                     </div>
-                    <div id="pdf-container" style="flex: 2; border: 1px solid #ccc; border-radius: 4px; overflow-y: auto; height: 600px; padding: 10px;">
-                        <p>Cargando PDF...</p>
-                    </div>
+    
+                    <!-- Botón para agregar el horario -->
+                    <button id="btn-agregar-horario" class="swal2-confirm swal2-styled">Agregar Horario</button>
+    
+                    <!-- Tabla de horarios asignados -->
+                    <h4>Horarios Asignados</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; text-align: left;">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Grupo</th>
+                                <th>Día</th>
+                                <th>Inicio</th>
+                                <th>Fin</th>
+                                <th>Aula</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-horarios"></tbody>
+                    </table>
                 </div>
             `,
-            width: 1000,
+            width: 800,
             showCancelButton: true,
-            showDenyButton: isEditable,
-            showConfirmButton: isEditable,
-            confirmButtonText: "Aceptar",
-            denyButtonText: "Rechazar",
+            showConfirmButton: true,
+            confirmButtonText: "Guardar",
             cancelButtonText: "Cancelar",
             focusConfirm: false,
             didOpen: () => {
-                // Generar el PDF y cargarlo en el iframe
-                const pdfContainer = document.getElementById("pdf-container");
-                if (pdfContainer) {
-                    const pdfDataUri = generarSilaboPDF(carga,2);
-                    pdfContainer.innerHTML = `
-                        <iframe 
-                            src="${pdfDataUri}" 
-                            style="width: 100%; height: 100%; border: none;" 
-                            title="Sílabo PDF"
-                        ></iframe>
-                    `;
-                }
+                // Habilitar o deshabilitar el campo de grupo de laboratorio
+                document.getElementById("tipo-sesion")?.addEventListener("change", (e) => {
+                    const tipo = (e.target as HTMLSelectElement).value;
+                    const grupoContainer = document.getElementById("grupo-laboratorio-container");
+                    if (tipo === "Laboratorio" && carga.curso?.nGrupos > 0) {
+                        grupoContainer.style.display = "block";
+                    } else {
+                        grupoContainer.style.display = "none";
+                    }
+                });
+                // Agregar un horario a la tabla
+                document.getElementById("btn-agregar-horario")?.addEventListener("click", () => {
+                    const tipo = (document.getElementById("tipo-sesion") as HTMLSelectElement)?.value;
+                    const dia = (document.getElementById("dia") as HTMLSelectElement)?.value;
+                    const inicio = (document.getElementById("hora-inicio") as HTMLInputElement)?.value;
+                    const fin = (document.getElementById("hora-fin") as HTMLInputElement)?.value;
+                    const aula = (document.getElementById("aula") as HTMLInputElement)?.value;
+                    const grupo = tipo === "Laboratorio" ? (document.getElementById("grupo-laboratorio") as HTMLSelectElement)?.value : null;
+    
+                    if (tipo && inicio && fin && aula) {
+                        horarios.push({ tipoSesion: tipo, grupo, dia, horaInicio: inicio, horaFin: fin, aula });
+                        renderTablaHorarios();
+                    } else {
+                        Swal.fire("Error", "Por favor, completa todos los campos.", "error");
+                    }
+                });
+    
+                renderTablaHorarios();
             },
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log("Horarios asignados:", horarios);
+                manejarGuardarHorarios(horarios, carga.idCargaDocente, carga.idFilial, carga.idDocente);
+            }
         });
     };
+    
+    
+
+    const modal1 = (carga: CargaDocente, numero: number) => {
+        const isEditable = numero === 1;
+        let horarios = carga.asignacion || [];
+    
+        // Renderiza la tabla de horarios
+        const renderTablaHorarios = () => {
+            const tabla = document.getElementById("tabla-horarios");
+            if (tabla) {
+                tabla.innerHTML = horarios
+                    .map((asignacion, index) => `
+                        <tr>
+                            <td>${asignacion.tipoSesion}</td>
+                            <td>${asignacion.grupo || "N/A"}</td>
+                            <td>${asignacion.dia}</td>
+                            <td>${asignacion.horaInicio}</td>
+                            <td>${asignacion.horaFin}</td>
+                            <td><button class="btn-delete" data-index="${index}">Eliminar</button></td>
+                        </tr>
+                    `)
+                    .join("");
+    
+                // Agregar eventos de eliminación
+                document.querySelectorAll(".btn-delete").forEach((btn) => {
+                    btn.addEventListener("click", (e) => {
+                        const index = parseInt((e.target as HTMLElement).getAttribute("data-index"));
+                        horarios.splice(index, 1);
+                        renderTablaHorarios();
+                    });
+                });
+            }
+        };
+    
+        Swal.fire({
+            title: "Asignar Horarios",
+            html: `
+                <div>
+                    <h4>Asignar Horarios</h4>
+                    <!-- Select para escoger el tipo de sesión (Teoría, Práctica, Laboratorio) -->
+                    <label for="tipo-sesion">Tipo de Sesión:</label>
+                    <select id="tipo-sesion" class="swal2-input">
+                        <option value="">Selecciona tipo de sesión</option>
+                        ${carga.curso?.hTeoricas ? `<option value="Teoría" ${horarios.some(h => h.tipoSesion === 'Teoría') ? 'selected' : ''}>Teoría</option>` : ""}
+                        ${carga.curso?.hPracticas ? `<option value="Práctica" ${horarios.some(h => h.tipoSesion === 'Práctica') ? 'selected' : ''}>Práctica</option>` : ""}
+                        ${carga.curso?.hLaboratorio ? `<option value="Laboratorio" ${horarios.some(h => h.tipoSesion === 'Laboratorio') ? 'selected' : ''}>Laboratorio</option>` : ""}
+                    </select>
+                    
+                    <!-- Selección de día -->
+                    <label for="dia">Día de la Semana:</label>
+                    <select id="dia" class="swal2-input">
+                        <option value="Lunes" ${horarios.some(h => h.dia === 'Lunes') ? 'selected' : ''}>Lunes</option>
+                        <option value="Martes" ${horarios.some(h => h.dia === 'Martes') ? 'selected' : ''}>Martes</option>
+                        <option value="Miércoles" ${horarios.some(h => h.dia === 'Miércoles') ? 'selected' : ''}>Miércoles</option>
+                        <option value="Jueves" ${horarios.some(h => h.dia === 'Jueves') ? 'selected' : ''}>Jueves</option>
+                        <option value="Viernes" ${horarios.some(h => h.dia === 'Viernes') ? 'selected' : ''}>Viernes</option>
+                        <option value="Sábado" ${horarios.some(h => h.dia === 'Sábado') ? 'selected' : ''}>Sábado</option>
+                    </select>
+    
+                    <!-- Hora de inicio y fin -->
+                    <label for="hora-inicio">Hora de Inicio:</label>
+                    <input type="time" id="hora-inicio" class="swal2-input" style="width: 100%;" value="${horarios[0]?.horaInicio || ''}" />
+                    <label for="hora-fin">Hora de Fin:</label>
+                    <input type="time" id="hora-fin" class="swal2-input" style="width: 100%;" value="${horarios[0]?.horaFin || ''}" />
+                    
+                    <!-- Select para elegir el grupo de laboratorio (si es necesario) -->
+                    <div id="grupo-laboratorio-container" style="display: none;">
+                        <label for="grupo-laboratorio">Grupo de Laboratorio:</label>
+                        <select id="grupo-laboratorio" class="swal2-input">
+                            ${[...Array(carga.curso?.nGrupos || 0)].map((_, index) => `<option value="Grupo ${index + 1}" ${horarios.some(h => h.grupo === `Grupo ${index + 1}`) ? 'selected' : ''}>Grupo ${index + 1}</option>`).join("")}
+                        </select>
+                    </div>
+                    
+                    <!-- Botón para agregar el horario -->
+                    <button id="btn-agregar-horario" class="swal2-confirm swal2-styled">Agregar Horario</button>
+    
+                    <!-- Tabla de horarios asignados -->
+                    <h4>Horarios Asignados</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; text-align: left;">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Grupo</th>
+                                <th>Día</th>
+                                <th>Inicio</th>
+                                <th>Fin</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-horarios"></tbody>
+                    </table>
+                </div>
+            `,
+            width: 800,
+            showCancelButton: true,
+            showConfirmButton: true,
+            confirmButtonText: "Guardar",
+            cancelButtonText: "Cancelar",
+            focusConfirm: false,
+            didOpen: () => {
+                // Habilitar o deshabilitar el campo de grupo de laboratorio
+                document.getElementById("tipo-sesion")?.addEventListener("change", (e) => {
+                    const tipo = (e.target as HTMLSelectElement).value;
+                    const grupoContainer = document.getElementById("grupo-laboratorio-container");
+                    if (tipo === "Laboratorio" && carga.curso?.nGrupos > 0) {
+                        grupoContainer.style.display = "block";
+                    } else {
+                        grupoContainer.style.display = "none";
+                    }
+                });
+    
+                // Agregar un horario a la tabla
+                document.getElementById("btn-agregar-horario")?.addEventListener("click", () => {
+                    const tipo = (document.getElementById("tipo-sesion") as HTMLSelectElement)?.value;
+                    const dia = (document.getElementById("dia") as HTMLSelectElement)?.value;
+                    const inicio = (document.getElementById("hora-inicio") as HTMLInputElement)?.value;
+                    const fin = (document.getElementById("hora-fin") as HTMLInputElement)?.value;
+                    const grupo = tipo === "Laboratorio" ? (document.getElementById("grupo-laboratorio") as HTMLSelectElement)?.value : null;
+    
+                    if (tipo && inicio && fin) {
+                        horarios.push({ tipoSesion: tipo, grupo, dia, horaInicio: inicio, horaFin: fin });
+                        renderTablaHorarios();
+                    } else {
+                        Swal.fire("Error", "Por favor, completa todos los campos.", "error");
+                    }
+                });
+    
+                renderTablaHorarios();
+            },
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log("Horarios asignados:", horarios);
+                // Aquí puedes enviar los horarios al backend o procesarlos según sea necesario
+            }
+        });
+    };
+    
+
+    
     
     
 
