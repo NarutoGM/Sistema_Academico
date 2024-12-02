@@ -94,6 +94,7 @@ export interface CargaDocente {
     silabo?: Silabo;
     nomdocente: string;
     apedocente: string;
+    asignacionEstado: number;
 
 }
 

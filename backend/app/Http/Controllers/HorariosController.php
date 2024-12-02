@@ -87,6 +87,15 @@ class HorariosController extends Controller
                             }
                             $carga -> asignacion = $asignacion;
                             return $carga;
+                        })
+                        ->map(function ($carga) {
+                            $asignacion = Asignacion::where('idDocente', $carga->idDocente)
+                            ->where('idCargaDocente', $carga->idCargaDocente)
+                            ->where('idFilial', $carga->idFilial)
+                            ->exists();
+                            $carga->asignacionEstado = $asignacion ? 1 : 0;
+                            $carga->asignacionDetalle = $asignacion ? 'Con horarios asignados' : 'Sin horarios asignados';
+                            return $carga;
                         });
 
 

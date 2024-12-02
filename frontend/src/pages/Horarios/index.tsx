@@ -75,7 +75,7 @@ const Index: React.FC = () => {
         }
     };
 
-    const modal = (carga: CargaDocente, numero: number) => {
+    const modal1 = (carga: CargaDocente, numero: number) => {
         const isEditable = numero === 1;
         let horarios = carga.asignacion || [];
     
@@ -215,31 +215,35 @@ const Index: React.FC = () => {
             }
         });
     };
-    
-    
 
-    const modal1 = (carga: CargaDocente, numero: number) => {
+
+    const modal = (carga: CargaDocente, numero: number) => {
         const isEditable = numero === 1;
         let horarios = carga.asignacion || [];
     
-        // Renderiza la tabla de horarios
         const renderTablaHorarios = () => {
             const tabla = document.getElementById("tabla-horarios");
             if (tabla) {
                 tabla.innerHTML = horarios
-                    .map((asignacion, index) => `
-                        <tr>
-                            <td>${asignacion.tipoSesion}</td>
-                            <td>${asignacion.grupo || "N/A"}</td>
-                            <td>${asignacion.dia}</td>
-                            <td>${asignacion.horaInicio}</td>
-                            <td>${asignacion.horaFin}</td>
-                            <td><button class="btn-delete" data-index="${index}">Eliminar</button></td>
-                        </tr>
-                    `)
+                    .map(
+                        (asignacion, index) => `
+                            <tr class="border-b">
+                                <td class="px-2 py-1">${asignacion.tipoSesion}</td>
+                                <td class="px-2 py-1">${asignacion.grupo || "N/A"}</td>
+                                <td class="px-2 py-1">${asignacion.dia}</td>
+                                <td class="px-2 py-1">${asignacion.horaInicio}</td>
+                                <td class="px-2 py-1">${asignacion.horaFin}</td>
+                                <td class="px-2 py-1">${asignacion.aula || "N/A"}</td>
+                                <td class="px-2 py-1 text-center">
+                                    <button class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 btn-delete" data-index="${index}">
+                                        Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        `
+                    )
                     .join("");
     
-                // Agregar eventos de eliminación
                 document.querySelectorAll(".btn-delete").forEach((btn) => {
                     btn.addEventListener("click", (e) => {
                         const index = parseInt((e.target as HTMLElement).getAttribute("data-index"));
@@ -251,92 +255,109 @@ const Index: React.FC = () => {
         };
     
         Swal.fire({
-            title: "Asignar Horarios",
+            title: "<h2 style='color: #2c3e50;'>Asignar Horarios</h2>",
             html: `
-                <div>
-                    <h4>Asignar Horarios</h4>
-                    <!-- Select para escoger el tipo de sesión (Teoría, Práctica, Laboratorio) -->
-                    <label for="tipo-sesion">Tipo de Sesión:</label>
+                <div style="text-align: left; padding: 10px;">
+                    <h4 class="text-lg font-bold mb-3">Información</h4>
+    
+                    <!-- Tipo de Sesión -->
+                    <label for="tipo-sesion" class="block font-medium">Tipo de Sesión:</label>
                     <select id="tipo-sesion" class="swal2-input">
                         <option value="">Selecciona tipo de sesión</option>
-                        ${carga.curso?.hTeoricas ? `<option value="Teoría" ${horarios.some(h => h.tipoSesion === 'Teoría') ? 'selected' : ''}>Teoría</option>` : ""}
-                        ${carga.curso?.hPracticas ? `<option value="Práctica" ${horarios.some(h => h.tipoSesion === 'Práctica') ? 'selected' : ''}>Práctica</option>` : ""}
-                        ${carga.curso?.hLaboratorio ? `<option value="Laboratorio" ${horarios.some(h => h.tipoSesion === 'Laboratorio') ? 'selected' : ''}>Laboratorio</option>` : ""}
-                    </select>
-                    
-                    <!-- Selección de día -->
-                    <label for="dia">Día de la Semana:</label>
-                    <select id="dia" class="swal2-input">
-                        <option value="Lunes" ${horarios.some(h => h.dia === 'Lunes') ? 'selected' : ''}>Lunes</option>
-                        <option value="Martes" ${horarios.some(h => h.dia === 'Martes') ? 'selected' : ''}>Martes</option>
-                        <option value="Miércoles" ${horarios.some(h => h.dia === 'Miércoles') ? 'selected' : ''}>Miércoles</option>
-                        <option value="Jueves" ${horarios.some(h => h.dia === 'Jueves') ? 'selected' : ''}>Jueves</option>
-                        <option value="Viernes" ${horarios.some(h => h.dia === 'Viernes') ? 'selected' : ''}>Viernes</option>
-                        <option value="Sábado" ${horarios.some(h => h.dia === 'Sábado') ? 'selected' : ''}>Sábado</option>
+                        ${carga.curso?.hTeoricas ? `<option value="Teoría">Teoría</option>` : ""}
+                        ${carga.curso?.hPracticas ? `<option value="Práctica">Práctica</option>` : ""}
+                        ${carga.curso?.hLaboratorio ? `<option value="Laboratorio">Laboratorio</option>` : ""}
                     </select>
     
-                    <!-- Hora de inicio y fin -->
-                    <label for="hora-inicio">Hora de Inicio:</label>
-                    <input type="time" id="hora-inicio" class="swal2-input" style="width: 100%;" value="${horarios[0]?.horaInicio || ''}" />
-                    <label for="hora-fin">Hora de Fin:</label>
-                    <input type="time" id="hora-fin" class="swal2-input" style="width: 100%;" value="${horarios[0]?.horaFin || ''}" />
-                    
-                    <!-- Select para elegir el grupo de laboratorio (si es necesario) -->
+                    <!-- Día -->
+                    <label for="dia" class="block font-medium mt-2">Día de la Semana:</label>
+                    <select id="dia" class="swal2-input">
+                        <option value="Lunes">Lunes</option>
+                        <option value="Martes">Martes</option>
+                        <option value="Miércoles">Miércoles</option>
+                        <option value="Jueves">Jueves</option>
+                        <option value="Viernes">Viernes</option>
+                        <option value="Sábado">Sábado</option>
+                    </select>
+    
+                    <!-- Horario -->
+                    <div class="flex gap-2 mt-2">
+                        <div>
+                            <label for="hora-inicio" class="block font-medium">Hora de Inicio:</label>
+                            <input type="time" id="hora-inicio" class="swal2-input w-full" />
+                        </div>
+                        <div>
+                            <label for="hora-fin" class="block font-medium">Hora de Fin:</label>
+                            <input type="time" id="hora-fin" class="swal2-input w-full" />
+                        </div>
+                    </div>
+    
+                    <!-- Aula -->
+                    <label for="aula" class="block font-medium mt-2">Aula:</label>
+                    <input type="text" id="aula" class="swal2-input w-full" placeholder="Ejemplo: A101" />
+    
+                    <!-- Grupo Laboratorio -->
                     <div id="grupo-laboratorio-container" style="display: none;">
-                        <label for="grupo-laboratorio">Grupo de Laboratorio:</label>
+                        <label for="grupo-laboratorio" class="block font-medium mt-2">Grupo de Laboratorio:</label>
                         <select id="grupo-laboratorio" class="swal2-input">
-                            ${[...Array(carga.curso?.nGrupos || 0)].map((_, index) => `<option value="Grupo ${index + 1}" ${horarios.some(h => h.grupo === `Grupo ${index + 1}`) ? 'selected' : ''}>Grupo ${index + 1}</option>`).join("")}
+                            ${[...Array(carga.curso?.nGrupos || 0)]
+                                .map(
+                                    (_, index) =>
+                                        `<option value="Grupo ${index + 1}">Grupo ${index + 1}</option>`
+                                )
+                                .join("")}
                         </select>
                     </div>
-                    
-                    <!-- Botón para agregar el horario -->
-                    <button id="btn-agregar-horario" class="swal2-confirm swal2-styled">Agregar Horario</button>
     
-                    <!-- Tabla de horarios asignados -->
-                    <h4>Horarios Asignados</h4>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; text-align: left;">
+                    <!-- Botón Agregar -->
+                    <button id="btn-agregar-horario" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mt-3">
+                        Agregar Horario
+                    </button>
+    
+                    <!-- Tabla -->
+                    <h4 class="text-lg font-bold mt-5">Horarios Asignados</h4>
+                    <table class="w-full border-collapse mt-2">
                         <thead>
-                            <tr>
-                                <th>Tipo</th>
-                                <th>Grupo</th>
-                                <th>Día</th>
-                                <th>Inicio</th>
-                                <th>Fin</th>
-                                <th>Acciones</th>
+                            <tr class="bg-gray-100">
+                                <th class="border px-2 py-1">Tipo</th>
+                                <th class="border px-2 py-1">Grupo</th>
+                                <th class="border px-2 py-1">Día</th>
+                                <th class="border px-2 py-1">Inicio</th>
+                                <th class="border px-2 py-1">Fin</th>
+                                <th class="border px-2 py-1">Aula</th>
+                                <th class="border px-2 py-1">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="tabla-horarios"></tbody>
+                        <tbody id="tabla-horarios" class="text-sm"></tbody>
                     </table>
                 </div>
             `,
-            width: 800,
+            width: "60%",
             showCancelButton: true,
-            showConfirmButton: true,
             confirmButtonText: "Guardar",
             cancelButtonText: "Cancelar",
             focusConfirm: false,
             didOpen: () => {
-                // Habilitar o deshabilitar el campo de grupo de laboratorio
                 document.getElementById("tipo-sesion")?.addEventListener("change", (e) => {
                     const tipo = (e.target as HTMLSelectElement).value;
                     const grupoContainer = document.getElementById("grupo-laboratorio-container");
-                    if (tipo === "Laboratorio" && carga.curso?.nGrupos > 0) {
-                        grupoContainer.style.display = "block";
-                    } else {
-                        grupoContainer.style.display = "none";
-                    }
+                    grupoContainer.style.display =
+                        tipo === "Laboratorio" && carga.curso?.nGrupos > 0 ? "block" : "none";
                 });
     
-                // Agregar un horario a la tabla
                 document.getElementById("btn-agregar-horario")?.addEventListener("click", () => {
                     const tipo = (document.getElementById("tipo-sesion") as HTMLSelectElement)?.value;
                     const dia = (document.getElementById("dia") as HTMLSelectElement)?.value;
                     const inicio = (document.getElementById("hora-inicio") as HTMLInputElement)?.value;
                     const fin = (document.getElementById("hora-fin") as HTMLInputElement)?.value;
-                    const grupo = tipo === "Laboratorio" ? (document.getElementById("grupo-laboratorio") as HTMLSelectElement)?.value : null;
+                    const aula = (document.getElementById("aula") as HTMLInputElement)?.value;
+                    const grupo =
+                        tipo === "Laboratorio"
+                            ? (document.getElementById("grupo-laboratorio") as HTMLSelectElement)?.value
+                            : null;
     
-                    if (tipo && inicio && fin) {
-                        horarios.push({ tipoSesion: tipo, grupo, dia, horaInicio: inicio, horaFin: fin });
+                    if (tipo && inicio && fin && aula) {
+                        horarios.push({ tipoSesion: tipo, grupo, dia, horaInicio: inicio, horaFin: fin, aula });
                         renderTablaHorarios();
                     } else {
                         Swal.fire("Error", "Por favor, completa todos los campos.", "error");
@@ -348,21 +369,12 @@ const Index: React.FC = () => {
         }).then((result) => {
             if (result.isConfirmed) {
                 console.log("Horarios asignados:", horarios);
-                // Aquí puedes enviar los horarios al backend o procesarlos según sea necesario
+                manejarGuardarHorarios(horarios, carga.idCargaDocente, carga.idFilial, carga.idDocente);
             }
         });
     };
     
-
     
-    
-    
-
-
-
-
-
-
 
     const SubmitCarga = async (carga: CargaDocente, numero: number, observaciones: string) => {
         console.log('observaciones:', observaciones);
@@ -401,8 +413,8 @@ const Index: React.FC = () => {
 
     return (
         <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">Listado de Carga Docente</h1>
-            <h1 className="text-xl font-bold mb-4">Filtrar:</h1>
+            <h1 className="text-2xl font-bold mb-4">Asignar horarios</h1>
+            <h2 className="text-xl font-bold mb-4">Filtrar:</h2>
 
             {/* Filters */}
             <div className="flex flex-wrap gap-4 mb-4">
@@ -437,13 +449,6 @@ const Index: React.FC = () => {
                     />
                     <input
                         type="text"
-                        placeholder="Proceso Sílabos"
-                        value={procesoSilabo}
-                        onChange={(e) => setProcesoSilabo(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
-                    />
-                    <input
-                        type="text"
                         placeholder="Docente"
                         value={docente}
                         onChange={(e) => setDocente(e.target.value)}
@@ -466,6 +471,7 @@ const Index: React.FC = () => {
             </div>
 
             <div className="overflow-x-auto">
+                <h2 className="text-xl font-bold mb-4">Listado de Carga Docente</h2>
                 <table className="min-w-full bg-white border border-gray-200">
                     <thead>
                         <tr className='bg-blue-700'>
@@ -491,38 +497,37 @@ const Index: React.FC = () => {
 
                                 <td className="px-4 py-2 border-b text-center">{carga.ciclo}</td>
 
+
                                 <td className="px-4 py-2 border-b text-center">
-                                    {
-                                        carga.estado === false
-                                            ? 'Inactivo'
-                                            : (
-                                                carga.silabo == null
-                                                    ? 'Aún no envió silabo' // Verifica si silabo es null o undefined
-                                                    : (
-                                                        carga.silabo.estado === 1 ? 'Aún falta revisar'
-                                                            : carga.silabo.estado === 2 ? 'Rechazado'
-                                                                : carga.silabo.estado === 3 ? 'Aceptado'
-                                                                    : 'Estado desconocido'
-                                                    )
-                                            )
-                                    }
+                                    {carga.estado === false ? (
+                                        <span className="text-gray-500 font-semibold">Inactivo</span>
+                                    ) : (
+                                        <span
+                                            className={`font-semibold px-2 py-1 rounded ${
+                                                carga.asignacionEstado === 0
+                                                    ? 'text-red-600 bg-red-100'
+                                                    : 'text-green-600 bg-green-100'
+                                            }`}
+                                        >
+                                            {carga.asignacionEstado === 0 ? 'Sin horarios' : 'Con horarios asignados'}
+                                        </span>
+                                    )}
                                 </td>
 
 
-
-
-
                                 <td className="px-4 py-2 border-b text-center">
-                                    <button onClick={() => {
-
-                                        modal(carga, 1)
-                                    }}>asdasds</button>
-
-
+                                    <button 
+                                        onClick={() => modal(carga, 1)}
+                                        className={`px-4 py-2 rounded font-semibold text-white shadow-md hover:shadow-lg transition-transform transform hover:scale-105 ${
+                                            carga.asignacionEstado === 0
+                                                ? 'bg-green-500 hover:bg-green-600'
+                                                : 'bg-blue-500 hover:bg-blue-600'
+                                        }`}
+                                    >
+                                        {carga.asignacionEstado === 0 ? 'Asignar' : 'Modificar'}
+                                    </button>
                                 </td>
-
-
-
+                                
                             </tr>
                         ))}
                     </tbody>
