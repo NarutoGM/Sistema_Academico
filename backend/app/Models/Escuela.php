@@ -32,4 +32,9 @@ class Escuela extends Model
     {
         return $this->belongsTo(Facultad::class, 'idFacultad', 'idFacultad');
     }
+
+    public function mallas()
+    {
+        return $this->hasMany(Malla::class, 'idEscuela', 'idEscuela');
+    }
 }
