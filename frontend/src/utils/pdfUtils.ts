@@ -674,7 +674,7 @@ Es el aprendizaje alcanzado por el estudiante. Para la determinación de los niv
   );
 
   addText(
-    'V. TUTORÍA ACADÉMICA (Plan de Mejora)',
+    'VI. REFERENCIAS',
     margenes.izquierdo,
     margenes.superior + 62,
     styleTitle,
