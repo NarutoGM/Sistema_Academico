@@ -1,3 +1,4 @@
+import { PageMargin } from 'docx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
@@ -90,32 +91,60 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
       headStyles?: any;
       bodyStyles?: any;
       margin?: { left: number; right: number };
+      columnStyles?: any;
+      fontSize?: number; // Tamaño de fuente global
     } = {},
   ): void => {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const leftMargin = estilos.margin?.left || 10;
+    const rightMargin = estilos.margin?.right || 10;
+    const maxTableWidth = pageWidth - (leftMargin + rightMargin);
+
+    const adjustedColumnStyles = { ...estilos.columnStyles };
+    if (Object.keys(adjustedColumnStyles).length > 0) {
+      let totalColumnWidth = 0;
+
+      for (const key in adjustedColumnStyles) {
+        totalColumnWidth += adjustedColumnStyles[key]?.cellWidth || 0;
+      }
+
+      if (totalColumnWidth > maxTableWidth) {
+        const scaleFactor = maxTableWidth / totalColumnWidth;
+        for (const key in adjustedColumnStyles) {
+          adjustedColumnStyles[key].cellWidth *= scaleFactor;
+        }
+      }
+    }
+
     const config: any = {
       body: filas,
       startY,
       theme: estilos.theme || 'grid',
-      styles: estilos.styles || {
+      styles: {
         halign: 'center',
-        fontSize: 10,
+        fontSize: estilos.fontSize || 10, // Tamaño de fuente global
         lineWidth: 0.1,
         lineColor: [0, 0, 0],
         textColor: [0, 0, 0],
+        ...estilos.styles, // Permitir sobrescribir estilos globales
       },
-      bodyStyles: estilos.bodyStyles || {
+      bodyStyles: {
+        fontSize: estilos.fontSize || 10, // Tamaño de fuente para el cuerpo
         fillColor: [255, 255, 255],
+        ...estilos.bodyStyles, // Permitir sobrescribir estilos del cuerpo
       },
-      margin: estilos.margin || { left: 10, right: 10 },
-    };
-
-    // Solo agregar encabezados si hay columnas
-    if (columnas.length > 0) {
-      config.head = [columnas];
-      config.headStyles = estilos.headStyles || {
+      headStyles: {
+        fontSize: estilos.fontSize || 11, // Tamaño de fuente para el encabezado
         fillColor: [255, 255, 255],
         fontStyle: 'bold',
-      };
+        ...estilos.headStyles, // Permitir sobrescribir estilos del encabezado
+      },
+      margin: { left: leftMargin, right: rightMargin },
+      columnStyles: adjustedColumnStyles,
+    };
+
+    if (columnas.length > 0) {
+      config.head = [columnas];
     }
 
     (doc as any).autoTable(config);
@@ -255,7 +284,7 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
   addText(
     '1.16.    Docente / Equipo Docente(s) :',
     margenes.izquierdo2,
-    margenes.superior2 + 160,
+    margenes.superior2 + 168,
     styleParrafo,
   );
 
@@ -276,7 +305,7 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
   ];
 
   // Tabla de docente
-  agregarTabla(columnas1, filas1, margenes.superior2 + 167, {
+  agregarTabla(columnas1, filas1, margenes.superior2 + 174, {
     margin: { left: margenes.izquierdo2 + 13, right: 20 },
   });
 
@@ -303,9 +332,7 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
     'Unidad de Competencia: Gestión de Infraestructura y Comunicaciones',
   ];
 
-  const filas2 = [
-    [`${silabo.silabo.unidadcompetencia}`], // Asegúrate de que las filas coincidan con las columnas
-  ];
+  const filas2 = [[`${silabo.silabo.unidadcompetencia}`]];
 
   // Tabla unida de competencia
   agregarTabla(columnas2, filas2, margenes.superior + 98, {
@@ -355,6 +382,198 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
     margin: { left: margenes.izquierdo2, right: 20 },
     bodyStyles: {
       halign: 'rigt',
+    },
+  });
+
+  doc.addPage('a4', 'landscape');
+  addText('PROGRAMACIÓN ACADÉMICA', margenes.izquierdo, 18, styleTitle);
+
+  // Definir las columnas (encabezados)
+  const columnas10 = [
+    'Capacidades Terminales (CT)',
+    'Resultados de Aprendizajes',
+    'Organización de Unidades de Contenidos',
+    'Estrategias Didáctica',
+    'Evidencias de Desempeño',
+    'Instrumentos de Evaluación',
+    'Semanas',
+  ];
+
+  const filas100 = [
+    [
+      { content: silabo.silabo.capacidadesterminales1, rowSpan: 5 },
+      { content: silabo.silabo.resultadosaprendizajes1, rowSpan: 5 },
+      `${silabo.silabo.semanas[0].organizacion}`,
+      `${silabo.silabo.semanas[0].estrategias}`,
+      `${silabo.silabo.semanas[0].evidencias}`,
+      `${silabo.silabo.semanas[0].instrumentos}`,
+      `${silabo.silabo.semanas[0].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[1].organizacion}`,
+      `${silabo.silabo.semanas[1].estrategias}`,
+      `${silabo.silabo.semanas[1].evidencias}`,
+      `${silabo.silabo.semanas[1].instrumentos}`,
+      `${silabo.silabo.semanas[1].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[2].organizacion}`,
+      `${silabo.silabo.semanas[2].estrategias}`,
+      `${silabo.silabo.semanas[2].evidencias}`,
+      `${silabo.silabo.semanas[2].instrumentos}`,
+      `${silabo.silabo.semanas[2].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[3].organizacion}`,
+      `${silabo.silabo.semanas[3].estrategias}`,
+      `${silabo.silabo.semanas[3].evidencias}`,
+      `${silabo.silabo.semanas[3].instrumentos}`,
+      `${silabo.silabo.semanas[3].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[4].organizacion}`,
+      `${silabo.silabo.semanas[4].estrategias}`,
+      `${silabo.silabo.semanas[4].evidencias}`,
+      `${silabo.silabo.semanas[4].instrumentos}`,
+      `${silabo.silabo.semanas[4].nomSem}`,
+    ],
+  ];
+
+  const filas10 = [
+    [
+      { content: silabo.silabo.capacidadesterminales1, rowSpan: 5 },
+      { content: silabo.silabo.resultadosaprendizajes1, rowSpan: 5 },
+      `${silabo.silabo.semanas[0].organizacion}`,
+      `${silabo.silabo.semanas[0].estrategias}`,
+      `${silabo.silabo.semanas[0].evidencias}`,
+      `${silabo.silabo.semanas[0].instrumentos}`,
+      `${silabo.silabo.semanas[0].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[1].organizacion}`,
+      `${silabo.silabo.semanas[1].estrategias}`,
+      `${silabo.silabo.semanas[1].evidencias}`,
+      `${silabo.silabo.semanas[1].instrumentos}`,
+      `${silabo.silabo.semanas[1].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[2].organizacion}`,
+      `${silabo.silabo.semanas[2].estrategias}`,
+      `${silabo.silabo.semanas[2].evidencias}`,
+      `${silabo.silabo.semanas[2].instrumentos}`,
+      `${silabo.silabo.semanas[2].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[3].organizacion}`,
+      `${silabo.silabo.semanas[3].estrategias}`,
+      `${silabo.silabo.semanas[3].evidencias}`,
+      `${silabo.silabo.semanas[3].instrumentos}`,
+      `${silabo.silabo.semanas[3].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[4].organizacion}`,
+      `${silabo.silabo.semanas[4].estrategias}`,
+      `${silabo.silabo.semanas[4].evidencias}`,
+      `${silabo.silabo.semanas[4].instrumentos}`,
+      `${silabo.silabo.semanas[4].nomSem}`,
+    ],
+    [
+      { content: silabo.silabo.capacidadesterminales2, rowSpan: 5 },
+      { content: silabo.silabo.capacidadesterminales2, rowSpan: 5 },
+      `${silabo.silabo.semanas[5].organizacion}`,
+      `${silabo.silabo.semanas[5].estrategias}`,
+      `${silabo.silabo.semanas[5].evidencias}`,
+      `${silabo.silabo.semanas[5].instrumentos}`,
+      `${silabo.silabo.semanas[5].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[6].organizacion}`,
+      `${silabo.silabo.semanas[6].estrategias}`,
+      `${silabo.silabo.semanas[6].evidencias}`,
+      `${silabo.silabo.semanas[6].instrumentos}`,
+      `${silabo.silabo.semanas[6].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[7].organizacion}`,
+      `${silabo.silabo.semanas[7].estrategias}`,
+      `${silabo.silabo.semanas[7].evidencias}`,
+      `${silabo.silabo.semanas[7].instrumentos}`,
+      `${silabo.silabo.semanas[7].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[8].organizacion}`,
+      `${silabo.silabo.semanas[8].estrategias}`,
+      `${silabo.silabo.semanas[8].evidencias}`,
+      `${silabo.silabo.semanas[8].instrumentos}`,
+      `${silabo.silabo.semanas[8].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[9].organizacion}`,
+      `${silabo.silabo.semanas[9].estrategias}`,
+      `${silabo.silabo.semanas[9].evidencias}`,
+      `${silabo.silabo.semanas[9].instrumentos}`,
+      `${silabo.silabo.semanas[9].nomSem}`,
+    ],
+    [
+      { content: silabo.silabo.capacidadesterminales3, rowSpan: 5 },
+      { content: silabo.silabo.capacidadesterminales3, rowSpan: 5 },
+      `${silabo.silabo.semanas[10].organizacion}`,
+      `${silabo.silabo.semanas[10].estrategias}`,
+      `${silabo.silabo.semanas[10].evidencias}`,
+      `${silabo.silabo.semanas[10].instrumentos}`,
+      `${silabo.silabo.semanas[10].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[11].organizacion}`,
+      `${silabo.silabo.semanas[11].estrategias}`,
+      `${silabo.silabo.semanas[11].evidencias}`,
+      `${silabo.silabo.semanas[11].instrumentos}`,
+      `${silabo.silabo.semanas[11].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[12].organizacion}`,
+      `${silabo.silabo.semanas[12].estrategias}`,
+      `${silabo.silabo.semanas[12].evidencias}`,
+      `${silabo.silabo.semanas[12].instrumentos}`,
+      `${silabo.silabo.semanas[12].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[13].organizacion}`,
+      `${silabo.silabo.semanas[13].estrategias}`,
+      `${silabo.silabo.semanas[13].evidencias}`,
+      `${silabo.silabo.semanas[13].instrumentos}`,
+      `${silabo.silabo.semanas[13].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[14].organizacion}`,
+      `${silabo.silabo.semanas[14].estrategias}`,
+      `${silabo.silabo.semanas[14].evidencias}`,
+      `${silabo.silabo.semanas[14].instrumentos}`,
+      `${silabo.silabo.semanas[14].nomSem}`,
+    ],
+  ];
+
+  agregarTabla(columnas10, filas10, 25, {
+    theme: 'grid',
+    margin: { left: 15, right: 15 },
+    fontSize: 9,
+    headStyles: {
+      fillColor: [174, 196, 222],
+      halign: 'center',
+      valign: 'middle',
+    },
+    bodyStyles: {
+      halign: 'left',
+      valign: 'middle',
+    },
+    columnStyles: {
+      0: { cellWidth: 35 },
+      1: { cellWidth: 45 },
+      2: { cellWidth: 60 },
+      3: { cellWidth: 75 },
+      4: { cellWidth: 45 },
+      5: { cellWidth: 32 },
+      6: { cellWidth: 40 },
     },
   });
 
