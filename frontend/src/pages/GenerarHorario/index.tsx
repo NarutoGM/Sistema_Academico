@@ -1086,7 +1086,7 @@ const Index: React.FC = () => {
                                                 : 'bg-blue-500 hover:bg-blue-600'
                                         }`}
                                     >
-                                        {carga.asignacionEstado === 0 ? 'Asignar' : 'Modificar'}
+                                        {carga.asignacionEstado === 0 ? 'Asignar' : 'Ver'}
                                     </button>
                                 </td>
 
