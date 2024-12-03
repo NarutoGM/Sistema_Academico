@@ -38,6 +38,20 @@ export interface Curso {
     hRetroalimentacion: string;
     nGrupos: number;
 }
+
+export interface Asignacion {
+    dia: string;
+    nombreAula: string;
+    horaInicio: string;
+    horaFin: string;
+    tipoSesion: string;
+}
+
+export interface Cursos {
+    asignaciones?: Asignacion;
+    curso: string;
+    id: number;
+}
 export interface Area {
     idArea: number;
     nomArea: string;
@@ -84,7 +98,10 @@ export interface CargaDocente {
     idEscuela: number;
     idDirector: number;
     curso?: Curso; // Campo opcional que hace referencia a un objeto de tipo Curso
-    filial?: Filial; 
+    cursos?: Cursos;
+    //filial?: Filial; 
+    filial: string;
+    id: number;
     semestre_academico?: Semestre_academico; 
     escuela?: Escuela; // Campo opcional que hace referencia a un objeto de tipo Curso
     ciclo: string;
