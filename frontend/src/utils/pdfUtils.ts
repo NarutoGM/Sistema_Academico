@@ -399,46 +399,6 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
     'Semanas',
   ];
 
-  const filas100 = [
-    [
-      { content: silabo.silabo.capacidadesterminales1, rowSpan: 5 },
-      { content: silabo.silabo.resultadosaprendizajes1, rowSpan: 5 },
-      `${silabo.silabo.semanas[0].organizacion}`,
-      `${silabo.silabo.semanas[0].estrategias}`,
-      `${silabo.silabo.semanas[0].evidencias}`,
-      `${silabo.silabo.semanas[0].instrumentos}`,
-      `${silabo.silabo.semanas[0].nomSem}`,
-    ],
-    [
-      `${silabo.silabo.semanas[1].organizacion}`,
-      `${silabo.silabo.semanas[1].estrategias}`,
-      `${silabo.silabo.semanas[1].evidencias}`,
-      `${silabo.silabo.semanas[1].instrumentos}`,
-      `${silabo.silabo.semanas[1].nomSem}`,
-    ],
-    [
-      `${silabo.silabo.semanas[2].organizacion}`,
-      `${silabo.silabo.semanas[2].estrategias}`,
-      `${silabo.silabo.semanas[2].evidencias}`,
-      `${silabo.silabo.semanas[2].instrumentos}`,
-      `${silabo.silabo.semanas[2].nomSem}`,
-    ],
-    [
-      `${silabo.silabo.semanas[3].organizacion}`,
-      `${silabo.silabo.semanas[3].estrategias}`,
-      `${silabo.silabo.semanas[3].evidencias}`,
-      `${silabo.silabo.semanas[3].instrumentos}`,
-      `${silabo.silabo.semanas[3].nomSem}`,
-    ],
-    [
-      `${silabo.silabo.semanas[4].organizacion}`,
-      `${silabo.silabo.semanas[4].estrategias}`,
-      `${silabo.silabo.semanas[4].evidencias}`,
-      `${silabo.silabo.semanas[4].instrumentos}`,
-      `${silabo.silabo.semanas[4].nomSem}`,
-    ],
-  ];
-
   const filas10 = [
     [
       { content: silabo.silabo.capacidadesterminales1, rowSpan: 5 },
@@ -479,7 +439,7 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
     ],
     [
       { content: silabo.silabo.capacidadesterminales2, rowSpan: 5 },
-      { content: silabo.silabo.capacidadesterminales2, rowSpan: 5 },
+      { content: silabo.silabo.resultadosaprendizajes2, rowSpan: 5 },
       `${silabo.silabo.semanas[5].organizacion}`,
       `${silabo.silabo.semanas[5].estrategias}`,
       `${silabo.silabo.semanas[5].evidencias}`,
@@ -516,7 +476,7 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
     ],
     [
       { content: silabo.silabo.capacidadesterminales3, rowSpan: 5 },
-      { content: silabo.silabo.capacidadesterminales3, rowSpan: 5 },
+      { content: silabo.silabo.resultadosaprendizajes3, rowSpan: 5 },
       `${silabo.silabo.semanas[10].organizacion}`,
       `${silabo.silabo.semanas[10].estrategias}`,
       `${silabo.silabo.semanas[10].evidencias}`,
@@ -576,6 +536,156 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
       6: { cellWidth: 40 },
     },
   });
+
+  doc.addPage('a4', 'portrait');
+  addImage();
+  addText(
+    'IV. SISTEMA DE EVALUACIÓN',
+    margenes.izquierdo,
+    margenes.superior,
+    styleTitle,
+  );
+
+  addText(
+    'Base Legal:',
+    margenes.izquierdo2,
+    margenes.superior + 10,
+    styleTitle,
+  );
+
+  addText(
+    'Reglamento de Normas Generales de Evaluación y Aprendizaje con el enfoque en Competencias, de los estudiantes de Pregrado UNT.',
+    margenes.izquierdo2,
+    margenes.superior + 18,
+    styleParrafo,
+  );
+
+  addText(
+    'Principios y Procedimiento:',
+    margenes.izquierdo2,
+    margenes.superior + 30,
+    styleTitle,
+  );
+
+  addText(
+    'La evaluación por competencias se caracteriza por ser progresiva, formativa y auténtica; por lo que es de procesos e integral y se orienta a asegurar el logro de los aprendizajes esperados, capacidades y competencias. Se evalúan las evidencias concretas a través de las cuales los estudiantes demuestran haber logrado aprendizajes (exposiciones orales, presentación de trabajos escritos, ensayos, exposiciones, mapas conceptuales, infografías, maquetas, entre otros); y sirve para recoger información, tomar decisiones oportunas e informar a los estudiantes y autoridades para las acciones de mejora respectiva.',
+    margenes.izquierdo2,
+    margenes.superior + 38,
+    styleParrafo,
+  );
+
+  const formulas = `
+1. Al valorar los resultados y/o productos se debe de tener en cuenta una ponderación 
+    específica por unidad.
+
+   Fórmulas para calcular el promedio por unidad:
+
+   PU1 = 0.5 PTL + 0.5 EO
+   PU2 = 0.4 PTL + 0.4 EO + 0.2 IM
+   PU3 = 0.4 PTL + 0.2 EO + 0.4 EXPO
+
+2. La fórmula del promedio promocional:
+
+   PP = 0.3 PU1 + 0.3 PU2 + 0.4 PU3
+`;
+
+  addText(formulas, margenes.izquierdo2, margenes.superior + 70, styleParrafo);
+
+  addText(
+    'Criterios para la Promoción:',
+    margenes.izquierdo2,
+    margenes.superior + 138,
+    styleTitle,
+  );
+
+  const criterios = `
+  1. El sistema de calificación es vigesimal (0-20).
+  2. La nota aprobatoria es 11, en el promedio promocional el medio punto (0.5) favorece al 
+      estudiante.
+  3. La asistencia es obligatoria tener más del 30% de inasistencia injustificada es causal de 
+      inhabilitación.
+  4. La evaluación por competencias evalúa el Nivel de Logro.
+  `;
+
+  addText(
+    criterios,
+    margenes.izquierdo2,
+    margenes.superior + 142,
+    styleParrafo,
+  );
+
+  addText(
+    'Nivel de Logro:',
+    margenes.izquierdo2,
+    margenes.superior + 182,
+    styleTitle,
+  );
+
+  const nivelLogro = `
+Es el aprendizaje alcanzado por el estudiante. Para la determinación de los niveles de logro   de los resultados  de aprendizaje de los estudiantes se toma en cuenta lo siguiente:
+
+  • Nivel I: Necesita reforzar las capacidades terminales previstas en coordinación con 
+    Dirección de Escuela y/o Estudios Generales, según corresponda (0-10).
+  • Nivel II: Requiere fortalecer la mayoría de las capacidades terminales (11-14).
+  • Nivel III: Muestra un nivel de dominio adecuado en las capacidades terminales (15-17).
+  • Nivel IV: Posee un alto nivel de dominio de las capacidades terminales (18-20). `;
+
+  addText(
+    nivelLogro,
+    margenes.izquierdo2,
+    margenes.superior + 186,
+    styleParrafo,
+  );
+
+  doc.addPage('a4', 'portrait');
+  addImage();
+  addText(
+    'V. TUTORÍA ACADÉMICA (Plan de Mejora)',
+    margenes.izquierdo,
+    margenes.superior,
+    styleTitle,
+  );
+  addText(
+    '7.1 Propósito:',
+    margenes.izquierdo2,
+    margenes.superior + 10,
+    styleTitle,
+  );
+
+  addText(
+    'Acompañamiento y monitoreo académico oportuno al estudiante que no logra las capacidades programadas en el proceso del desarrollo de la experiencia curricular como parte del Plan de Mejora.',
+    margenes.izquierdo2 + 7,
+    margenes.superior + 18,
+    styleParrafo,
+  );
+
+  addText(
+    '7.2 Desarrollo de la Tutoría',
+    margenes.izquierdo2,
+    margenes.superior + 36,
+    styleTitle,
+  );
+
+  addText(
+    `${silabo.silabo.tutoria}`,
+    margenes.izquierdo2 + 7,
+    margenes.superior + 43,
+    styleParrafo,
+  );
+
+  addText(
+    'V. TUTORÍA ACADÉMICA (Plan de Mejora)',
+    margenes.izquierdo,
+    margenes.superior + 62,
+    styleTitle,
+  );
+
+  addText(
+    `${silabo.silabo.referencias}`,
+    margenes.izquierdo2,
+    margenes.superior + 70,
+    styleParrafo,
+  );
 
   if (numero === 1) {
     doc.save(`${silabo.curso.name}_silabo.pdf`);
