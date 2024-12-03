@@ -361,29 +361,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                                 'bg-graydark dark:bg-meta-4'
                               }`}
                             >
-                              Reporte 1
-                            </NavLink>
-                          </li>
-                          <li>
-                            <NavLink
-                              to="/reportes/financieros"
-                              className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                                pathname.includes('reportes/financieros') &&
-                                'bg-graydark dark:bg-meta-4'
-                              }`}
-                            >
-                              Financieros
-                            </NavLink>
-                          </li>
-                          <li>
-                            <NavLink
-                              to="/reportes/logistica"
-                              className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                                pathname.includes('reportes/logistica') &&
-                                'bg-graydark dark:bg-meta-4'
-                              }`}
-                            >
-                              Logística
+                              Silabo
                             </NavLink>
                           </li>
                         </ul>
