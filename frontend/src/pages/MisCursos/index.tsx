@@ -101,11 +101,15 @@ const Index: React.FC = () => {
   };
 
   const handleCreateSilabo2 = async () => {
+    
       // Asegurarse de que selectedCarga2 tenga los valores correctos de selectedCarga
     selectedCarga2.idDirector = selectedCarga?.idDirector;
-    selectedCarga2.silabo.idDocente = selectedCarga?.silabo?.idDocente;
-    selectedCarga2.idCargaDocente = selectedCarga?.idCargaDocente;
-    selectedCarga2.silabo.idFilial = selectedCarga?.silabo?.idFilial;
+    selectedCarga2.idDocente = selectedCarga?.idDocente;
+    selectedCarga2.idCargaDocente = selectedCarga?.idCargaDocente; 
+    selectedCarga2.idFilial = selectedCarga?.idFilial;
+    selectedCarga2.silabo.idDocente = selectedCarga?.idDocente;
+    selectedCarga2.silabo.idCargaDocente = selectedCarga?.idCargaDocente; 
+    selectedCarga2.silabo.idFilial = selectedCarga?.idFilial;
     selectedCarga2.filial.name = selectedCarga?.filial?.name;
     selectedCarga2.semestre_academico.nomSemestre = selectedCarga?.semestre_academico?.nomSemestre;
     selectedCarga2.semestre_academico.fInicio = selectedCarga?.semestre_academico?.fInicio;
@@ -114,11 +118,10 @@ const Index: React.FC = () => {
     // Actualizar los valores de los campos dinámicamente a partir de selectedCarga
     selectedCarga2.silabo.semanas.forEach((semana, index) => {
       // Aquí, los valores de cada campo provienen de selectedCarga
-      semana.organizacion = selectedCarga?.silabo?.semanas[index]?.organizacion || '';  // Valor desde selectedCarga
-      semana.estrategias = selectedCarga?.silabo?.semanas[index]?.estrategias || '';
-      semana.evidencias = selectedCarga?.silabo?.semanas[index]?.evidencias || '';
-      semana.instrumentos = selectedCarga?.silabo?.semanas[index]?.instrumentos || '';
-      semana.nomSem = selectedCarga?.silabo?.semanas[index]?.nomSem || ''; // Usar un valor por defecto vacío si no existe
+      semana.idCargaDocente = selectedCarga?.idCargaDocente || '';  // Valor desde selectedCarga
+      semana.idFilial = selectedCarga?.idFilial || '';
+      semana.idDocente = selectedCarga?.idDocente|| '';
+
     });
     
     console.log(selectedCarga2);
