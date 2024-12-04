@@ -13,7 +13,6 @@ import visualizarenvio from '../../images/logo/visualizarenvio.png';
 import LogoReutilizar from '../../images/logo/reutilizarsilabo.png';
 import moment from 'moment'; // O cualquier otra librería de manejo de fechas que prefieras
 import { generarSilaboPDF } from '@/utils/pdfUtils';
-import { generarSilaboPDF2 } from '@/utils/pdfUtils2';
 import { set } from 'zod';
 
 const Index: React.FC = () => {
@@ -28,6 +27,7 @@ const Index: React.FC = () => {
 
   const [selectedCarga, setSelectedCarga] = useState<CargaDocente>();
   const [selectedCarga2, setSelectedCarga2] = useState<CargaDocente>();
+  const [selectedOriginal, setSelectedOriginal] = useState<CargaDocente>();
 
   const itemsPerPage = 5;
   const [currentPage, setCurrentPage] = useState(1);
@@ -101,21 +101,34 @@ const Index: React.FC = () => {
   };
 
   const handleCreateSilabo2 = async () => {
-    try {
-      console.log('Sílabo enviado correctamente:', selectedCarga2);
+      // Asegurarse de que selectedCarga2 tenga los valores correctos de selectedCarga
+    selectedCarga2.idDirector = selectedCarga?.idDirector;
+    selectedCarga2.silabo.idDocente = selectedCarga?.silabo?.idDocente;
+    selectedCarga2.idCargaDocente = selectedCarga?.idCargaDocente;
+    selectedCarga2.silabo.idFilial = selectedCarga?.silabo?.idFilial;
+    selectedCarga2.filial.name = selectedCarga?.filial?.name;
+    selectedCarga2.semestre_academico.nomSemestre = selectedCarga?.semestre_academico?.nomSemestre;
+    selectedCarga2.semestre_academico.fInicio = selectedCarga?.semestre_academico?.fInicio;
+    selectedCarga2.semestre_academico.fTermino = selectedCarga?.semestre_academico?.fTermino;
+    
+    // Actualizar los valores de los campos dinámicamente a partir de selectedCarga
+    selectedCarga2.silabo.semanas.forEach((semana, index) => {
+      // Aquí, los valores de cada campo provienen de selectedCarga
+      semana.organizacion = selectedCarga?.silabo?.semanas[index]?.organizacion || '';  // Valor desde selectedCarga
+      semana.estrategias = selectedCarga?.silabo?.semanas[index]?.estrategias || '';
+      semana.evidencias = selectedCarga?.silabo?.semanas[index]?.evidencias || '';
+      semana.instrumentos = selectedCarga?.silabo?.semanas[index]?.instrumentos || '';
+      semana.nomSem = selectedCarga?.silabo?.semanas[index]?.nomSem || ''; // Usar un valor por defecto vacío si no existe
+    });
+    
+    console.log(selectedCarga2);
+    setSelectedCarga(selectedCarga2);
+    openModal(true);
 
-      const response = await enviarinfoSilabo(selectedCarga2);
-      console.log('Sílabo enviado correctamente:', response);
-
-      // Refrescar los datos directamente
-      await fetchCursos();
-      closeModal();
-      setIsFlipped(false);
-    } catch (error) {
-      console.error('Error al enviar el sílabo:', error);
-    }
     setShowModal(false);
   };
+
+
 
 
   const nextStep = () => {
@@ -535,7 +548,7 @@ const Index: React.FC = () => {
                     <td className="px-4 py-2 border-b text-center">
                       <button
                         onClick={() => {
-                          setSelectedCarga(carga);
+                          setSelectedOriginal(carga);
                           setIsFlipped(true); // Gira la tarjeta
                         }}
                         className="px-4 py-2 bg-blue-500 text-white rounded"
@@ -588,7 +601,7 @@ const Index: React.FC = () => {
           <div className="flex flex-wrap gap-4">
             {/* Opción: Crear un nuevo sílabo */}
             <div
-              onClick={() => openModal()}
+              onClick={() => {openModal(); setSelectedCarga(selectedOriginal);}}
               className="flex flex-col items-center bg-white border rounded-lg shadow-lg p-6 w-96 cursor-pointer transition transform hover:scale-105 hover:shadow-xl relative"
             >
               <div className="absolute top-0 left-0 w-full h-2 bg-blue-500 rounded-t-lg"></div>
@@ -619,7 +632,7 @@ const Index: React.FC = () => {
             </div>
 
             <div
-              onClick={() => selectedCarga?.silabo !== null && openModal3()}
+              onClick={() => {selectedCarga?.silabo !== null && openModal3(); setSelectedCarga(selectedOriginal);}}
               className={`flex flex-col items-center bg-white border rounded-lg shadow-lg p-6 w-96 transition transform relative ${selectedCarga?.silabo !== null
                 ? 'cursor-pointer hover:scale-105 hover:shadow-xl'
                 : 'cursor-not-allowed opacity-50'
@@ -665,7 +678,7 @@ const Index: React.FC = () => {
             style={{ height: "55vh" }} // Ajusta la altura del contenedor
           >
             <iframe
-              src={generarSilaboPDF2(selectedCarga2, selectedCarga, 2)}
+              src={generarSilaboPDF(selectedCarga2, 2)}
               style={{ width: "100%", height: "100%", border: "none" }}
               title="Sílabo PDF"
             />
