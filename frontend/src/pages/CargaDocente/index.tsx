@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import jsPDF from 'jspdf';
 import {
   getFiliales,
   getDocentesByFilial,
   Filial,
   Docente,
+  getCursosAsignados
 } from '@/pages/services/cargadocente.services';
 
 import AsignarCursosModal from './AsignarCursosModal';
+import { isAuthenticated } from '@/utils/auth';
 
 const CargaDocente: React.FC = () => {
   const [filiales, setFiliales] = useState<Filial[]>([]);
@@ -22,6 +25,15 @@ const CargaDocente: React.FC = () => {
 
   const [selectedDocente, setSelectedDocente] = useState<Docente | null>(null);
   const [showModal, setShowModal] = useState(false);
+
+
+  // Obtener idDirector
+  const authData = isAuthenticated();
+  const idDirector = authData?.id ? parseInt(authData.id, 10) : null; // Asegúrate de que el id del usuario esté disponible
+  if (!idDirector) {
+    console.error('No se pudo obtener el idDirector');
+    return;
+  }
 
   // Cargar filiales al iniciar el componente
   useEffect(() => {
@@ -43,10 +55,23 @@ const CargaDocente: React.FC = () => {
       const fetchDocentes = async () => {
         try {
           const data = await getDocentesByFilial(selectedFilial);
-          const docentesConCursos = data.map((docente) => ({
-            ...docente,
-            nroCursos: Math.floor(Math.random() * 5) + 1, // Generar número aleatorio entre 1 y 5
-          }));
+
+          // Obtener el número de cursos asignados para cada docente
+          const docentesConCursos = await Promise.all(
+            data.map(async (docente) => {
+              try {
+                const cursosAsignados = await getCursosAsignados(docente.id, selectedFilial);
+                return {
+                  ...docente,
+                  nroCursos: cursosAsignados.length, // Número de cursos asignados
+                };
+              } catch (error) {
+                console.error(`Error al cargar cursos asignados para el docente ${docente.id}:`, error);
+                return { ...docente, nroCursos: 0 }; // Si falla, asignar 0
+              }
+            })
+          );
+          
           setDocentes(docentesConCursos);
           setFilteredDocentes(docentesConCursos); // Inicialmente, mostrar todos los docentes
         } catch (error) {
@@ -90,6 +115,47 @@ const CargaDocente: React.FC = () => {
   const handleCloseModal = () => {
     setShowModal(false); // Cierra el modal
     setSelectedDocente(null); // Limpia el docente seleccionado
+  };
+
+
+  //PDF
+  const generatePDF = async (docenteId: number, docenteName: string) => {
+    try {
+      // Obtén los cursos asignados para el docente desde tu API
+      const response = await fetch(
+        `http://localhost:8000/api/cargadocente/${docenteId}/cursos`
+      );
+      if (!response.ok) {
+        throw new Error('Error al obtener los cursos asignados');
+      }
+  
+      const cursos = await response.json();
+  
+      // Inicializar jsPDF
+      const doc = new jsPDF();
+  
+      // Agregar título
+      doc.setFontSize(16);
+      doc.text(`Reporte de Cursos Asignados`, 20, 20);
+      doc.setFontSize(12);
+      doc.text(`Docente: ${docenteName}`, 20, 30);
+      doc.text(`ID Docente: ${docenteId}`, 20, 40);
+  
+      // Crear tabla con los cursos
+      doc.setFontSize(10);
+      const startY = 50;
+      cursos.forEach((curso: { idCurso: number; nombreCurso: string }, index: number) => {
+        const y = startY + index * 10;
+        doc.text(`ID Curso: ${curso.idCurso}`, 20, y);
+        doc.text(`Nombre Curso: ${curso.nombreCurso}`, 60, y);
+      });
+  
+      // Guardar el archivo PDF
+      doc.save(`Reporte_Docente_${docenteId}.pdf`);
+    } catch (error) {
+      console.error('Error al generar el PDF:', error);
+      alert('Ocurrió un error al generar el reporte.');
+    }
   };
 
   return (
@@ -184,7 +250,12 @@ const CargaDocente: React.FC = () => {
                   <td className="px-6 py-4 text-sm text-gray-800">
                     {docente.nroCursos}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-800">Activo</td>
+                  <td className="px-6 py-4 text-sm">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      En proceso
+                    </span>
+                  </td>
+
                   <td className="px-6 py-4 text-sm text-gray-800">
                     <button
                       onClick={() => handleEditar(docente)}
@@ -217,9 +288,11 @@ const CargaDocente: React.FC = () => {
           </tbody>
         </table>
         {/* Modal */}
-        {showModal && selectedDocente && (
+        {showModal && selectedDocente && selectedFilial !== null && (
           <AsignarCursosModal
             docente={selectedDocente}
+            idFilial={selectedFilial}
+            idDirector = {idDirector}
             onClose={handleCloseModal}
           />
         )}

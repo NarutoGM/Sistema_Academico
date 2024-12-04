@@ -13,11 +13,20 @@ use App\Http\Controllers\RolPermisoController;
 
 use App\Http\Controllers\CondicionController;  
 use App\Http\Controllers\RegimenController;  
-use App\Http\Controllers\CategoriaController; 
+use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\CursoAperturadoController;
+
+use App\Http\Controllers\SubirSilaboController;
 use App\Http\Controllers\FilialController;
+use App\Http\Controllers\DirectorEscuelaController;
+use App\Http\Controllers\SemestreController;
+use App\Http\Controllers\CursoAperturadosController;
+use App\Http\Controllers\CargaDocenteController;
+
+
 use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\HorariosController;
-use App\Http\Controllers\SubirSilaboController;
+
 use App\Http\Controllers\TokenController;
 use App\Models\Horario;
 
@@ -91,12 +100,20 @@ Route::get('/generate-token', [TokenController::class, 'generateAccessToken']);
 Route::get('/miscursos', [SubirSilaboController::class, 'index']); 
 Route::get('/versilabos', [SubirSilaboController::class, 'versilabos']); 
 Route::get('/reportesilabos', [SubirSilaboController::class, 'reportesilabos']); 
+Route::post('/silaboReusar', [SubirSilaboController::class, 'silaboReusar']); //silabos reutilizables
 
 Route::apiResource('condiciones', CondicionController::class);  
 Route::apiResource('regimenes', RegimenController::class);  
 Route::apiResource('categorias', CategoriaController::class);
+
+
 Route::apiResource('filiales', FilialController::class);  
 Route::get('/filiales/{idFilial}/docentes', [FilialController::class, 'getDocentes']);
+Route::get('/escuelas/{idEscuela}/malla', [EscuelaController::class, 'getMallaByEscuela']);
+Route::apiResource('/semestreacademico', SemestreController::class);
+Route::get('/cursosAperturados/{idEscuela}/{idMalla}/{idSemestreAcademico}', [CursoAperturadosController ::class, 'getCursosByMallaAndSemestre']);
+Route::get('/cargadocente/{idDocente}/{idFilial}/asignados',[CargaDocenteController::class, 'getCursosAsignados']);
+Route::post('/cargadocente', [CargaDocenteController::class, 'store']);
 Route::post('gestionarsilabo', [SubirSilaboController::class, 'gestionarsilabo']);
 Route::get('/obtenerMisPermisos', [UserController::class, 'obtenerMisPermisos']); // Obtener todos los permisos
 Route::post('/gestionarhorarios', [SubirSilaboController::class, 'gestionarhorarios']);
@@ -105,6 +122,12 @@ Route::post('gestionarsilabodirector', [SubirSilaboController::class, 'gestionar
 
 
 
-Route::get('/verhorarios', [HorariosController::class, 'verhorarios']); 
+Route::get('/verhorarios', [HorariosController::class, 'verhorarios']);
+Route::post('/guardar-horarios', [HorariosController::class, 'guardarHorarios']);
+Route::get('/cursosFiltrados', [HorariosController::class, 'obtenerCursosFiltrados']);
+
+
+
+
 
 });

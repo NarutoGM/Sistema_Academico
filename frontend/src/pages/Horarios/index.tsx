@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import { getCargaHorario, CargaDocente } from '@/pages/services/horario.services';
+import { getCargaHorario, CargaDocente, guardarHorarios } from '@/pages/services/horario.services';
 import "quill/dist/quill.snow.css";
 import { generarSilaboPDF } from '@/utils/pdfUtils';
 
@@ -63,90 +63,318 @@ const Index: React.FC = () => {
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
+    const manejarGuardarHorarios = async (horarios: any[], idDocente: number, idCargaDocente: number, idFilial: number) => {
+        try {
+            await guardarHorarios(horarios, idDocente, idCargaDocente, idFilial);
+            // Mostrar mensaje de éxito
+            Swal.fire('Éxito', 'Los horarios se han guardado correctamente.', 'success');
+        } catch (error) {
+            // Manejar cualquier error
+            console.error(error);
+            Swal.fire('Error', 'Hubo un problema al guardar los horarios.', 'error');
+        }
+    };
+
+    const modal1 = (carga: CargaDocente, numero: number) => {
+        const isEditable = numero === 1;
+        let horarios = carga.asignacion || [];
+    
+        // Renderiza la tabla de horarios
+        const renderTablaHorarios = () => {
+            const tabla = document.getElementById("tabla-horarios");
+            if (tabla) {
+                tabla.innerHTML = horarios
+                    .map((asignacion, index) => `
+                        <tr>
+                            <td>${asignacion.tipoSesion}</td>
+                            <td>${asignacion.grupo || "N/A"}</td>
+                            <td>${asignacion.dia}</td>
+                            <td>${asignacion.horaInicio}</td>
+                            <td>${asignacion.horaFin}</td>
+                            <td>${asignacion.aula || "N/A"}</td>
+                            <td><button class="btn-delete" data-index="${index}">Eliminar</button></td>
+                        </tr>
+                    `)
+                    .join("");
+    
+                // Agregar eventos de eliminación
+                document.querySelectorAll(".btn-delete").forEach((btn) => {
+                    btn.addEventListener("click", (e) => {
+                        const index = parseInt((e.target as HTMLElement).getAttribute("data-index"));
+                        horarios.splice(index, 1);
+                        renderTablaHorarios();
+                    });
+                });
+            }
+        };
+    
+        Swal.fire({
+            title: "Asignar Horarios",
+            html: `
+                <div>
+                    <h4>Asignar Horarios</h4>
+                    <!-- Select para escoger el tipo de sesión -->
+                    <label for="tipo-sesion">Tipo de Sesión:</label>
+                    <select id="tipo-sesion" class="swal2-input">
+                        <option value="">Selecciona tipo de sesión</option>
+                        ${carga.curso?.hTeoricas ? `<option value="Teoría">Teoría</option>` : ""}
+                        ${carga.curso?.hPracticas ? `<option value="Práctica">Práctica</option>` : ""}
+                        ${carga.curso?.hLaboratorio ? `<option value="Laboratorio">Laboratorio</option>` : ""}
+                    </select>
+    
+                    <!-- Selección de día -->
+                    <label for="dia">Día de la Semana:</label>
+                    <select id="dia" class="swal2-input">
+                        <option value="Lunes">Lunes</option>
+                        <option value="Martes">Martes</option>
+                        <option value="Miércoles">Miércoles</option>
+                        <option value="Jueves">Jueves</option>
+                        <option value="Viernes">Viernes</option>
+                        <option value="Sábado">Sábado</option>
+                    </select>
+    
+                    <!-- Hora de inicio y fin -->
+                    <label for="hora-inicio">Hora de Inicio:</label>
+                    <input type="time" id="hora-inicio" class="swal2-input" style="width: 100%;" />
+                    <label for="hora-fin">Hora de Fin:</label>
+                    <input type="time" id="hora-fin" class="swal2-input" style="width: 100%;" />
+    
+                    <!-- Input para aula -->
+                    <label for="aula">Aula:</label>
+                    <input type="text" id="aula" class="swal2-input" style="width: 100%;" placeholder="Ejemplo: A101" />
+
+                    <!-- Select para elegir el grupo de laboratorio (si es necesario) -->
+                    <div id="grupo-laboratorio-container" style="display: none;">
+                        <label for="grupo-laboratorio">Grupo de Laboratorio:</label>
+                        <select id="grupo-laboratorio" class="swal2-input">
+                            ${[...Array(carga.curso?.nGrupos || 0)].map((_, index) => `<option value="Grupo ${index + 1}" ${horarios.some(h => h.grupo === `Grupo ${index + 1}`) ? 'selected' : ''}>Grupo ${index + 1}</option>`).join("")}
+                        </select>
+                    </div>
+    
+                    <!-- Botón para agregar el horario -->
+                    <button id="btn-agregar-horario" class="swal2-confirm swal2-styled">Agregar Horario</button>
+    
+                    <!-- Tabla de horarios asignados -->
+                    <h4>Horarios Asignados</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; text-align: left;">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Grupo</th>
+                                <th>Día</th>
+                                <th>Inicio</th>
+                                <th>Fin</th>
+                                <th>Aula</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-horarios"></tbody>
+                    </table>
+                </div>
+            `,
+            width: 800,
+            showCancelButton: true,
+            showConfirmButton: true,
+            confirmButtonText: "Guardar",
+            cancelButtonText: "Cancelar",
+            focusConfirm: false,
+            didOpen: () => {
+                // Habilitar o deshabilitar el campo de grupo de laboratorio
+                document.getElementById("tipo-sesion")?.addEventListener("change", (e) => {
+                    const tipo = (e.target as HTMLSelectElement).value;
+                    const grupoContainer = document.getElementById("grupo-laboratorio-container");
+                    if (tipo === "Laboratorio" && carga.curso?.nGrupos > 0) {
+                        grupoContainer.style.display = "block";
+                    } else {
+                        grupoContainer.style.display = "none";
+                    }
+                });
+                // Agregar un horario a la tabla
+                document.getElementById("btn-agregar-horario")?.addEventListener("click", () => {
+                    const tipo = (document.getElementById("tipo-sesion") as HTMLSelectElement)?.value;
+                    const dia = (document.getElementById("dia") as HTMLSelectElement)?.value;
+                    const inicio = (document.getElementById("hora-inicio") as HTMLInputElement)?.value;
+                    const fin = (document.getElementById("hora-fin") as HTMLInputElement)?.value;
+                    const aula = (document.getElementById("aula") as HTMLInputElement)?.value;
+                    const grupo = tipo === "Laboratorio" ? (document.getElementById("grupo-laboratorio") as HTMLSelectElement)?.value : null;
+    
+                    if (tipo && inicio && fin && aula) {
+                        horarios.push({ tipoSesion: tipo, grupo, dia, horaInicio: inicio, horaFin: fin, aula });
+                        renderTablaHorarios();
+                    } else {
+                        Swal.fire("Error", "Por favor, completa todos los campos.", "error");
+                    }
+                });
+    
+                renderTablaHorarios();
+            },
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log("Horarios asignados:", horarios);
+                manejarGuardarHorarios(horarios, carga.idCargaDocente, carga.idFilial, carga.idDocente);
+            }
+        });
+    };
 
 
     const modal = (carga: CargaDocente, numero: number) => {
         const isEditable = numero === 1;
-        const observacionesText = numero === 2 ? carga.silabo?.observaciones || "" : "";
+        let horarios = carga.asignacion || [];
     
-        const getEstadoSilabo = (carga: CargaDocente) => {
-            if (carga.estado === false) {
-                return 'Inactivo';
-            } else if (carga.silabo == null) {
-                return 'Aún no envió silabo';
-            } else {
-                switch (carga.silabo.estado) {
-                    case 1: return 'Por Revisar';
-                    case 2: return 'Rechazado';
-                    case 3: return 'Visado';
-                    default: return 'Estado Desconocido';
-                }
+        const renderTablaHorarios = () => {
+            const tabla = document.getElementById("tabla-horarios");
+            if (tabla) {
+                tabla.innerHTML = horarios
+                    .map(
+                        (asignacion, index) => `
+                            <tr class="border-b">
+                                <td class="px-2 py-1">${asignacion.tipoSesion}</td>
+                                <td class="px-2 py-1">${asignacion.grupo || "N/A"}</td>
+                                <td class="px-2 py-1">${asignacion.dia}</td>
+                                <td class="px-2 py-1">${asignacion.horaInicio}</td>
+                                <td class="px-2 py-1">${asignacion.horaFin}</td>
+                                <td class="px-2 py-1">${asignacion.aula || "N/A"}</td>
+                                <td class="px-2 py-1 text-center">
+                                    <button class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 btn-delete" data-index="${index}">
+                                        Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        `
+                    )
+                    .join("");
+    
+                document.querySelectorAll(".btn-delete").forEach((btn) => {
+                    btn.addEventListener("click", (e) => {
+                        const index = parseInt((e.target as HTMLElement).getAttribute("data-index"));
+                        horarios.splice(index, 1);
+                        renderTablaHorarios();
+                    });
+                });
             }
         };
     
-        const estadoSilabo = getEstadoSilabo(carga);
-    
         Swal.fire({
-            title: "Detalles del Sílabo",
+            title: "<h2 style='color: #2c3e50;'>Asignar Horarios</h2>",
             html: `
-                <div style="display: flex; gap: 20px; align-items: flex-start;">
-                    <div style="flex: 1; text-align: left; line-height: 1.5; margin-bottom: 20px; min-width: 300px;">
-                        <p><strong>ID Curso:</strong> ${carga.idCurso}</p>
-                        <p><strong>Curso:</strong> ${carga.curso?.name}</p>
-                        <p><strong>Docente:</strong> ${carga.nomdocente} ${carga.apedocente}</p>
-                        <p><strong>Filial:</strong> ${carga.filial?.name}</p>
-                        <p><strong>Semestre Académico:</strong> ${carga.semestre_academico?.nomSemestre}</p>
-                        ${numero === 2
-                            ? `<p><strong>Observaciones:</strong> ${carga.silabo?.observaciones || "Sin observaciones registradas"}</p>`
-                            : ""
-                        }
-                        <p>
-                            <strong>Estado del Sílabo:</strong> ${estadoSilabo}
-                        </p>
-                        <textarea 
-                            id="observaciones" 
-                            placeholder="Escribe las observaciones aquí..." 
-                            style="width: 100%; height: 300px; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" 
-                            ${!isEditable ? "disabled" : ""}
-                        >${observacionesText}</textarea>
+                <div style="text-align: left; padding: 10px;">
+                    <h4 class="text-lg font-bold mb-3">Información</h4>
+    
+                    <!-- Tipo de Sesión -->
+                    <label for="tipo-sesion" class="block font-medium">Tipo de Sesión:</label>
+                    <select id="tipo-sesion" class="swal2-input">
+                        <option value="">Selecciona tipo de sesión</option>
+                        ${carga.curso?.hTeoricas ? `<option value="Teoría">Teoría</option>` : ""}
+                        ${carga.curso?.hPracticas ? `<option value="Práctica">Práctica</option>` : ""}
+                        ${carga.curso?.hLaboratorio ? `<option value="Laboratorio">Laboratorio</option>` : ""}
+                    </select>
+    
+                    <!-- Día -->
+                    <label for="dia" class="block font-medium mt-2">Día de la Semana:</label>
+                    <select id="dia" class="swal2-input">
+                        <option value="Lunes">Lunes</option>
+                        <option value="Martes">Martes</option>
+                        <option value="Miércoles">Miércoles</option>
+                        <option value="Jueves">Jueves</option>
+                        <option value="Viernes">Viernes</option>
+                        <option value="Sábado">Sábado</option>
+                    </select>
+    
+                    <!-- Horario -->
+                    <div class="flex gap-2 mt-2">
+                        <div>
+                            <label for="hora-inicio" class="block font-medium">Hora de Inicio:</label>
+                            <input type="time" id="hora-inicio" class="swal2-input w-full" />
+                        </div>
+                        <div>
+                            <label for="hora-fin" class="block font-medium">Hora de Fin:</label>
+                            <input type="time" id="hora-fin" class="swal2-input w-full" />
+                        </div>
                     </div>
-                    <div id="pdf-container" style="flex: 2; border: 1px solid #ccc; border-radius: 4px; overflow-y: auto; height: 600px; padding: 10px;">
-                        <p>Cargando PDF...</p>
+    
+                    <!-- Aula -->
+                    <label for="aula" class="block font-medium mt-2">Aula:</label>
+                    <input type="text" id="aula" class="swal2-input w-full" placeholder="Ejemplo: A101" />
+    
+                    <!-- Grupo Laboratorio -->
+                    <div id="grupo-laboratorio-container" style="display: none;">
+                        <label for="grupo-laboratorio" class="block font-medium mt-2">Grupo de Laboratorio:</label>
+                        <select id="grupo-laboratorio" class="swal2-input">
+                            ${[...Array(carga.curso?.nGrupos || 0)]
+                                .map(
+                                    (_, index) =>
+                                        `<option value="Grupo ${index + 1}">Grupo ${index + 1}</option>`
+                                )
+                                .join("")}
+                        </select>
                     </div>
+    
+                    <!-- Botón Agregar -->
+                    <button id="btn-agregar-horario" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mt-3">
+                        Agregar Horario
+                    </button>
+    
+                    <!-- Tabla -->
+                    <h4 class="text-lg font-bold mt-5">Horarios Asignados</h4>
+                    <table class="w-full border-collapse mt-2">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border px-2 py-1">Tipo</th>
+                                <th class="border px-2 py-1">Grupo</th>
+                                <th class="border px-2 py-1">Día</th>
+                                <th class="border px-2 py-1">Inicio</th>
+                                <th class="border px-2 py-1">Fin</th>
+                                <th class="border px-2 py-1">Aula</th>
+                                <th class="border px-2 py-1">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-horarios" class="text-sm"></tbody>
+                    </table>
                 </div>
             `,
-            width: 1000,
+            width: "60%",
             showCancelButton: true,
-            showDenyButton: isEditable,
-            showConfirmButton: isEditable,
-            confirmButtonText: "Aceptar",
-            denyButtonText: "Rechazar",
+            confirmButtonText: "Guardar",
             cancelButtonText: "Cancelar",
             focusConfirm: false,
             didOpen: () => {
-                // Generar el PDF y cargarlo en el iframe
-                const pdfContainer = document.getElementById("pdf-container");
-                if (pdfContainer) {
-                    const pdfDataUri = generarSilaboPDF(carga,2);
-                    pdfContainer.innerHTML = `
-                        <iframe 
-                            src="${pdfDataUri}" 
-                            style="width: 100%; height: 100%; border: none;" 
-                            title="Sílabo PDF"
-                        ></iframe>
-                    `;
-                }
+                document.getElementById("tipo-sesion")?.addEventListener("change", (e) => {
+                    const tipo = (e.target as HTMLSelectElement).value;
+                    const grupoContainer = document.getElementById("grupo-laboratorio-container");
+                    grupoContainer.style.display =
+                        tipo === "Laboratorio" && carga.curso?.nGrupos > 0 ? "block" : "none";
+                });
+    
+                document.getElementById("btn-agregar-horario")?.addEventListener("click", () => {
+                    const tipo = (document.getElementById("tipo-sesion") as HTMLSelectElement)?.value;
+                    const dia = (document.getElementById("dia") as HTMLSelectElement)?.value;
+                    const inicio = (document.getElementById("hora-inicio") as HTMLInputElement)?.value;
+                    const fin = (document.getElementById("hora-fin") as HTMLInputElement)?.value;
+                    const aula = (document.getElementById("aula") as HTMLInputElement)?.value;
+                    const grupo =
+                        tipo === "Laboratorio"
+                            ? (document.getElementById("grupo-laboratorio") as HTMLSelectElement)?.value
+                            : null;
+    
+                    if (tipo && inicio && fin && aula) {
+                        horarios.push({ tipoSesion: tipo, grupo, dia, horaInicio: inicio, horaFin: fin, aula });
+                        renderTablaHorarios();
+                    } else {
+                        Swal.fire("Error", "Por favor, completa todos los campos.", "error");
+                    }
+                });
+    
+                renderTablaHorarios();
             },
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log("Horarios asignados:", horarios);
+                manejarGuardarHorarios(horarios, carga.idCargaDocente, carga.idFilial, carga.idDocente);
+            }
         });
     };
     
     
-
-
-
-
-
-
 
     const SubmitCarga = async (carga: CargaDocente, numero: number, observaciones: string) => {
         console.log('observaciones:', observaciones);
@@ -185,8 +413,8 @@ const Index: React.FC = () => {
 
     return (
         <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">Listado de Carga Docente</h1>
-            <h1 className="text-xl font-bold mb-4">Filtrar:</h1>
+            <h1 className="text-2xl font-bold mb-4">Asignar horarios</h1>
+            <h2 className="text-xl font-bold mb-4">Filtrar:</h2>
 
             {/* Filters */}
             <div className="flex flex-wrap gap-4 mb-4">
@@ -221,13 +449,6 @@ const Index: React.FC = () => {
                     />
                     <input
                         type="text"
-                        placeholder="Proceso Sílabos"
-                        value={procesoSilabo}
-                        onChange={(e) => setProcesoSilabo(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
-                    />
-                    <input
-                        type="text"
                         placeholder="Docente"
                         value={docente}
                         onChange={(e) => setDocente(e.target.value)}
@@ -250,6 +471,7 @@ const Index: React.FC = () => {
             </div>
 
             <div className="overflow-x-auto">
+                <h2 className="text-xl font-bold mb-4">Listado de Carga Docente</h2>
                 <table className="min-w-full bg-white border border-gray-200">
                     <thead>
                         <tr className='bg-blue-700'>
@@ -275,38 +497,37 @@ const Index: React.FC = () => {
 
                                 <td className="px-4 py-2 border-b text-center">{carga.ciclo}</td>
 
+
                                 <td className="px-4 py-2 border-b text-center">
-                                    {
-                                        carga.estado === false
-                                            ? 'Inactivo'
-                                            : (
-                                                carga.silabo == null
-                                                    ? 'Aún no envió silabo' // Verifica si silabo es null o undefined
-                                                    : (
-                                                        carga.silabo.estado === 1 ? 'Aún falta revisar'
-                                                            : carga.silabo.estado === 2 ? 'Rechazado'
-                                                                : carga.silabo.estado === 3 ? 'Aceptado'
-                                                                    : 'Estado desconocido'
-                                                    )
-                                            )
-                                    }
+                                    {carga.estado === false ? (
+                                        <span className="text-gray-500 font-semibold">Inactivo</span>
+                                    ) : (
+                                        <span
+                                            className={`font-semibold px-2 py-1 rounded ${
+                                                carga.asignacionEstado === 0
+                                                    ? 'text-red-600 bg-red-100'
+                                                    : 'text-green-600 bg-green-100'
+                                            }`}
+                                        >
+                                            {carga.asignacionEstado === 0 ? 'Sin horarios' : 'Con horarios asignados'}
+                                        </span>
+                                    )}
                                 </td>
 
 
-
-
-
                                 <td className="px-4 py-2 border-b text-center">
-                                    <button onClick={() => {
-
-                                        modal(carga, 1)
-                                    }}>asdasds</button>
-
-
+                                    <button 
+                                        onClick={() => modal(carga, 1)}
+                                        className={`px-4 py-2 rounded font-semibold text-white shadow-md hover:shadow-lg transition-transform transform hover:scale-105 ${
+                                            carga.asignacionEstado === 0
+                                                ? 'bg-green-500 hover:bg-green-600'
+                                                : 'bg-blue-500 hover:bg-blue-600'
+                                        }`}
+                                    >
+                                        {carga.asignacionEstado === 0 ? 'Asignar' : 'Modificar'}
+                                    </button>
                                 </td>
-
-
-
+                                
                             </tr>
                         ))}
                     </tbody>

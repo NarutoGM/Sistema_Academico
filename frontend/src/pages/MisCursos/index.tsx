@@ -3,6 +3,7 @@ import {
   getMisCursos,
   CargaDocente,
   enviarinfoSilabo,
+  getSilaboPasado,
 } from '@/pages/services/silabo.services';
 import './estilos.css';
 import LogoCrear from '../../images/logo/crearsilabo.png';
@@ -12,6 +13,7 @@ import visualizarenvio from '../../images/logo/visualizarenvio.png';
 import LogoReutilizar from '../../images/logo/reutilizarsilabo.png';
 import moment from 'moment'; // O cualquier otra librería de manejo de fechas que prefieras
 import { generarSilaboPDF } from '@/utils/pdfUtils';
+import { set } from 'zod';
 
 const Index: React.FC = () => {
   const [cargaDocente, setCargaDocente] = useState<CargaDocente[]>([]);
@@ -24,6 +26,8 @@ const Index: React.FC = () => {
   const [isModalOpen3, setIsModalOpen3] = useState(false); // Controla si el modal2 está abierto
 
   const [selectedCarga, setSelectedCarga] = useState<CargaDocente>();
+  const [selectedCarga2, setSelectedCarga2] = useState<CargaDocente>();
+  const [selectedOriginal, setSelectedOriginal] = useState<CargaDocente>();
 
   const itemsPerPage = 5;
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,9 +54,17 @@ const Index: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const openModal2 = () => {
-    setIsModalOpen2(true);
-  };
+  const openModal2 = async () => {
+    try {
+        const data2 = await getSilaboPasado(selectedCarga?.idCurso);
+        setSelectedCarga2(data2.cargadocente[0]);
+        console.log(selectedCarga2);
+        setIsModalOpen2(true);
+    } catch (error) {
+        console.error("Error al obtener los datos del silabo:", error);
+    }
+};
+
 
   const openModal3 = () => {
     setIsModalOpen3(true);
@@ -87,6 +99,40 @@ const Index: React.FC = () => {
     }
     setShowModal(false);
   };
+
+  const handleCreateSilabo2 = async () => {
+    
+      // Asegurarse de que selectedCarga2 tenga los valores correctos de selectedCarga
+    selectedCarga2.idDirector = selectedCarga?.idDirector;
+    selectedCarga2.idDocente = selectedCarga?.idDocente;
+    selectedCarga2.idCargaDocente = selectedCarga?.idCargaDocente; 
+    selectedCarga2.idFilial = selectedCarga?.idFilial;
+    selectedCarga2.silabo.idDocente = selectedCarga?.idDocente;
+    selectedCarga2.silabo.idCargaDocente = selectedCarga?.idCargaDocente; 
+    selectedCarga2.silabo.idFilial = selectedCarga?.idFilial;
+    selectedCarga2.filial.name = selectedCarga?.filial?.name;
+    selectedCarga2.semestre_academico.nomSemestre = selectedCarga?.semestre_academico?.nomSemestre;
+    selectedCarga2.semestre_academico.fInicio = selectedCarga?.semestre_academico?.fInicio;
+    selectedCarga2.semestre_academico.fTermino = selectedCarga?.semestre_academico?.fTermino;
+    
+    // Actualizar los valores de los campos dinámicamente a partir de selectedCarga
+    selectedCarga2.silabo.semanas.forEach((semana, index) => {
+      // Aquí, los valores de cada campo provienen de selectedCarga
+      semana.idCargaDocente = selectedCarga?.idCargaDocente || '';  // Valor desde selectedCarga
+      semana.idFilial = selectedCarga?.idFilial || '';
+      semana.idDocente = selectedCarga?.idDocente|| '';
+
+    });
+    
+    console.log(selectedCarga2);
+    setSelectedCarga(selectedCarga2);
+    openModal(true);
+
+    setShowModal(false);
+  };
+
+
+
 
   const nextStep = () => {
     if (validateStep()) {
@@ -505,7 +551,7 @@ const Index: React.FC = () => {
                     <td className="px-4 py-2 border-b text-center">
                       <button
                         onClick={() => {
-                          setSelectedCarga(carga);
+                          setSelectedOriginal(carga);
                           setIsFlipped(true); // Gira la tarjeta
                         }}
                         className="px-4 py-2 bg-blue-500 text-white rounded"
@@ -558,7 +604,7 @@ const Index: React.FC = () => {
           <div className="flex flex-wrap gap-4">
             {/* Opción: Crear un nuevo sílabo */}
             <div
-              onClick={() => openModal()}
+              onClick={() => {openModal(); setSelectedCarga(selectedOriginal);}}
               className="flex flex-col items-center bg-white border rounded-lg shadow-lg p-6 w-96 cursor-pointer transition transform hover:scale-105 hover:shadow-xl relative"
             >
               <div className="absolute top-0 left-0 w-full h-2 bg-blue-500 rounded-t-lg"></div>
@@ -589,7 +635,7 @@ const Index: React.FC = () => {
             </div>
 
             <div
-              onClick={() => selectedCarga?.silabo !== null && openModal3()}
+              onClick={() => {selectedCarga?.silabo !== null && openModal3(); setSelectedCarga(selectedOriginal);}}
               className={`flex flex-col items-center bg-white border rounded-lg shadow-lg p-6 w-96 transition transform relative ${selectedCarga?.silabo !== null
                 ? 'cursor-pointer hover:scale-105 hover:shadow-xl'
                 : 'cursor-not-allowed opacity-50'
@@ -622,21 +668,44 @@ const Index: React.FC = () => {
       {/* Modal */}
 
       {isModalOpen2 && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-0 z-50">
-          <div className="bg-white p-16 rounded-lg shadow-2xl max-w-full text-center">
-            <h2 className="text-6xl  font-bold mb-12">Información</h2>
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className="bg-white p-8 rounded-lg shadow-2xl max-w-4xl w-full text-center">
+          <div className="text-2xl font-bold mb-4">
+            {selectedCarga?.curso?.name || "Sin nombre"}
+          </div>
 
-            {selectedCarga?.curso?.name || 'Sin nombre'}
+          {/* Sección del PDF */}
+          <div
+            id="pdf-container"
+            className="basis-3/4 border rounded-lg overflow-hidden"
+            style={{ height: "55vh" }} // Ajusta la altura del contenedor
+          >
+            <iframe
+              src={generarSilaboPDF(selectedCarga2, 2)}
+              style={{ width: "100%", height: "100%", border: "none" }}
+              title="Sílabo PDF"
+            />
+          </div>
 
+          {/* Contenedor del botón */}
+          <div className="mt-6 flex justify-center gap-4">
+            <button
+              onClick={handleCreateSilabo2}
+              className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold rounded-lg shadow-lg hover:from-green-600 hover:to-green-800 transform hover:scale-105 transition-all duration-300"
+            >
+              Usar
+            </button>
             <button
               onClick={closeModal2}
-              className="px-8 py-4 bg-blue-600 text-white text-2xl rounded-lg hover:bg-blue-500"
+              className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-800 transform hover:scale-105 transition-all duration-300"
             >
               Cerrar
             </button>
           </div>
         </div>
+      </div>
       )}
+
 
       {isModalOpen3 && (
 

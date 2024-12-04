@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Filial;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 
 class FilialController extends Controller
@@ -18,22 +17,14 @@ class FilialController extends Controller
     public function getDocentes($idFilial)
     {
         try {
-            Log::info("ID de filial recibido: $idFilial");
 
             $filial = Filial::findOrFail($idFilial);
-            Log::info("Filial encontrada: ", ['filial' => $filial]);
 
             // Carga la relación 'user' junto con los docentes
             $docentes = $filial->docentes()->with('user')->get();
-            Log::info("Docentes con relación 'user' cargados: ", ['docentes' => $docentes]);
-
+            
             // Formatea los datos de los docentes
             $docentes = $docentes->map(function ($docente) {
-                Log::info("Procesando docente: ", [
-                    'id' => $docente->idDocente,
-                    'nombre' => $docente->user->name ?? 'Sin nombre',
-                    'apellido' => $docente->user->lastname ?? 'Sin apellido'
-                ]);
                 return [
                     'id' => $docente->idDocente,
                     'nombre' => $docente->user->name ?? 'Sin nombre', // Si no hay nombre, usa 'Sin nombre'
@@ -41,11 +32,8 @@ class FilialController extends Controller
                 ];
             });
 
-            Log::info("Docentes procesados para la respuesta final: ", ['docentes' => $docentes]);
-
             return response()->json($docentes, 200);
         } catch (\Exception $e) {
-            Log::error('Error en getDocentes:', ['exception' => $e]);
             return response()->json(['error' => 'Error interno en el servidor'], 500);
         }
     }

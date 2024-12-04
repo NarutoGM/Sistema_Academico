@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Escuela;
+use App\Models\Malla;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class EscuelaController extends Controller
 {
@@ -93,4 +95,32 @@ class EscuelaController extends Controller
 
         return response()->json(['message' => 'Escuela eliminada exitosamente']);
     }
+
+
+
+    public function getMallaByEscuela($idEscuela)
+    {
+        try {
+    
+            // Verifica que la escuela exista
+            $escuela = Escuela::findOrFail($idEscuela);
+    
+            // Ajusta la consulta para coincidir con la estructura de tu base de datos
+            $malla = Malla::where('idEscuela', $idEscuela)
+                ->where('año', '2018') // Usa 'año' como está en la base de datos
+                ->first(['idMalla', 'año', 'estado']);
+    
+            if (!$malla) {
+                return response()->json(['message' => 'No se encontró una malla para esta escuela en 2018.'], 404);
+            }
+    
+            return response()->json($malla, 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => 'Escuela no encontrada.'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error interno en el servidor.'], 500);
+        }
+    }
+    
+
 }

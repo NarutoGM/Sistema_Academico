@@ -22,6 +22,7 @@ const Index: React.FC = () => {
   const [semestre, setSemestre] = useState('');
   const [procesoSilabo, setProcesoSilabo] = useState('');
   const [docente, setDocente] = useState('');
+  const [entregaSilabo, setEntregaSilabo] = useState('');
 
   // Información adicional para el reporte
   const [filiales, setFiliales] = useState<string[]>([]); // Opciones de filiales
@@ -51,7 +52,7 @@ const Index: React.FC = () => {
         );
         setFiliales(uniqueFiliales);
 
-        // Extraer las filiales únicas
+        // Extraer estados de silabos
         const uniqueEstados = Array.from(
           new Set(docenteArray.map((item) => item.curso?.estado_silabo).filter(Boolean)),
         );
@@ -66,6 +67,25 @@ const Index: React.FC = () => {
       const estadoSilabo = item.curso?.estado_silabo || 'Curso por gestionar';
       const nombreDocente =
         `${item.nomdocente} ${item.apedocente}`.toLowerCase();
+
+          // Procesar fechas
+      const fEnvio = item.silabo?.fEnvio ? new Date(item.silabo.fEnvio) : null;
+      const fLimiteSilabo = item.semestre_academico?.fLimiteSilabo
+        ? new Date(item.semestre_academico.fLimiteSilabo)
+        : null;
+
+      let cumpleEntrega = true; // Valor por defecto si no se selecciona filtro de entrega
+      if (entregaSilabo && fEnvio && fLimiteSilabo) {
+
+        cumpleEntrega =
+          entregaSilabo === 'aTiempo'
+            ? fEnvio <= fLimiteSilabo
+            : entregaSilabo === 'tarde'
+            ? fEnvio > fLimiteSilabo
+            : true;
+      }
+
+
       return (
         (codigoCurso ? item.idCurso.toString().includes(codigoCurso) : true) &&
         (curso
@@ -80,7 +100,7 @@ const Index: React.FC = () => {
         (procesoSilabo
           ? estadoSilabo.toLowerCase().includes(procesoSilabo.toLowerCase())
           : true) &&
-        (docente ? nombreDocente.includes(docente.toLowerCase()) : true)
+        (docente ? nombreDocente.includes(docente.toLowerCase()) : true) && cumpleEntrega
       );
     });
     setFilteredData(filtered);
@@ -92,6 +112,7 @@ const Index: React.FC = () => {
     semestre,
     procesoSilabo,
     docente,
+    entregaSilabo,
     cargaDocente,
   ]);
 
@@ -199,15 +220,17 @@ const Index: React.FC = () => {
                   {est}
                 </option>
               ))}
-            </select>
-          
-          <input
-            type="text"
-            placeholder="Entrega de silabo"
-            value={curso}
-            onChange={(e) => setCurso(e.target.value)}
+          </select>
+          <select
+            value={entregaSilabo}
+            onChange={(e) => setEntregaSilabo(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
-          />
+          >
+            <option value="">Seleccionar Entrega de sílabo</option>
+            <option value="aTiempo">A tiempo</option>
+            <option value="tarde">Tarde</option>
+          </select>
+          
           <input
             type="text"
             placeholder="Docente"
@@ -217,10 +240,25 @@ const Index: React.FC = () => {
           />
           <button
             onClick={handleDownloadPDF}
-            className="px-4 py-2 bg-gray-500 text-white rounded bg-blue-500"
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-800 transform hover:scale-105 transition-all duration-300"
           >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3"
+              />
+            </svg>
             Descargar
           </button>
+
         </div>
       </div>
       <div className="overflow-x-auto">
@@ -263,7 +301,17 @@ const Index: React.FC = () => {
                 <td className="px-4 py-2 border-b text-center">
                   {carga.silabo?.fEnvio || 'N/A'}
                 </td>
-                <td className="px-4 py-2 border-b text-center">
+                <td className={`px-4 py-2 border-b text-center
+                    ${carga.silabo?.estado === null 
+                            ? "bg-gray-100 text-gray-600 border border-gray-300" 
+                            : carga.silabo?.estado === 1 
+                                ? "bg-blue-100 text-blue-600 border border-blue-300" 
+                                : carga.silabo?.estado === 2 
+                                    ? "bg-red-100 text-red-600 border border-red-300" 
+                                    : carga.silabo?.estado === 3 
+                                        ? "bg-green-100 text-green-600 border border-green-300" 
+                                        : "bg-yellow-100 text-yellow-600 border border-yellow-300" 
+                    }`} >
                   {carga.curso?.estado_silabo}
                 </td>
               </tr>
