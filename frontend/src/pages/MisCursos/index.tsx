@@ -113,6 +113,7 @@ const Index: React.FC = () => {
   };
 
   const handleCreateSilabo2 = async () => {
+    closeModal2();
     console.log(selectedCarga2);
     // Asegurarse de que selectedCarga2 tenga los valores correctos de selectedCarga
     selectedCarga2.idDirector = selectedOriginal?.idDirector;
@@ -547,7 +548,7 @@ const Index: React.FC = () => {
                       >
                         {carga.estado === false
                           ? "Inactivo"
-                          : carga.silabo?.estado === null
+                          : carga.silabo?.estado == null
                             ? "Gestiona tu silabo"
                             : carga.silabo?.estado === 1
                               ? "Silabo enviado"
@@ -703,7 +704,7 @@ const Index: React.FC = () => {
             {/* Contenedor del botón */}
             <div className="mt-6 flex justify-center gap-4">
               <button
-onClick={() => { handleCreateSilabo2(); setnum(1); }}
+onClick={() => { handleCreateSilabo2(); setnum(1);  }}
 className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold rounded-lg shadow-lg hover:from-green-600 hover:to-green-800 transform hover:scale-105 transition-all duration-300"
               >
                 Usar
