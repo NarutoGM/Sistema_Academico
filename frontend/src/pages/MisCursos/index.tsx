@@ -13,7 +13,6 @@ import visualizarenvio from '../../images/logo/visualizarenvio.png';
 import LogoReutilizar from '../../images/logo/reutilizarsilabo.png';
 import moment from 'moment'; // O cualquier otra librería de manejo de fechas que prefieras
 import { generarSilaboPDF } from '@/utils/pdfUtils';
-import { generarSilaboPDF2 } from '@/utils/pdfUtils2';
 import { set } from 'zod';
 
 const Index: React.FC = () => {
@@ -28,6 +27,8 @@ const Index: React.FC = () => {
 
   const [selectedCarga, setSelectedCarga] = useState<CargaDocente>();
   const [selectedCarga2, setSelectedCarga2] = useState<CargaDocente>();
+  const [selectedOriginal, setSelectedOriginal] = useState<CargaDocente>();
+  const [num, setnum] = useState<number>();
 
   const itemsPerPage = 5;
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,14 +57,16 @@ const Index: React.FC = () => {
 
   const openModal2 = async () => {
     try {
-        const data2 = await getSilaboPasado(selectedCarga?.idCurso);
-        setSelectedCarga2(data2.cargadocente[0]);
-        console.log(selectedCarga2);
-        setIsModalOpen2(true);
+
+      const data2 = await getSilaboPasado(selectedOriginal?.idCurso);
+      console.log(data2);
+      setSelectedCarga2(data2.cargadocente[0]);
+      setIsModalOpen2(true);
+      setnum(1);
     } catch (error) {
-        console.error("Error al obtener los datos del silabo:", error);
+      console.error("Error al obtener los datos del silabo:", error);
     }
-};
+  };
 
 
   const openModal3 = () => {
@@ -85,10 +88,19 @@ const Index: React.FC = () => {
 
   const handleCreateSilabo = async () => {
     try {
-      console.log('Sílabo enviado correctamente:', selectedCarga);
+      if (num == 1) {
+        console.log('Sílabo enviado correctamente:', selectedCarga2);
 
-      const response = await enviarinfoSilabo(selectedCarga);
-      console.log('Sílabo enviado correctamente:', response);
+        const response = await enviarinfoSilabo(selectedCarga2);
+        console.log('Sílabo enviado correctamente:', response);
+
+      } else {
+        console.log('Sílabo enviado correctamente:', selectedCarga);
+
+        const response = await enviarinfoSilabo(selectedCarga);
+        console.log('Sílabo enviado correctamente:', response);
+
+      }
 
       // Refrescar los datos directamente
       await fetchCursos();
@@ -101,21 +113,39 @@ const Index: React.FC = () => {
   };
 
   const handleCreateSilabo2 = async () => {
-    try {
-      console.log('Sílabo enviado correctamente:', selectedCarga2);
+    closeModal2();
+    console.log(selectedCarga2);
+    // Asegurarse de que selectedCarga2 tenga los valores correctos de selectedCarga
+    selectedCarga2.idDirector = selectedOriginal?.idDirector;
+    selectedCarga2.idDocente = selectedOriginal?.idDocente;
+    selectedCarga2.idCargaDocente = selectedOriginal?.idCargaDocente;
+    selectedCarga2.idFilial = selectedOriginal?.idFilial;
+    selectedCarga2.silabo.idDocente = selectedOriginal?.idDocente;
+    selectedCarga2.silabo.idCargaDocente = selectedOriginal?.idCargaDocente;
+    selectedCarga2.silabo.idFilial = selectedOriginal?.idFilial;
+    selectedCarga2.filial.name = selectedOriginal?.filial?.name;
+    
+    selectedCarga2.semestre_academico.nomSemestre = selectedOriginal?.semestre_academico?.nomSemestre;
+    selectedCarga2.semestre_academico.fInicio = selectedOriginal?.semestre_academico?.fInicio;
+    selectedCarga2.semestre_academico.fTermino = selectedOriginal?.semestre_academico?.fTermino;
 
-      const response = await enviarinfoSilabo(selectedCarga2);
-      console.log('Sílabo enviado correctamente:', response);
+    // Actualizar los valores de los campos dinámicamente a partir de selectedCarga
+    selectedCarga2.silabo.semanas.forEach((semana, index) => {
+      // Aquí, los valores de cada campo provienen de selectedCarga
+      semana.idCargaDocente = selectedOriginal?.idCargaDocente || '';  // Valor desde selectedCarga
+      semana.idFilial = selectedOriginal?.idFilial || '';
+      semana.idDocente = selectedOriginal?.idDocente || '';
 
-      // Refrescar los datos directamente
-      await fetchCursos();
-      closeModal();
-      setIsFlipped(false);
-    } catch (error) {
-      console.error('Error al enviar el sílabo:', error);
-    }
+    });
+
+    console.log(selectedCarga2);
+    setSelectedCarga(selectedCarga2);
+    openModal(true);
+
     setShowModal(false);
   };
+
+
 
 
   const nextStep = () => {
@@ -518,7 +548,7 @@ const Index: React.FC = () => {
                       >
                         {carga.estado === false
                           ? "Inactivo"
-                          : carga.silabo?.estado === null
+                          : carga.silabo?.estado == null
                             ? "Gestiona tu silabo"
                             : carga.silabo?.estado === 1
                               ? "Silabo enviado"
@@ -535,7 +565,7 @@ const Index: React.FC = () => {
                     <td className="px-4 py-2 border-b text-center">
                       <button
                         onClick={() => {
-                          setSelectedCarga(carga);
+                          setSelectedOriginal(carga);
                           setIsFlipped(true); // Gira la tarjeta
                         }}
                         className="px-4 py-2 bg-blue-500 text-white rounded"
@@ -583,12 +613,12 @@ const Index: React.FC = () => {
             Curso Seleccionado
           </h3>
           <p className="text-gray-600 text-center text-4xl font-bold mb-6">
-            {selectedCarga?.curso?.name || 'Sin nombre'}
+            {selectedOriginal?.curso?.name || 'Sin nombre'}
           </p>
           <div className="flex flex-wrap gap-4">
             {/* Opción: Crear un nuevo sílabo */}
             <div
-              onClick={() => openModal()}
+              onClick={() => { openModal(); setSelectedCarga(selectedOriginal); }}
               className="flex flex-col items-center bg-white border rounded-lg shadow-lg p-6 w-96 cursor-pointer transition transform hover:scale-105 hover:shadow-xl relative"
             >
               <div className="absolute top-0 left-0 w-full h-2 bg-blue-500 rounded-t-lg"></div>
@@ -619,7 +649,7 @@ const Index: React.FC = () => {
             </div>
 
             <div
-              onClick={() => selectedCarga?.silabo !== null && openModal3()}
+              onClick={() => { selectedCarga?.silabo !== null && openModal3(); setSelectedCarga(selectedOriginal); }}
               className={`flex flex-col items-center bg-white border rounded-lg shadow-lg p-6 w-96 transition transform relative ${selectedCarga?.silabo !== null
                 ? 'cursor-pointer hover:scale-105 hover:shadow-xl'
                 : 'cursor-not-allowed opacity-50'
@@ -652,42 +682,42 @@ const Index: React.FC = () => {
       {/* Modal */}
 
       {isModalOpen2 && (
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div className="bg-white p-8 rounded-lg shadow-2xl max-w-4xl w-full text-center">
-          <div className="text-2xl font-bold mb-4">
-            {selectedCarga?.curso?.name || "Sin nombre"}
-          </div>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-8 rounded-lg shadow-2xl max-w-4xl w-full text-center">
+            <div className="text-2xl font-bold mb-4">
+              {selectedOriginal?.curso?.name || "Sin nombre"}
+            </div>
 
-          {/* Sección del PDF */}
-          <div
-            id="pdf-container"
-            className="basis-3/4 border rounded-lg overflow-hidden"
-            style={{ height: "55vh" }} // Ajusta la altura del contenedor
-          >
-            <iframe
-              src={generarSilaboPDF2(selectedCarga2, selectedCarga, 2)}
-              style={{ width: "100%", height: "100%", border: "none" }}
-              title="Sílabo PDF"
-            />
-          </div>
+            {/* Sección del PDF */}
+            <div
+              id="pdf-container"
+              className="basis-3/4 border rounded-lg overflow-hidden"
+              style={{ height: "55vh" }} // Ajusta la altura del contenedor
+            >
+              <iframe
+                src={generarSilaboPDF(selectedCarga2, 2)}
+                style={{ width: "100%", height: "100%", border: "none" }}
+                title="Sílabo PDF"
+              />
+            </div>
 
-          {/* Contenedor del botón */}
-          <div className="mt-6 flex justify-center gap-4">
-            <button
-              onClick={handleCreateSilabo2}
-              className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold rounded-lg shadow-lg hover:from-green-600 hover:to-green-800 transform hover:scale-105 transition-all duration-300"
-            >
-              Usar
-            </button>
-            <button
-              onClick={closeModal2}
-              className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-800 transform hover:scale-105 transition-all duration-300"
-            >
-              Cerrar
-            </button>
+            {/* Contenedor del botón */}
+            <div className="mt-6 flex justify-center gap-4">
+              <button
+onClick={() => { handleCreateSilabo2(); setnum(1);  }}
+className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold rounded-lg shadow-lg hover:from-green-600 hover:to-green-800 transform hover:scale-105 transition-all duration-300"
+              >
+                Usar
+              </button>
+              <button
+                onClick={closeModal2}
+                className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-800 transform hover:scale-105 transition-all duration-300"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
-      </div>
       )}
 
 
@@ -697,7 +727,7 @@ const Index: React.FC = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-8 rounded-lg shadow-2xl max-w-4xl w-full text-center">
             <div className="text-2xl font-bold mb-4">
-              {selectedCarga?.curso?.name || "Sin nombre"}
+              {selectedOriginal?.curso?.name || "Sin nombre"}
             </div>
 
             <div className="flex flex-row gap-4 h-100 ">
@@ -705,7 +735,7 @@ const Index: React.FC = () => {
               <div className="basis-1/4 border rounded-lg p-4 overflow-auto">
                 <h3 className="text-xl font-semibold mb-2">Observaciones</h3>
                 <p className="text-gray-700">
-                  {selectedCarga?.silabo?.observaciones || "Sin observaciones"}
+                  {selectedOriginal?.silabo?.observaciones || "Sin observaciones"}
                 </p>
               </div>
 
@@ -715,7 +745,7 @@ const Index: React.FC = () => {
                 className="basis-3/4 border rounded-lg overflow-hidden"
               >
                 <iframe
-                  src={generarSilaboPDF(selectedCarga, 2)}
+                  src={generarSilaboPDF(selectedOriginal, 2)}
                   style={{ width: "100%", height: "100%", border: "none" }}
                   title="Sílabo PDF"
                 />
@@ -1519,7 +1549,7 @@ const Index: React.FC = () => {
 
             {/* Close Button */}
             <button
-              onClick={closeModal}
+              onClick={() => { closeModal(); setnum(0); }}
               className="mt-6 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 w-full"
             >
               Cerrar

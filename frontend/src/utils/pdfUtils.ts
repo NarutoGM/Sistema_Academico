@@ -475,8 +475,8 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
       `${silabo.silabo.semanas[9].nomSem}`,
     ],
     [
-      { content: silabo.silabo.capacidadesterminales3, rowSpan: 5 },
-      { content: silabo.silabo.resultadosaprendizajes3, rowSpan: 5 },
+      { content: silabo.silabo.capacidadesterminales3, rowSpan: 6 },
+      { content: silabo.silabo.resultadosaprendizajes3, rowSpan: 6 },
       `${silabo.silabo.semanas[10].organizacion}`,
       `${silabo.silabo.semanas[10].estrategias}`,
       `${silabo.silabo.semanas[10].evidencias}`,
@@ -510,6 +510,13 @@ export const generarSilaboPDF = (silabo: any, numero: number) => {
       `${silabo.silabo.semanas[14].evidencias}`,
       `${silabo.silabo.semanas[14].instrumentos}`,
       `${silabo.silabo.semanas[14].nomSem}`,
+    ],
+    [
+      `${silabo.silabo.semanas[15].organizacion}`,
+      `${silabo.silabo.semanas[15].estrategias}`,
+      `${silabo.silabo.semanas[15].evidencias}`,
+      `${silabo.silabo.semanas[15].instrumentos}`,
+      `${silabo.silabo.semanas[15].nomSem}`,
     ],
   ];
 
