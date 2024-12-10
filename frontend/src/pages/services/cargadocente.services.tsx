@@ -6,6 +6,8 @@ export interface Docente {
   id: number;
   nombre: string;
   apellido: string;
+  dni: string;
+  regimen: string;
   courseCount: number;
   status: 'Sin Iniciar' | 'Incompleto' | 'Completado';
 }

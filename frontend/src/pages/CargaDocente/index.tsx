@@ -9,6 +9,8 @@ import {
 } from '@/pages/services/cargadocente.services';
 
 import AsignarCursosModal from './AsignarCursosModal';
+import CHNLmodal from './CHNLmodal';
+import PDFcombinado from './PDFcombinado.js';
 import { isAuthenticated } from '@/utils/auth';
 
 const CargaDocente: React.FC = () => {
@@ -24,8 +26,11 @@ const CargaDocente: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [selectedDocente, setSelectedDocente] = useState<Docente | null>(null);
-  const [showModal, setShowModal] = useState(false);
+  const [showModalCHL, setShowModalCHL] = useState(false);
+  const [showModalCHNL, setShowModalCHNL] = useState(false);
 
+  // Estado para los cursos asignados
+  const [cursosAsignados, setCursosAsignados] = useState<any[]>([]);
 
   // Obtener idDirector
   const authData = isAuthenticated();
@@ -107,55 +112,38 @@ const CargaDocente: React.FC = () => {
     }
   };
 
-  const handleEditar = (docente: Docente) => {
+  //CHL
+  const handleEditarCHL = (docente: Docente) => {
     setSelectedDocente(docente); // Establece el docente seleccionado
-    setShowModal(true); // Muestra el modal
+    setShowModalCHL(true); // Muestra el modal
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false); // Cierra el modal
+  const handleCloseModalCHL = () => {
+    setShowModalCHL(false); // Cierra el modal
     setSelectedDocente(null); // Limpia el docente seleccionado
   };
 
 
+    //CHNL
+    const handleEditarCHNL = (docente: Docente) => {
+      setSelectedDocente(docente); // Establece el docente seleccionado
+      setShowModalCHNL(true); // Muestra el modal
+    };
+  
+    const handleCloseModalCHNL = () => {
+      setShowModalCHNL(false); // Cierra el modal
+      setSelectedDocente(null); // Limpia el docente seleccionado
+    };
+
+
+  // Asignar los cursos desde el modal
+  const handleCursosAsignados = (cursos: any[]) => {
+    setCursosAsignados(cursos); // Actualizamos el estado con los cursos asignados
+  };
+
   //PDF
   const generatePDF = async (docenteId: number, docenteName: string) => {
-    try {
-      // Obtén los cursos asignados para el docente desde tu API
-      const response = await fetch(
-        `http://localhost:8000/api/cargadocente/${docenteId}/cursos`
-      );
-      if (!response.ok) {
-        throw new Error('Error al obtener los cursos asignados');
-      }
-  
-      const cursos = await response.json();
-  
-      // Inicializar jsPDF
-      const doc = new jsPDF();
-  
-      // Agregar título
-      doc.setFontSize(16);
-      doc.text(`Reporte de Cursos Asignados`, 20, 20);
-      doc.setFontSize(12);
-      doc.text(`Docente: ${docenteName}`, 20, 30);
-      doc.text(`ID Docente: ${docenteId}`, 20, 40);
-  
-      // Crear tabla con los cursos
-      doc.setFontSize(10);
-      const startY = 50;
-      cursos.forEach((curso: { idCurso: number; nombreCurso: string }, index: number) => {
-        const y = startY + index * 10;
-        doc.text(`ID Curso: ${curso.idCurso}`, 20, y);
-        doc.text(`Nombre Curso: ${curso.nombreCurso}`, 60, y);
-      });
-  
-      // Guardar el archivo PDF
-      doc.save(`Reporte_Docente_${docenteId}.pdf`);
-    } catch (error) {
-      console.error('Error al generar el PDF:', error);
-      alert('Ocurrió un error al generar el reporte.');
-    }
+    
   };
 
   return (
@@ -227,7 +215,7 @@ const CargaDocente: React.FC = () => {
                 Estado
               </th>
               <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                Acción
+                Acciones
               </th>
               <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
                 Reporte
@@ -258,21 +246,29 @@ const CargaDocente: React.FC = () => {
 
                   <td className="px-6 py-4 text-sm text-gray-800">
                     <button
-                      onClick={() => handleEditar(docente)}
+                      onClick={() => handleEditarCHL(docente)}
+                      className="bg-green-500 text-white px-4 py-2 m-3 rounded hover:bg-green-600 transition duration-300"
+                    >
+                      CHL
+                    </button>
+                    
+                    <button
+                      onClick={() => handleEditarCHNL(docente)}
                       className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300"
                     >
-                      Editar
+                      CHNL
                     </button>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-800">
-                    <button
-                      onClick={() =>
-                        alert(`Generar reporte para ${docente.nombre}`)
-                      }
-                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
-                    >
-                      Reporte
-                    </button>
+                    {/* Botón para descargar el reporte PDF */}
+                    
+                      <PDFcombinado docente={{
+                      id: docente.id,
+                      nombre: docente.nombre,
+                      apellido: docente.apellido,
+                      dni: docente.dni
+                    }} 
+                    idFilial={selectedFilial ?? 0} idDirector={idDirector} />
                   </td>
                 </tr>
               ))
@@ -288,14 +284,25 @@ const CargaDocente: React.FC = () => {
           </tbody>
         </table>
         {/* Modal */}
-        {showModal && selectedDocente && selectedFilial !== null && (
+        {showModalCHL && selectedDocente && selectedFilial !== null && (
           <AsignarCursosModal
             docente={selectedDocente}
             idFilial={selectedFilial}
             idDirector = {idDirector}
-            onClose={handleCloseModal}
+            onClose={handleCloseModalCHL}
           />
         )}
+
+        {showModalCHNL && selectedDocente && selectedFilial !== null && (
+          <CHNLmodal
+            docente={selectedDocente}
+            idFilial={selectedFilial}
+            idDirector = {idDirector}
+            onClose={handleCloseModalCHNL}
+          />
+        )}
+
+      
       </div>
     </div>
   );
