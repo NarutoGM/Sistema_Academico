@@ -58,9 +58,105 @@ class SubirSilaboController extends Controller
 
                             // Obtén las semanas relacionadas manualmente
                             $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
-                                ->where('idFilial', $silabo->idFilial)
-                                ->where('idDocente', $silabo->idDocente)
-                                ->get();
+                            ->where('idFilial', $silabo->idFilial)
+                            ->where('idDocente', $silabo->idDocente)
+                            ->orderBy('idSemana')  // Ordena por idSemana de forma ascendente (predeterminado)
+                            ->get();
+            
+
+                            // Agrega las semanas al silabo como un atributo
+                            $carga->silabo->semanas = $semanas;
+                        }
+                        return $carga;
+                    })
+                    ->map(function ($carga) {
+                        $plancursoacademico = PlanCursoAcademico::where('idMalla', $carga->idMalla)
+                            ->where('idCurso', $carga->idCurso)
+                            ->where('idEscuela', $carga->idEscuela)
+                            ->first();
+
+                        // Verificar si existe el PlanCursoAcademico y asignar el ciclo
+                        if ($plancursoacademico) {
+                            $carga->ciclo = $plancursoacademico->ciclo;
+                            $carga->prerequisitos = $plancursoacademico->prerequisitos;
+                        }
+
+                        return $carga;
+                    })
+                    ->map(function ($carga) {
+                        $user = auth()->user();
+
+                        $carga->nomdocente = $user->name;
+                        $carga->apedocente = $user->lastname;
+                        $carga->email = $user->email;
+                        $carga->profesion = $user->profesion;
+
+                        return $carga;
+                    });
+
+
+
+
+
+                return response()->json([
+                    'cargadocente' => $cargadocente,
+                    'message' => 'Docente encontrado',
+                ]);
+            } else {
+                return response()->json([
+                    'message' => 'Docente no encontrado',
+                ], 404);
+            }
+        } else {
+            return response()->json([
+                'message' => 'Usuario no autenticado',
+            ], 401);
+        }
+    }
+    
+    public function silaboReusar(Request $request)
+    {
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+
+        // Verificar que el usuario esté autenticado y el ID no sea null
+        if ($userId) {
+            // Buscar el docente en el modelo Docente usando el userId
+            $docente = Docente::where('id', $userId)->first();
+
+            // Comprobar si el docente existe
+            if ($docente) {
+
+                $cargadocente = CargaDocente::with([
+                    'filial',
+                    'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio', // Selecciona solo los campos necesarios
+                    'curso' => function ($query) {
+                        $query->with(['departamento', 'facultad', 'area', 'regimenCurso', 'tipoCurso']);
+                    },
+                    'escuela:idEscuela,name',
+                ])
+                    ->where('idDocente', $docente->idDocente)
+                    ->where('idCurso', $request->idCurso)
+                    ->where('estado', 0)
+                    ->get()
+                    ->map(function ($carga) {
+                        $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
+                            ->where('idFilial', $carga->idFilial)
+                            ->where('idDocente', $carga->idDocente)
+                            ->first();
+
+                        if (!$silabo) {
+                            $carga->silabo = null;
+                        } else {
+                            $carga->silabo = $silabo;
+
+                            // Obtén las semanas relacionadas manualmente
+                            $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
+                            ->where('idFilial', $silabo->idFilial)
+                            ->where('idDocente', $silabo->idDocente)
+                            ->orderBy('idSemana')  // Ordena por idSemana de forma ascendente (predeterminado)
+                            ->get();
+            
 
                             // Agrega las semanas al silabo como un atributo
                             $carga->silabo->semanas = $semanas;
@@ -179,7 +275,9 @@ class SubirSilaboController extends Controller
                                     $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
                                     ->where('idFilial', $silabo->idFilial)
                                     ->where('idDocente', $silabo->idDocente)
+                                    ->orderBy('idSemana')  // Ordena por idSemana de forma ascendente (predeterminado)
                                     ->get();
+                    
                                  
                                     $carga->silabo->semanas = $semanas;
                                 }
@@ -277,10 +375,11 @@ class SubirSilaboController extends Controller
                                     $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
                                     ->where('idFilial', $silabo->idFilial)
                                     ->where('idDocente', $silabo->idDocente)
+                                    ->orderBy('idSemana')  // Ordena por idSemana de forma ascendente (predeterminado)
                                     ->get();
-                                    if ($silabo->activo == false) {
-                                        $carga->curso->estado_silabo = "Sin creación de silabo";
-                                    } elseif ($silabo->estado == 1 && $silabo->activo == true) {
+                    
+
+                                    if ($silabo->estado == 1 && $silabo->activo == true) {
                                         $carga->curso->estado_silabo = "Esperando aprobación";
                                     } elseif ($silabo->estado == 3 && $silabo->activo == true) {
                                         $carga->curso->estado_silabo = "Visado";
@@ -293,6 +392,9 @@ class SubirSilaboController extends Controller
                                     }
     
                                     $carga->silabo->semanas = $semanas;
+                                }else {
+                                    // Si no existe un sílabo
+                                    $carga->curso->estado_silabo = "Sin envio de silabo";
                                 }
 
                                 $user = auth()->user();

@@ -36,6 +36,21 @@ export interface Curso {
     hPracticas: string;
     hLaboratorio: string;
     hRetroalimentacion: string;
+    nGrupos: number;
+}
+
+export interface Asignacion {
+    dia: string;
+    nombreAula: string;
+    horaInicio: string;
+    horaFin: string;
+    tipoSesion: string;
+}
+
+export interface Cursos {
+    asignaciones?: Asignacion;
+    curso: string;
+    id: number;
 }
 export interface Area {
     idArea: number;
@@ -83,16 +98,21 @@ export interface CargaDocente {
     idEscuela: number;
     idDirector: number;
     curso?: Curso; // Campo opcional que hace referencia a un objeto de tipo Curso
-    filial?: Filial; 
+    cursos?: Cursos;
+    //filial?: Filial; 
+    filial: string;
+    id: number;
     semestre_academico?: Semestre_academico; 
     escuela?: Escuela; // Campo opcional que hace referencia a un objeto de tipo Curso
     ciclo: string;
+    semestre: string;
     prerequisitos: string;
     email: string;
     profesion: string;
     silabo?: Silabo;
     nomdocente: string;
     apedocente: string;
+    asignacionEstado: number;
 
 }
 
@@ -177,38 +197,6 @@ export const getMisCursos = async (): Promise<MisCursosResponse> => {
     return data;
 };
 
-export const getSilaboPasado = async (idCurso: any): Promise<MisCursosResponse> => {
-    const authData = isAuthenticated();
-
-    if (!authData || !authData.token) {
-        throw new Error('User is not authenticated or token is missing');
-    }
-
-    // Realizamos una solicitud POST y pasamos los parámetros necesarios
-    const response = await fetch(`${apiUrl}/silaboReusar`, {
-        method: 'POST',
-        headers: {
-            Authorization: `Bearer ${authData.token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            idCurso, // Pasamos el idCurso que se usará en el controlador
-        }),
-    });
-
-    // Revisar el estado y el cuerpo de la respuesta
-    if (!response.ok) {
-        throw new Error('Error al obtener los cursos asignados');
-    }
-
-    // Leer el cuerpo de la respuesta solo una vez
-    const data = await response.json();
-    console.log("Datos recibidos:", data);
-
-    return data;
-};
-
-
 
 export const getMisSilabos = async (): Promise<any> => {
     const authData = isAuthenticated();
@@ -258,6 +246,53 @@ export const getReporte = async (): Promise<any> => {
     return data;
 };
 
+export const getCargaHorario = async (): Promise<any> => {
+    const authData = isAuthenticated();
+
+    if (!authData || !authData.token) {
+        throw new Error('User is not authenticated or token is missing');
+    }
+
+    const response = await fetch(`${apiUrl}/verhorarios`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${authData.token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error('Error al obtener los sílabos asignados');
+    }
+
+    const data = await response.json();
+    console.log("Sílabos recibidos:", data);
+    return data;
+};
+
+export const getCursosFiltrados = async (): Promise<any> => {
+    const authData = isAuthenticated();
+
+    if (!authData || !authData.token) {
+        throw new Error('User is not authenticated or token is missing');
+    }
+
+    const response = await fetch(`${apiUrl}/cursosFiltrados`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${authData.token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error('Error al obtener los sílabos asignados');
+    }
+
+    const data = await response.json();
+    console.log("Cursos filtrados:", data);
+    return data;
+};
 
 
 export const enviarinfoSilabo = async (selectedCarga: any): Promise<any> => {
@@ -296,42 +331,78 @@ export const enviarinfoSilabo = async (selectedCarga: any): Promise<any> => {
     }
 };
 
-export const enviarinfoSilabodirector = async (selectedCarga: any): Promise<any> => {
+
+
+
+
+export const enviarinfoHorario = async (HorarioData: any): Promise<any> => {
     const authData = isAuthenticated();
-    console.log("Iniciando envío del sílabo al director...");
 
-    // Verificar autenticación
     if (!authData || !authData.token) {
-        throw new Error('El usuario no está autenticado o falta el token');
+        throw new Error('User is not authenticated or token is missing');
     }
 
-    try {
-        // Realizar la solicitud POST con los datos del sílabo
-        const response = await fetch(`${apiUrl}/gestionarsilabodirector`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json', // Indica que enviamos datos en formato JSON
-                Authorization: `Bearer ${authData.token}`, // Incluir el token en la cabecera
-            },
-            body: JSON.stringify(selectedCarga), // Convertir los datos a JSON
-        });
+    const response = await fetch(`${apiUrl}/gestionarhorarios`, {
+        method: 'POST', // Cambiar a POST para enviar datos
+        headers: {
+            Authorization: `Bearer ${authData.token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(HorarioData), // Agregar el cuerpo con los datos a enviar
+    });
 
-        // Verificar si la respuesta es exitosa
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Error en la respuesta del servidor:", errorText);
-            throw new Error('Error al enviar los datos del sílabo al director');
-        }
-
-        // Procesar la respuesta como JSON
-        const data = await response.json();
-        console.log("Respuesta del servidor al director:", data);
-        return data; // Retornar los datos recibidos del servidor
-    } catch (error) {
-        console.error("Error al enviar los datos del sílabo al director:", error);
-        throw error; // Re-lanzar el error para manejarlo fuera de esta función
+    if (!response.ok) {
+        throw new Error('Error al enviar los datos del sílabo');
     }
+
+    const data = await response.json();
+    console.log("Respuesta del servidor:", data);
+    return data;
 };
 
+// horariosApi.ts
 
+export const guardarHorarios = async (horarios: any[], idCargaDocente: number, idFilial: number, idDocente: number): Promise<void> => {
+    const authData = isAuthenticated();
+
+    if (!authData || !authData.token) {
+        throw new Error('User is not authenticated or token is missing');
+    }
+    console.log(idCargaDocente, idFilial, idDocente);
+
+    // Filtrar los campos relevantes antes de enviarlos
+    const horariosFiltrados = horarios.map((horario) => ({
+        idCargaDocente: idCargaDocente,
+        idFilial: idFilial,
+        idDocente: idDocente,
+        aula: horario.aula,
+        dia: horario.dia,
+        grupo: horario.grupo,
+        horaFin: horario.horaFin,
+        horaInicio: horario.horaInicio,
+        tipoSesion: horario.tipoSesion
+    }));
+
+    console.log(horariosFiltrados);
+
+    const response = await fetch(`${apiUrl}/guardar-horarios`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authData.token}`,
+        },
+        body: JSON.stringify({ horarios: horariosFiltrados, idCargaDocente: idCargaDocente, idFilial: idFilial, idDocente: idDocente }),
+    });
+
+    if (!response.ok) {
+        throw new Error('Error al guardar los horarios');
+    }
+
+    // Obtener la respuesta JSON
+    const data = await response.json();
+    console.log("Datos recibidos:", data);
+
+    // Aquí puedes agregar el código necesario para manejar la respuesta
+    return data;
+};
 

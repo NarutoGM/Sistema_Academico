@@ -36,6 +36,7 @@ export interface Curso {
     hPracticas: string;
     hLaboratorio: string;
     hRetroalimentacion: string;
+    nGrupos: number;
 }
 export interface Area {
     idArea: number;
@@ -87,12 +88,14 @@ export interface CargaDocente {
     semestre_academico?: Semestre_academico; 
     escuela?: Escuela; // Campo opcional que hace referencia a un objeto de tipo Curso
     ciclo: string;
+    semestre: string;
     prerequisitos: string;
     email: string;
     profesion: string;
     silabo?: Silabo;
     nomdocente: string;
     apedocente: string;
+    asignacionEstado: number;
 
 }
 
@@ -250,6 +253,31 @@ export const getCargaHorario = async (): Promise<any> => {
     return data;
 };
 
+export const getCursosFiltrados = async (): Promise<any> => {
+    const authData = isAuthenticated();
+
+    if (!authData || !authData.token) {
+        throw new Error('User is not authenticated or token is missing');
+    }
+
+    const response = await fetch(`${apiUrl}/cursosFiltrados`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${authData.token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error('Error al obtener los sílabos asignados');
+    }
+
+    const data = await response.json();
+    console.log("Cursos filtrados:", data);
+    return data;
+};
+
+
 export const enviarinfoSilabo = async (selectedCarga: any): Promise<any> => {
     const authData = isAuthenticated();
     console.log("Iniciando envío del sílabo...");
@@ -314,3 +342,50 @@ export const enviarinfoHorario = async (HorarioData: any): Promise<any> => {
     console.log("Respuesta del servidor:", data);
     return data;
 };
+
+// horariosApi.ts
+
+export const guardarHorarios = async (horarios: any[], idCargaDocente: number, idFilial: number, idDocente: number): Promise<void> => {
+    const authData = isAuthenticated();
+
+    if (!authData || !authData.token) {
+        throw new Error('User is not authenticated or token is missing');
+    }
+    console.log(idCargaDocente, idFilial, idDocente);
+
+    // Filtrar los campos relevantes antes de enviarlos
+    const horariosFiltrados = horarios.map((horario) => ({
+        idCargaDocente: idCargaDocente,
+        idFilial: idFilial,
+        idDocente: idDocente,
+        aula: horario.aula,
+        dia: horario.dia,
+        grupo: horario.grupo,
+        horaFin: horario.horaFin,
+        horaInicio: horario.horaInicio,
+        tipoSesion: horario.tipoSesion
+    }));
+
+    console.log(horariosFiltrados);
+
+    const response = await fetch(`${apiUrl}/guardar-horarios`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authData.token}`,
+        },
+        body: JSON.stringify({ horarios: horariosFiltrados, idCargaDocente: idCargaDocente, idFilial: idFilial, idDocente: idDocente }),
+    });
+
+    if (!response.ok) {
+        throw new Error('Error al guardar los horarios');
+    }
+
+    // Obtener la respuesta JSON
+    const data = await response.json();
+    console.log("Datos recibidos:", data);
+
+    // Aquí puedes agregar el código necesario para manejar la respuesta
+    return data;
+};
+

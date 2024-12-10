@@ -100,6 +100,7 @@ Route::get('/generate-token', [TokenController::class, 'generateAccessToken']);
 Route::get('/miscursos', [SubirSilaboController::class, 'index']); 
 Route::get('/versilabos', [SubirSilaboController::class, 'versilabos']); 
 Route::get('/reportesilabos', [SubirSilaboController::class, 'reportesilabos']); 
+Route::post('/silaboReusar', [SubirSilaboController::class, 'silaboReusar']); //silabos reutilizables
 
 Route::apiResource('condiciones', CondicionController::class);  
 Route::apiResource('regimenes', RegimenController::class);  
@@ -121,6 +122,12 @@ Route::post('gestionarsilabodirector', [SubirSilaboController::class, 'gestionar
 
 
 
-Route::get('/verhorarios', [HorariosController::class, 'verhorarios']); 
+Route::get('/verhorarios', [HorariosController::class, 'verhorarios']);
+Route::post('/guardar-horarios', [HorariosController::class, 'guardarHorarios']);
+Route::get('/cursosFiltrados', [HorariosController::class, 'obtenerCursosFiltrados']);
+
+
+
+
 
 });
