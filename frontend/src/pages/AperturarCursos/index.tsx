@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Pie, Bar } from 'react-chartjs-2'; // Importar gráfico de tipo Pie
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'; // Registrar componentes de Chart.js
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'; // Registrar componentes de Chart.js
 import Swal from 'sweetalert2';
 import { getMisCursos, CargaDocente} from '@/pages/services/silabo.services';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 
 const Index: React.FC = () => {
@@ -76,7 +76,7 @@ const Index: React.FC = () => {
         // Actualizar el estado de los cursos seleccionados
         const updatedCourses = cargaDocente.map(course => {
             if (selectedCourses.some(item => item.idCargaDocente === course.idCargaDocente)) {
-                return { ...course, estado: 'Aperturado' };
+                return { ...course, estado: 'Aperturado', fechaApertura: new Date().toLocaleString()};
             }
             return course;
         });
@@ -103,8 +103,19 @@ const Index: React.FC = () => {
                 hoverBackgroundColor: ['#66BB6A', '#E57373'],
             },
         ],
-    };      
-    
+    };  
+    const barChartData = {
+        labels: ['Cursos Aperturados', 'Cursos No Aperturados'],
+        datasets: [
+            {
+                label: 'Cantidad de Cursos',
+                data: [aperturadosCount, noAperturadosCount],
+                backgroundColor: '#42A5F5', // Color para las barras
+                borderColor: '#1E88E5', // Color del borde de las barras
+                borderWidth: 1,
+            },
+        ],
+    };
     const handleDownloadPDF = () => {
         if (chartRef.current) {
           // Usamos html2canvas para capturar el gráfico como una imagen
@@ -303,6 +314,7 @@ const Index: React.FC = () => {
                             <th className="px-4 py-2 border-b font-medium text-white">Código</th>
                             <th className="px-4 py-2 border-b font-medium text-white">Curso</th>
                             <th className="px-4 py-2 border-b font-medium text-white">Estado</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Fecha de Apertura</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -311,14 +323,34 @@ const Index: React.FC = () => {
                                 <td className="px-4 py-2 border-b text-center">{carga.idCurso}</td>
                                 <td className="px-4 py-2 border-b text-center">{carga.curso?.name}</td>
                                 <td className="px-4 py-2 border-b text-center">{carga.estado}</td>
+                                <td className="px-4 py-2 border-b text-center">{carga.fechaApertura || 'No aperturado'}</td>
                             </tr>
                         ))}
                     </tbody>
 
                 </table>
             </div>
+
             <div className="flex justify-center items-center mb-4">
                 <Pie data={chartData} /> {/* Gráfico de pastel */}
+            </div>
+            
+            <div ref={chartRef} className="flex justify-center items-center mb-4">
+                <Bar data={barChartData} options={{
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    return `${context.dataset.label}: ${context.raw}`;
+                                },
+                            },
+                        },
+                    },
+                }} /> {/* Gráfico de barras */}
             </div>
             {/* <div>
                 <button onClick={handleDownloadPDF}>Generar PDF</button>
