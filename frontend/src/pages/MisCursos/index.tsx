@@ -9,6 +9,7 @@ import './estilos.css';
 import LogoCrear from '../../images/logo/crearsilabo.png';
 import Silabos from '../../images/logo/silabos.jpg';
 import visualizarenvio from '../../images/logo/visualizarenvio.png';
+import Modal from 'react-modal';
 
 import LogoReutilizar from '../../images/logo/reutilizarsilabo.png';
 import moment from 'moment'; // O cualquier otra librería de manejo de fechas que prefieras
@@ -32,6 +33,27 @@ const Index: React.FC = () => {
 
   const itemsPerPage = 5;
   const [currentPage, setCurrentPage] = useState(1);
+
+  Modal.setAppElement('#root');
+  useEffect(() => {
+    // Función para manejar la tecla F7
+    const handleKeyDown = (event) => {
+      if (event.key === 'F7') {
+        // Abrir el archivo HTML en una nueva ventana
+        window.open('/gestionsilabos/index.htm', '_blank');
+      }
+    };
+
+    // Agregar el event listener
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Limpiar el listener al desmontar el componente
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+
 
   const fetchCursos = async () => {
     try {
