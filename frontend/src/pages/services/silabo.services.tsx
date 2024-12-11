@@ -1,5 +1,6 @@
 import { isAuthenticated } from '@/utils/auth'; // Importa tu función isAuthenticated
 import { Escuela } from './rolesyusuarios.services';
+import { number } from 'zod';
 
 // Definición de la URL de la API directamente
 const apiUrl = 'http://127.0.0.1:8000/api'; // Cambia esta URL a la que necesites
@@ -94,6 +95,12 @@ export interface CargaDocente {
     nomdocente: string;
     apedocente: string;
 
+}
+
+export interface CursoApertura {
+    idCurso: number;
+    name:string;
+    estado: string;
 }
 
 export interface Semana {
@@ -332,6 +339,3 @@ export const enviarinfoSilabodirector = async (selectedCarga: any): Promise<any>
         throw error; // Re-lanzar el error para manejarlo fuera de esta función
     }
 };
-
-
-

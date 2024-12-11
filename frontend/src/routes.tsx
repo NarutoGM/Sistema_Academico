@@ -19,6 +19,7 @@ import Silabo from './pages/Silabo/index';
 import MisCursos from './pages/MisCursos/index';
 import Versilabos from './pages/VerSilabos/index';
 import Reporte1 from './pages/Reportes/index';
+import AperturarCursos from './pages/AperturarCursos/index';
 
 
 
@@ -271,6 +272,15 @@ const router = createBrowserRouter([
                     <ProtectedRoute>
                         <PageTitle title="academicos | TailAdmin - Tailwind CSS Admin Dashboard Template" />
                         <Reporte1/>
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path:'/aperturacursos',
+                element: (
+                    <ProtectedRoute>
+                        <PageTitle title="Aperturar Cursos | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+                        <AperturarCursos/>
                     </ProtectedRoute>
                 ),
             }
