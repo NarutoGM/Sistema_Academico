@@ -27,7 +27,6 @@ const SyllabusPieChart = ({ data }) => {
 
   return (
     <div style={{ width: '50%', height: '300px', maxWidth: '400px', margin: '0 auto' }}>
-      <h3>Estado de Sílabos</h3>
       <Pie data={chartData} options={options} />
     </div>
   );
