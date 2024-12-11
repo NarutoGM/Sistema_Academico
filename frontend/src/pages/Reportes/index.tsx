@@ -173,9 +173,12 @@ const Index: React.FC = () => {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Reporte de silabos</h1>
-       {/* Componente del gráfico de pastel */}
-       <SyllabusPieChart data={filteredData} />
-      <SyllabusStats data={filteredData} /> {/* Integración del componente de estadísticas */}
+      {/* Componente del gráfico de pastel */}
+      <div className="grid grid-cols-2 gap-4">  
+        <SyllabusPieChart data={filteredData} />
+        <SyllabusStats data={filteredData} /> {/* Integración del componente de estadísticas */}
+      </div>
+      
       <h1 className="text-xl font-bold mb-4">Filtrar:</h1>
 
       {/* Filters */}
