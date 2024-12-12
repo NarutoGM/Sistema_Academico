@@ -20,6 +20,7 @@ import MisCursos from './pages/MisCursos/index';
 import Versilabos from './pages/VerSilabos/index';
 import Reporte1 from './pages/Reportes/index';
 import AperturarCursos from './pages/AperturarCursos/index';
+import Reportedash from './pages/Reportedash/index';
 
 
 
@@ -282,7 +283,18 @@ const router = createBrowserRouter([
                         <AperturarCursos/>
                     </ProtectedRoute>
                 ),
+            },
+            {
+                path:'/reportedash',
+                element: (
+                    <ProtectedRoute>
+                        <PageTitle title="Aperturar Cursos | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+                        <Reportedash/>
+                    </ProtectedRoute>
+                ),
             }
+
+            
             
         ]
     },

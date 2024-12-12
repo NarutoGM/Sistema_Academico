@@ -428,7 +428,123 @@ class SubirSilaboController extends Controller
             ], 401);
         }
     }
+    public function reportesilabos2()
+    {
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+        if ($userId) {
 
+            $directorescuela = DirectorEscuela::where('id', $userId)->first();
+            if ($directorescuela) {
+                if ($directorescuela) {
+
+
+
+
+
+                    $cargadocente = CargaDocente::with([
+                        'filial',
+                        'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio,fLimiteSilabo', // Selecciona solo los campos necesarios
+                        'curso',
+                        'escuela:idEscuela,name',
+                    ])
+                        ->where('idDirector', $directorescuela->idDirector)
+                        ->get()
+                        ->map(function ($carga) {
+
+                            $docente = Docente::where('idDocente', $carga->idDocente)
+                                ->where('idDocente', $carga->idDocente)
+                                ->first();
+
+                            $docenteuser = User::where('id', $docente->id)
+                                ->first();
+
+                            $carga->nomdocente = $docenteuser->name;
+                            $carga->apedocente = $docenteuser->lastname;
+
+                            return $carga;
+                        })
+                        ->map(function ($carga) {
+                            $plancursoacademico = PlanCursoAcademico::where('idMalla', $carga->idMalla)
+                                ->where('idCurso', $carga->idCurso)
+                                ->where('idEscuela', $carga->idEscuela)
+                                ->first();
+    
+                            // Verificar si existe el PlanCursoAcademico y asignar el ciclo
+                            if ($plancursoacademico) {
+                                $carga->ciclo = $plancursoacademico->ciclo;
+                                $carga->prerequisitos = $plancursoacademico->prerequisitos;
+                            }
+    
+                            return $carga;
+                        })
+                        ->map(function ($carga) {
+                            $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
+                                ->where('idFilial', $carga->idFilial)
+                                ->where('idDocente', $carga->idDocente)
+                                ->first();
+
+
+
+                                if ($silabo!=null) {
+    
+                                
+                    
+
+                                    if ($silabo->estado == 1 && $silabo->activo == true) {
+                                        $carga->curso->estado_silabo = "Esperando aprobación";
+                                        $carga->silabo = $silabo;
+
+                                    } elseif ($silabo->estado == 3 && $silabo->activo == true) {
+                                        $carga->curso->estado_silabo = "Visado";
+                                        $carga->curso->observaciones = $silabo->observaciones;
+                                        $carga->silabo = $silabo;
+
+    
+                                    } elseif ($silabo->estado == 2 && $silabo->activo == true) {
+                                        $carga->curso->estado_silabo = "Rechazado";
+                                        $carga->curso->observaciones = $silabo->observaciones;
+                                        $carga->silabo = $silabo;
+
+    
+                                    }
+    
+                                }else {
+                                    // Si no existe un sílabo
+                                    $carga->curso->estado_silabo = "Sin envio de silabo";
+                                }
+
+                                $user = auth()->user();
+                                $carga->name = $user->name;
+                                $carga->lastname = $user->lastname;
+    
+                            return $carga; // Omite las cargas sin sílabo
+                        });
+
+
+
+
+
+                    return response()->json([
+                        'cargadocente' => $cargadocente,
+                        'message' => 'Docente encontrado',
+                    ]);
+                } else {
+                    return response()->json([
+                        'message' => 'Director de escuela no encontrado',
+                    ], 404);
+                }
+            } else {
+                return response()->json([
+                    'message' => 'Director de escuela no encontrado',
+                ], 404);
+            }
+        } else {
+            return response()->json([
+                'message' => 'Usuario no autenticado',
+            ], 401);
+        }
+    }
 
     public function infohorario()
     {

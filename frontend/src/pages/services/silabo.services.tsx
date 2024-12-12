@@ -258,7 +258,29 @@ export const getReporte = async (): Promise<any> => {
     return data;
 };
 
+export const getReporte2 = async (): Promise<any> => {
+    const authData = isAuthenticated();
 
+    if (!authData || !authData.token) {
+        throw new Error('User is not authenticated or token is missing');
+    }
+
+    const response = await fetch(`${apiUrl}/reportesilabos2`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${authData.token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error('Error al obtener los sílabos asignados');
+    }
+
+    const data = await response.json();
+    console.log("Sílabos recibidos:", data);
+    return data;
+};
 
 export const enviarinfoSilabo = async (selectedCarga: any): Promise<any> => {
     const authData = isAuthenticated();

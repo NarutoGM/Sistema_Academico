@@ -38,6 +38,7 @@ const ReportColumns: React.FC = () => {
         });
 
         setCarga1(esperando);
+        console.log(esperando);
         setCarga2(sinenvio);
         setCarga3(visado);
       } catch (error) {
@@ -87,6 +88,13 @@ const ReportColumns: React.FC = () => {
         <h2 className="text-lg font-semibold mb-2">Sílabos Enviados</h2>
         {carga1 && carga1.length > 0 ? (
           <>
+            <div>
+              <h3 className="text-md font-semibold mb-2">Distribución por Filial</h3>
+              <div className="flex justify-center items-center">
+                <div className="w-48 h-48">
+                  <Pie data={pieData} />
+                </div>
+              </div>            </div>
             <table className="table-auto w-full border-collapse border border-gray-300 mb-4">
               <thead>
                 <tr className="bg-gray-200">
@@ -95,6 +103,8 @@ const ReportColumns: React.FC = () => {
                   <th className="border border-gray-300 px-4 py-2">Filial</th>
                   <th className="border border-gray-300 px-4 py-2">Semestre</th>
                   <th className="border border-gray-300 px-4 py-2">Ciclo</th>
+                  <th className="border border-gray-300 px-4 py-2">Estado</th>
+
                   <th className="border border-gray-300 px-4 py-2">Fecha de envio</th>
                 </tr>
               </thead>
@@ -106,6 +116,8 @@ const ReportColumns: React.FC = () => {
                     <td className="border border-gray-300 px-4 py-2">{carga.filial?.name || "N/A"}</td>
                     <td className="border border-gray-300 px-4 py-2">{carga.semestre_academico?.nomSemestre || "N/A"}</td>
                     <td className="border border-gray-300 px-4 py-2">{carga.ciclo || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">{carga.curso?.estado_silabo || "N/A"}</td>
+
                     <td className="border border-gray-300 px-4 py-2">
                       {carga.silabo?.fEnvio
                         ? new Date(carga.silabo.fEnvio).toLocaleDateString("es-ES")
@@ -115,10 +127,7 @@ const ReportColumns: React.FC = () => {
                 ))}
               </tbody>
             </table>
-            <div>
-              <h3 className="text-md font-semibold mb-2">Distribución por Filial</h3>
-              <Pie data={pieData} />
-            </div>
+
           </>
         ) : (
           <p>No hay sílabos enviados.</p>
