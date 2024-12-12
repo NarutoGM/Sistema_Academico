@@ -103,6 +103,8 @@ Route::get('/generate-token', [TokenController::class, 'generateAccessToken']);
 Route::get('/miscursos', [SubirSilaboController::class, 'index']); 
 Route::get('/versilabos', [SubirSilaboController::class, 'versilabos']); 
 Route::get('/reportesilabos', [SubirSilaboController::class, 'reportesilabos']); 
+Route::get('/reportesilabos2', [SubirSilaboController::class, 'reportesilabos2']); 
+
 Route::post('/silaboReusar', [SubirSilaboController::class, 'silaboReusar']); //silabos reutilizables
 
 Route::apiResource('condiciones', CondicionController::class);  

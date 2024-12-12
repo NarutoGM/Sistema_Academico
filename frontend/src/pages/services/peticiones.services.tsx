@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://127.0.0.1:8000/api/peticiones'; // Cambia esta URL por tu endpoint real
+const API_URL = 'http://127.0.0.1:8000/api'; // Cambia esta URL por tu endpoint real
 
 // Función para obtener las peticiones desde el backend
 export const getPeticiones = async () => {

@@ -21,8 +21,10 @@ import MisCursos from './pages/MisCursos/index';
 import Versilabos from './pages/VerSilabos/index';
 import Reporte1 from './pages/Reportes/index';
 import AperturarCursos from './pages/AperturarCursos/index';
+import Reportedash from './pages/Reportedash/index';
 import SolicitudApertura from './pages/AperturarCursos/SolicitudApertura';
 import ReportesPeticiones from './pages/AperturarCursos/ReportesPeticiones'; 
+
 
 
 import SignIn from './pages/Authentication/SignIn';
@@ -285,7 +287,16 @@ const router = createBrowserRouter([
                 ),
             },
             {
-                path:'/solicitud-apertura',
+                path:'/reportedash',
+                element: (
+                    <ProtectedRoute>
+                        <PageTitle title="Aperturar Cursos | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+                        <Reportedash/>
+                    </ProtectedRoute>
+                ),
+            },
+            {
+            path:'/solicitud-apertura',
                 element: (
                     <ProtectedRoute>
                         <PageTitle title="Aperturar Cursos | TailAdmin - Tailwind CSS Admin Dashboard Template" />
@@ -302,6 +313,9 @@ const router = createBrowserRouter([
                     </ProtectedRoute>
                 ),
             }
+
+            
+            
         ]
     },
 ]);

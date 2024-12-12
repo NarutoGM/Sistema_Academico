@@ -1,371 +1,159 @@
-import React, { useEffect, useState } from 'react';
-import Swal from 'sweetalert2';
-import {
-  getReporte,
-  CargaDocente,
-} from '@/pages/services/silabo.services';
-import 'quill/dist/quill.snow.css';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import SyllabusPieChart from './SyllabusPieChart';
-import SyllabusStats from './SyllabusStats';  // Asegúrate de ajustar la ruta de importación según la ubicación real
-import './style.css';
+import React, { useEffect, useState } from "react";
+import { getReporte2, CargaDocente } from "@/pages/services/silabo.services";
+import { Pie } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
-const Index: React.FC = () => {
-  const [cargaDocente, setCargaDocente] = useState<CargaDocente[]>([]);
-  const [filteredData, setFilteredData] = useState<CargaDocente[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+ChartJS.register(ArcElement, Tooltip, Legend);
 
-  // Filtros
-  const [codigoCurso, setCodigoCurso] = useState('');
-  const [curso, setCurso] = useState('');
-  const [filial, setFilial] = useState('');
-  const [semestre, setSemestre] = useState('');
-  const [procesoSilabo, setProcesoSilabo] = useState('');
-  const [docente, setDocente] = useState('');
-  const [entregaSilabo, setEntregaSilabo] = useState('');
-
-  // Información adicional para el reporte
-  const [filiales, setFiliales] = useState<string[]>([]); // Opciones de filiales
-  const [semestres, setSemestres] = useState<string[]>([]);
-  const [estados, setEstados] = useState<string[]>([]);
+const ReportColumns: React.FC = () => {
+  const [carga1, setCarga1] = useState<CargaDocente[]>([]); // Sílabos Enviados
+  const [carga2, setCarga2] = useState<CargaDocente[]>([]); // Sílabos No Enviados
+  const [carga3, setCarga3] = useState<CargaDocente[]>([]); // Sílabos Observados
 
   useEffect(() => {
-    getReporte()
-      .then((data) => {
-        const docenteArray = Object.values(data.cargadocente) as CargaDocente[];
-        setCargaDocente(docenteArray);
-        setFilteredData(docenteArray);
+    const fetchData = async () => {
+      try {
+        const data = await getReporte2();
+        const cargadocente = data.cargadocente || [];
 
-        // Extraer los semestres únicos
-        const uniqueSemestres = Array.from(
-          new Set(
-            docenteArray
-              .map((item) => item.semestre_academico?.nomSemestre)
-              .filter(Boolean), // Eliminar valores nulos o undefined
-          ),
-        );
-        setSemestres(uniqueSemestres);
+        if (!Array.isArray(cargadocente)) {
+          console.error("La propiedad 'cargadocente' no es un arreglo.");
+          return;
+        }
 
-        // Extraer las filiales únicas
-        const uniqueFiliales = Array.from(
-          new Set(docenteArray.map((item) => item.filial?.name).filter(Boolean)),
-        );
-        setFiliales(uniqueFiliales);
+        const esperando = [];
+        const sinenvio = [];
+        const visado = [];
 
-        // Extraer estados de silabos
-        const uniqueEstados = Array.from(
-          new Set(docenteArray.map((item) => item.curso?.estado_silabo).filter(Boolean)),
-        );
-        setEstados(uniqueEstados);
-        
-      })
-      .catch((error) => setError(error.message));
+        cargadocente.forEach((element) => {
+          if (element.curso?.estado_silabo === "Esperando aprobación") {
+            esperando.push(element);
+          }
+          if (element.curso?.estado_silabo === "Sin envio de silabo") {
+            sinenvio.push(element);
+          }
+          if (element.curso?.estado_silabo === "Visado") {
+            visado.push(element);
+          }
+        });
+
+        setCarga1(esperando);
+        setCarga2(sinenvio);
+        setCarga3(visado);
+      } catch (error) {
+        console.error("Error al obtener los datos:", error);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  useEffect(() => {
-    const filtered = cargaDocente.filter((item) => {
-      const estadoSilabo = item.curso?.estado_silabo || 'Curso por gestionar';
-      const nombreDocente =
-        `${item.nomdocente} ${item.apedocente}`.toLowerCase();
+  // Datos para el gráfico de pastel basado en la propiedad "filial"
+  const filialCounts = carga1.reduce((acc, carga) => {
+    const filialName = carga.filial?.name || "N/A";
+    acc[filialName] = (acc[filialName] || 0) + 1;
+    return acc;
+  }, {});
 
-          // Procesar fechas
-      const fEnvio = item.silabo?.fEnvio ? new Date(item.silabo.fEnvio) : null;
-      const fLimiteSilabo = item.semestre_academico?.fLimiteSilabo
-        ? new Date(item.semestre_academico.fLimiteSilabo)
-        : null;
-
-      let cumpleEntrega = true; // Valor por defecto si no se selecciona filtro de entrega
-      if (entregaSilabo && fEnvio && fLimiteSilabo) {
-
-        cumpleEntrega =
-          entregaSilabo === 'aTiempo'
-            ? fEnvio <= fLimiteSilabo
-            : entregaSilabo === 'tarde'
-            ? fEnvio > fLimiteSilabo
-            : true;
-      }
-
-
-      return (
-        (codigoCurso ? item.idCurso.toString().includes(codigoCurso) : true) &&
-        (curso
-          ? item.curso?.name.toLowerCase().includes(curso.toLowerCase())
-          : true) &&
-        (filial
-          ? item.filial?.name.toLowerCase().includes(filial.toLowerCase())
-          : true) &&
-        (semestre
-        ? item.semestre_academico?.nomSemestre === semestre
-        : true) &&
-        (procesoSilabo
-          ? estadoSilabo.toLowerCase().includes(procesoSilabo.toLowerCase())
-          : true) &&
-        (docente ? nombreDocente.includes(docente.toLowerCase()) : true) && cumpleEntrega
-      );
-    });
-    setFilteredData(filtered);
-    setCurrentPage(1);
-  }, [
-    codigoCurso,
-    curso,
-    filial,
-    semestre,
-    procesoSilabo,
-    docente,
-    entregaSilabo,
-    cargaDocente,
-  ]);
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-
-  // Función para generar el PDF
-  const handleDownloadPDF = () => {
-    const doc = new jsPDF();
-
-    // Agregar imagen local desde public/images/logo.png
-    const imgUrl = `${window.location.origin}/images/logo.png`; // Ruta relativa al logo en public
-    const img = new Image();
-    img.src = imgUrl;
-    img.onload = () => {
-      doc.addImage(img, 'PNG', 150, 10, 45, 20); // Ajustar posición y tamaño
-
-      // Título y metadatos
-      doc.setFontSize(14);
-      doc.text('Reporte de Sílabo', 14, 20);
-      doc.setFontSize(10);
-      {currentData.map((carga) => (
-        doc.text(`Generado por: ${carga.name} ${carga.lastname}`, 14, 30)
-      ))}
-      
-      doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 35);
-
-      // Tabla
-      const tableData = filteredData.map((carga) => [
-        carga.curso?.name || 'N/A',
-        `${carga.nomdocente} ${carga.apedocente}` || 'N/A',
-        carga.filial?.name || 'N/A',
-        carga.semestre_academico?.nomSemestre || 'N/A',
-        carga.silabo?.fEnvio || 'N/A',
-        carga.curso?.estado_silabo || 'N/A',
-      ]);
-
-      doc.autoTable({
-        head: [['Curso', 'Docente', 'Filial', 'Periodo', 'Fecha envio', 'Estado Sílabo']],
-        body: tableData,
-        startY: 50, // Inicia después del título y la imagen
-      });
-
-      // Descargar PDF
-      doc.save('reporte_silabos.pdf');
-    };
-
-    img.onerror = () => {
-      console.error('No se pudo cargar el logo.');
-    };
+  const pieData = {
+    labels: Object.keys(filialCounts),
+    datasets: [
+      {
+        data: Object.values(filialCounts),
+        backgroundColor: [
+          "#FF6384",
+          "#36A2EB",
+          "#FFCE56",
+          "#4BC0C0",
+          "#9966FF",
+          "#FF9F40",
+        ],
+        hoverBackgroundColor: [
+          "#FF6384",
+          "#36A2EB",
+          "#FFCE56",
+          "#4BC0C0",
+          "#9966FF",
+          "#FF9F40",
+        ],
+      },
+    ],
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Reporte de silabos</h1>
-      {/* Componente del gráfico de pastel */}
-      <div className="grid grid-cols-2 gap-4">  
-        <SyllabusPieChart data={filteredData} />
-        <SyllabusStats data={filteredData} /> {/* Integración del componente de estadísticas */}
-      </div>
-      
-      <h1 className="text-xl font-bold mb-4">Filtrar:</h1>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-4">
-        <div className="flex flex-col md:flex-row md:flex-wrap gap-4 mb-4 w-full">
-          <div className="flex gap-4 w-full">
-            {/* Select dinámico para semestres */}
-            <select
-              value={semestre}
-              onChange={(e) => setSemestre(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
-            >
-              <option value="" disabled>
-                Seleccionar Periodo
-              </option>
-              {semestres.map((sem, index) => (
-                <option key={index} value={sem}>
-                  {sem}
-                </option>
-              ))}
-            </select>
-            <select
-              value={filial}
-              onChange={(e) => setFilial(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
-            >
-              <option value="" disabled>
-                Seleccionar Filial
-              </option>
-              {filiales.map((fil, index) => (
-                <option key={index} value={fil}>
-                  {fil}
-                </option>
-              ))}
-            </select>
-          </div>
-          <select
-              value={procesoSilabo}
-              onChange={(e) => setProcesoSilabo(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
-            >
-              <option value="" disabled>
-                Seleccionar Estado de silabo
-              </option>
-              {estados.map((est, index) => (
-                <option key={index} value={est}>
-                  {est}
-                </option>
-              ))}
-          </select>
-          <select
-            value={entregaSilabo}
-            onChange={(e) => setEntregaSilabo(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
-          >
-            <option value="">Seleccionar Entrega de sílabo</option>
-            <option value="aTiempo">A tiempo</option>
-            <option value="tarde">Tarde</option>
-          </select>
-          
-          <input
-            type="text"
-            placeholder="Docente"
-            value={docente}
-            onChange={(e) => setDocente(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
-          />
-          
-          <button type="button" className="btn" onClick={handleDownloadPDF}>
-            <strong>DESCARGAR </strong>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3"
-              />
-            </svg>
-            <div id="container-stars">
-              <div id="stars"></div>
+    <div className="flex flex-col md:flex-row gap-4 p-4">
+      {/* Primera columna: Sílabos Enviados */}
+      <div className="flex-1 p-4 border border-gray-300 rounded-lg bg-white shadow">
+        <h2 className="text-lg font-semibold mb-2">Sílabos Enviados</h2>
+        {carga1 && carga1.length > 0 ? (
+          <>
+            <table className="table-auto w-full border-collapse border border-gray-300 mb-4">
+              <thead>
+                <tr className="bg-gray-200">
+                  <th className="border border-gray-300 px-4 py-2">CodCurso</th>
+                  <th className="border border-gray-300 px-4 py-2">Curso</th>
+                  <th className="border border-gray-300 px-4 py-2">Filial</th>
+                  <th className="border border-gray-300 px-4 py-2">Semestre</th>
+                  <th className="border border-gray-300 px-4 py-2">Ciclo</th>
+                  <th className="border border-gray-300 px-4 py-2">Fecha de envio</th>
+                </tr>
+              </thead>
+              <tbody>
+                {carga1.map((carga) => (
+                  <tr key={carga.idCargaDocente} className="hover:bg-gray-100">
+                    <td className="border border-gray-300 px-4 py-2">{carga.idCurso || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">{carga.curso?.name || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">{carga.filial?.name || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">{carga.semestre_academico?.nomSemestre || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">{carga.ciclo || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {carga.silabo?.fEnvio
+                        ? new Date(carga.silabo.fEnvio).toLocaleDateString("es-ES")
+                        : "N/A"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div>
+              <h3 className="text-md font-semibold mb-2">Distribución por Filial</h3>
+              <Pie data={pieData} />
             </div>
-
-            <div id="glow">
-              <div className="circle"></div>
-              <div className="circle"></div>
-            </div>
-          </button>
-
-        </div>
+          </>
+        ) : (
+          <p>No hay sílabos enviados.</p>
+        )}
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-gray-200">
-          <thead>
-            <tr className="bg-blue-700">
-              <th className="px-4 py-2 border-b font-medium text-white">
-                Curso
-              </th>
-              <th className="px-4 py-2 border-b font-medium text-white">
-                Docente
-              </th>
-              <th className="px-4 py-2 border-b font-medium text-white">
-                Filial
-              </th>
-              <th className="px-4 py-2 border-b font-medium text-white">
-                Periodo
-              </th>
-              <th className="px-4 py-2 border-b font-medium text-white">
-                Fecha de envio
-              </th>
-              <th className="px-4 py-2 border-b font-medium text-white">
-                Estado Sílabo
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentData.map((carga) => (
-              <tr key={carga.idCargaDocente} className="hover:bg-gray-100">
-                <td className="px-4 py-2 border-b text-center">
-                  {carga.curso?.name}
-                </td>
-                <td className="px-4 py-2 border-b text-center">{`${carga.nomdocente} ${carga.apedocente}`}</td>
-                <td className="px-4 py-2 border-b text-center">
-                  {carga.filial?.name}
-                </td>
-                <td className="px-4 py-2 border-b text-center">
-                  {carga.semestre_academico?.nomSemestre}
-                </td>
-                <td className="px-4 py-2 border-b text-center">
-                  {carga.silabo?.fEnvio || 'N/A'}
-                </td>
-                <td className={`px-4 py-2 border-b text-center
-                    ${carga.silabo?.estado === null 
-                            ? "bg-gray-100 text-gray-600 border border-gray-300" 
-                            : carga.silabo?.estado === 1 
-                                ? "bg-blue-100 text-blue-600 border border-blue-300" 
-                                : carga.silabo?.estado === 2 
-                                    ? "bg-red-100 text-red-600 border border-red-300" 
-                                    : carga.silabo?.estado === 3 
-                                        ? "bg-green-100 text-green-600 border border-green-300" 
-                                        : "bg-yellow-100 text-yellow-600 border border-yellow-300" 
-                    }`} >
-                  {carga.curso?.estado_silabo}
-                </td>
-              </tr>
+
+      {/* Segunda columna: Sílabos No Enviados */}
+      <div className="flex-1 p-4 border border-gray-300 rounded-lg bg-white shadow">
+        <h2 className="text-lg font-semibold mb-2">Sílabos No Enviados</h2>
+        {carga2.length > 0 ? (
+          <ul className="list-disc pl-5">
+            {carga2.map((silabo) => (
+              <li key={silabo.id}>{silabo.titulo}</li>
             ))}
-          </tbody>
-        </table>
+          </ul>
+        ) : (
+          <p>No hay sílabos no enviados.</p>
+        )}
       </div>
 
-      <div className="flex justify-center items-center mt-4">
-        <button
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-          className={`px-4 py-2 mx-1 rounded ${
-            currentPage === 1
-              ? 'bg-gray-300'
-              : 'bg-blue-500 text-white hover:bg-blue-600'
-          }`}
-        >
-          Anterior
-        </button>
-        <span className="mx-2">
-          Página {currentPage} de {totalPages}
-        </span>
-        <button
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-          }
-          disabled={currentPage === totalPages}
-          className={`px-4 py-2 mx-1 rounded ${
-            currentPage === totalPages
-              ? 'bg-gray-300'
-              : 'bg-blue-500 text-white hover:bg-blue-600'
-          }`}
-        >
-          Siguiente
-        </button>
+      {/* Tercera columna: Sílabos Observados */}
+      <div className="flex-1 p-4 border border-gray-300 rounded-lg bg-white shadow">
+        <h2 className="text-lg font-semibold mb-2">Sílabos Observados</h2>
+        {carga3.length > 0 ? (
+          <ul className="list-disc pl-5">
+            {carga3.map((silabo) => (
+              <li key={silabo.id}>{silabo.titulo}</li>
+            ))}
+          </ul>
+        ) : (
+          <p>No hay sílabos observados.</p>
+        )}
       </div>
     </div>
   );
 };
 
-export default Index;
+export default ReportColumns;
