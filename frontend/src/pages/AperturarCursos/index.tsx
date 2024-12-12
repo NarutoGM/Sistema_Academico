@@ -112,7 +112,7 @@ const Index: React.FC = () => {
                 data: [aperturadosCount, noAperturadosCount],
                 backgroundColor: '#42A5F5', // Color para las barras
                 borderColor: '#1E88E5', // Color del borde de las barras
-                borderWidth: 1,
+                borderWidth: 2,
             },
         ],
     };

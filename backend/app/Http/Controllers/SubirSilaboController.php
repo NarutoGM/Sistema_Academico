@@ -58,9 +58,11 @@ class SubirSilaboController extends Controller
 
                             // Obtén las semanas relacionadas manualmente
                             $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
-                                ->where('idFilial', $silabo->idFilial)
-                                ->where('idDocente', $silabo->idDocente)
-                                ->get();
+                            ->where('idFilial', $silabo->idFilial)
+                            ->where('idDocente', $silabo->idDocente)
+                            ->orderBy('idSemana')  // Ordena por idSemana de forma ascendente (predeterminado)
+                            ->get();
+            
 
                             // Agrega las semanas al silabo como un atributo
                             $carga->silabo->semanas = $semanas;
@@ -150,9 +152,11 @@ class SubirSilaboController extends Controller
 
                             // Obtén las semanas relacionadas manualmente
                             $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
-                                ->where('idFilial', $silabo->idFilial)
-                                ->where('idDocente', $silabo->idDocente)
-                                ->get();
+                            ->where('idFilial', $silabo->idFilial)
+                            ->where('idDocente', $silabo->idDocente)
+                            ->orderBy('idSemana')  // Ordena por idSemana de forma ascendente (predeterminado)
+                            ->get();
+            
 
                             // Agrega las semanas al silabo como un atributo
                             $carga->silabo->semanas = $semanas;
@@ -271,7 +275,9 @@ class SubirSilaboController extends Controller
                                     $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
                                     ->where('idFilial', $silabo->idFilial)
                                     ->where('idDocente', $silabo->idDocente)
+                                    ->orderBy('idSemana')  // Ordena por idSemana de forma ascendente (predeterminado)
                                     ->get();
+                    
                                  
                                     $carga->silabo->semanas = $semanas;
                                 }
@@ -369,7 +375,9 @@ class SubirSilaboController extends Controller
                                     $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
                                     ->where('idFilial', $silabo->idFilial)
                                     ->where('idDocente', $silabo->idDocente)
+                                    ->orderBy('idSemana')  // Ordena por idSemana de forma ascendente (predeterminado)
                                     ->get();
+                    
 
                                     if ($silabo->estado == 1 && $silabo->activo == true) {
                                         $carga->curso->estado_silabo = "Esperando aprobación";

@@ -8,12 +8,14 @@ import {
   getCursosAsignados,
   saveCursosAsignados
 } from '@/pages/services/cargadocente.services';
+import PDFcombinado from './PDFcombinado';
 
 interface AsignarCursosModalProps {
   docente: { id: number; nombre: string; apellido: string };
   idFilial: number;
   idDirector: number;
   onClose: () => void; // Función para cerrar el modal
+  
 }
 
 interface Escuela {
@@ -247,7 +249,7 @@ const AsignarCursosModal: React.FC<AsignarCursosModalProps> = ({
     <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">
-          Asignar Cursos a {docente.nombre} {docente.apellido}
+          Carga Horaria Lectiva a {docente.nombre} {docente.apellido}
         </h2>
 
         <div className="mb-4">
@@ -416,6 +418,7 @@ const AsignarCursosModal: React.FC<AsignarCursosModalProps> = ({
             Guardar
           </button>
         </div>
+        
       </div>
     </div>
   );

@@ -184,7 +184,7 @@ export const getMisCursos = async (): Promise<MisCursosResponse> => {
     return data;
 };
 
-export const getSilaboPasado = async (idCurso: number): Promise<MisCursosResponse> => {
+export const getSilaboPasado = async (idCurso: any): Promise<MisCursosResponse> => {
     const authData = isAuthenticated();
 
     if (!authData || !authData.token) {
