@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EscuelaController;
 use App\Http\Controllers\FacultadController;
+use App\Http\Controllers\AperturaCursosController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -92,6 +93,8 @@ Route::delete('/rol-permiso/{idRol}/{idPermiso}', [RolPermisoController::class, 
 Route::post('/roles/guardar-permisos', [RolPermisoController::class, 'guardarPermisos']);
 
 Route::post('/roles/guardar-roles', [RoleUserController::class, 'guardarRoles']);
+
+Route::get('/aperturacursos',[AperturaCursosController::class, 'index']);
 
 Route::apiResource('escuelas', EscuelaController::class);
 Route::apiResource('facultades', FacultadController::class);
