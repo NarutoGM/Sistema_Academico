@@ -318,7 +318,14 @@ const CargaDocente: React.FC = () => {
           />
         )}
 
-        
+          {showModalCHNL && selectedDocente && selectedFilial !== null && (
+                    <CHNLmodal
+                      docente={selectedDocente}
+                      idFilial={selectedFilial}
+                      idDirector = {idDirector}
+                      onClose={handleCloseModalCHNL}
+                    />
+                  )}
       </div>
     </div>
   );

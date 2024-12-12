@@ -310,6 +310,7 @@ class HorariosController extends Controller
                                     'horaInicio' => $asignacion->horaInicio,
                                     'horaFin' => $asignacion->horaFin,
                                     'tipoSesion' => $asignacion->tipoSesion,
+                                    'grupo' => $asignacion->grupo,
                                 ];
                             }),
                             'id' => $curso->id,  // Agregar el id al curso
