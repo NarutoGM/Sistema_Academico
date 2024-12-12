@@ -72,7 +72,8 @@ const Index: React.FC = () => {
             Swal.fire('Error', 'Hubo un problema al guardar los horarios.', 'error');
         }
     };
-  
+
+
     const modal = (carga: CargaDocente, numero: number) => {
         const isEditable = numero === 1;
     
@@ -107,7 +108,153 @@ const Index: React.FC = () => {
                 dias.forEach(dia => {
                     let claseCelda = "";
                     let contenidoCelda = "";
+    
+                    // Validar que registro.cursos tenga datos antes de iterar
+                    if (registro.cursos && Object.keys(registro.cursos).length > 0) {
+                        // Iterar sobre las claves de `registro.cursos` (que son los nombres de los cursos)
+                        Object.keys(registro.cursos).forEach(cursoNombre => {
+                            const curso = registro.cursos[cursoNombre];
+    
+                            // Generar un color único para cada curso
+                            const cursoColor = generateColorForCourse(cursoNombre);
+    
+                            // Ordenar asignaciones por hora de inicio
+                            curso.forEach((cursoData: any) => {
+                                cursoData.asignaciones?.sort((a: any, b: any) => {
+                                    const aInicio = new Date(`1970-01-01T${convertTo24Hour(a.horaInicio)}:00`);
+                                    const bInicio = new Date(`1970-01-01T${convertTo24Hour(b.horaInicio)}:00`);
+                                    return aInicio - bInicio;
+                                });
+    
+                                // Iterar sobre las asignaciones de cada curso
+                                cursoData.asignaciones?.forEach((asignacion: any) => {
+                                    const horaInicio = formatTime(asignacion.horaInicio);
+                                    const horaFin = formatTime(asignacion.horaFin);
+    
+                                    // Comparar rango de horas
+                                    if (asignacion.dia === dia && isWithinTimeRange(hora, horaInicio, horaFin)) {
+                                        claseCelda = `background-color: ${cursoColor};`; // Aplicar color al estilo
+                                        contenidoCelda = cursoData.curso;
+    
+                                        // Añadir detalles adicionales si están disponibles
+                                        if (asignacion.tipoSesion) {
+                                            contenidoCelda += `<br><small>${asignacion.tipoSesion}</small>`;
+                                        }
+                                        if (asignacion.grupo) {
+                                            contenidoCelda += `<br><small>${asignacion.grupo}</small>`;
+                                        }
+                                        if (asignacion.nombreAula) {
+                                            contenidoCelda += `<br><small>${asignacion.nombreAula}</small>`;
+                                        }
+                                    }
+                                });
+                            });
+                        });
+                    }
+    
+                    // Aplicar estilo y contenido a la celda
+                    cuerpo += `<td class='border px-2 py-1' style='${claseCelda}'>${contenidoCelda}</td>`;
+                });
+                cuerpo += "</tr>";
+            });
+            cuerpo += "</tbody>";
+    
+            tabla.innerHTML += cuerpo;
+        };
+    
+        // Función para generar un color único basado en el nombre del curso
+        const generateColorForCourse = (courseName: string): string => {
+            let hash = 0;
+            for (let i = 0; i < courseName.length; i++) {
+                hash = ((hash << 5) - hash) + courseName.charCodeAt(i);
+                hash |= 0; // Convertir a un número de 32 bits
+            }
+            const color = (hash & 0x00FFFFFF).toString(16).padStart(6, '0');
+            return `#${color}`;
+        };
+    
+        // Función para convertir hora de 12 horas a 24 horas
+        const convertTo24Hour = (time: string): string => {
+            const [timePart, modifier] = time.split(" ");
+            let [hours, minutes] = timePart.split(":").map(Number);
+            if (modifier === "PM" && hours < 12) hours += 12;
+            if (modifier === "AM" && hours === 12) hours = 0;
+            return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+        };
+    
+        // Función para convertir el formato de 24 horas a 12 horas (AM/PM)
+        const formatTime = (time: string): string => {
+            const [hour, minute] = time.split(":").map(Number);
+            const period = hour >= 12 ? "PM" : "AM";
+            const hour12 = hour % 12 || 12;
+            return `${hour12}:${minute < 10 ? '0' + minute : minute} ${period}`;
+        };
+    
+        // Función para verificar si una hora está dentro de un rango
+        const isWithinTimeRange = (hora: string, inicio: string, fin: string): boolean => {
+            const horaDate = new Date(`1970-01-01T${convertTo24Hour(hora)}:00`);
+            const inicioDate = new Date(`1970-01-01T${convertTo24Hour(inicio)}:00`);
+            const finDate = new Date(`1970-01-01T${convertTo24Hour(fin)}:00`);
+            return horaDate >= inicioDate && horaDate < finDate;
+        };
+    
+        // Modal de SweetAlert
+        Swal.fire({
+            title: "<h2 style='color: #2c3e50;'>Horarios Asignados</h2>",
+            html: `
+                <div style="text-align: left; padding: 10px;">
+                    <h4 class="text-lg font-bold mb-3">Horarios de Clases</h4>
+                    <table id="tabla-horarios" class="w-full border-collapse mt-2"></table>
+                </div>
+            `,
+            width: "70%",
+            showCancelButton: true,
+            cancelButtonText: "Cerrar",
+            focusConfirm: false,
+            didOpen: () => {
+                renderTablaHorarios(carga); // Renderizar horarios al abrir el modal
+            },
+        });
+    };
+    
+  
+    const modal10 = (carga: CargaDocente, numero: number) => {
+        const isEditable = numero === 1;
+    
+        // Función para renderizar la tabla de horarios
+        const renderTablaHorarios = (registro: CargaDocente) => {
+            const tabla = document.getElementById("tabla-horarios");
+            const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            const horas = [
+                "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
+                "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM",
+                "07:00 PM", "08:00 PM"
+            ];
+    
+            if (!tabla) return; // Asegurarse de que la tabla existe
+            tabla.innerHTML = ""; // Limpiar la tabla antes de renderizar
+    
+            // Crear encabezado de la tabla
+            const encabezado = `
+                <thead>
+                    <tr class='bg-gray-100'>
+                        <th class='border px-2 py-1'></th> <!-- Columna de horas -->
+                        ${dias.map(dia => `<th class='border px-2 py-1 text-center'>${dia}</th>`).join("")}
+                    </tr>
+                </thead>
+            `;
+            tabla.innerHTML += encabezado;
+    
+            // Crear cuerpo de la tabla
+            let cuerpo = "<tbody>";
+            horas.forEach(hora => {
+                cuerpo += `<tr><td class='border px-2 py-1 text-center'>${hora}</td>`;
+                dias.forEach(dia => {
+                    let claseCelda = "";
+                    let contenidoCelda = "";
                     let nombreAula = "";
+                    let tipoSesion = "";
+                    let grupo = "";
     
                     // Iterar sobre las claves de `registro.cursos` (que son los nombres de los cursos)
                     Object.keys(registro.cursos).forEach(cursoNombre => {
@@ -128,6 +275,8 @@ const Index: React.FC = () => {
                                     claseCelda = `background-color: ${cursoColor};`; // Aplicar color al estilo
                                     contenidoCelda = cursoData.curso;
                                     nombreAula = asignacion.nombreAula;
+                                    tipoSesion = asignacion.tipoSesion;
+                                    grupo = asignacion.grupo;
     
                                     // Si la asignación se solapa con una anterior, fusionar celdas
                                     if (isConsecutiveAssignment(asignacion, cursoData.asignaciones)) {
@@ -141,6 +290,14 @@ const Index: React.FC = () => {
                     // Añadir el nombre del aula solo si la celda no está vacía
                     if (contenidoCelda && nombreAula) {
                         contenidoCelda += `<br><small>${nombreAula}</small>`;
+                    }
+
+                    if (contenidoCelda && tipoSesion) {
+                        contenidoCelda += `<br><small>${tipoSesion}</small>`;
+                    }
+
+                    if (contenidoCelda && grupo) {
+                        contenidoCelda += `<br><small>${grupo}</small>`;
                     }
     
                     // Aplicar el estilo de color en la celda
@@ -209,7 +366,7 @@ const Index: React.FC = () => {
                     <table id="tabla-horarios" class="w-full border-collapse mt-2"></table>
                 </div>
             `,
-            width: "60%",
+            width: "70%",
             showCancelButton: true,
             cancelButtonText: "Cerrar",
             focusConfirm: false,
