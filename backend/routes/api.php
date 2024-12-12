@@ -106,7 +106,7 @@ Route::get('/reportesilabos', [SubirSilaboController::class, 'reportesilabos']);
 Route::get('/reportesilabos2', [SubirSilaboController::class, 'reportesilabos2']); 
 
 Route::post('/silaboReusar', [SubirSilaboController::class, 'silaboReusar']); //silabos reutilizables
-
+Route::post('/notificarSilabo', [SubirSilaboController::class, 'notificarSilabo']);
 Route::apiResource('condiciones', CondicionController::class);  
 Route::apiResource('regimenes', RegimenController::class);  
 Route::apiResource('categorias', CategoriaController::class);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getReporte2, CargaDocente } from "@/pages/services/silabo.services";
+import { getReporte2, CargaDocente ,notificarSilabo} from "@/pages/services/silabo.services";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip as Tooltiprecharts, Legend as Legendrecharts } from 'recharts';
@@ -27,7 +27,25 @@ const ReportColumns: React.FC = () => {
   ]);
 
   // Mapear los índices del arreglo `data3` para acceder rápidamente según el ciclo
+  const handleNotificar = async (carga: CargaDocente) => {
+    try {
+        console.log(carga.nomdocente);
+        console.log(carga.apedocente);
+        console.log(carga.email);
 
+        // Llamar a la función notificarSilabo con los datos de carga docente
+        const response = await notificarSilabo({
+            name: carga.nomdocente,
+            lastname: carga.apedocente,
+            email: carga.email,
+        });
+        alert("Notificación enviada con éxito");
+        console.log("Detalles de la notificación:", response);
+    } catch (error) {
+        console.error("Error al enviar la notificación:", error);
+        alert("Error al enviar la notificación");
+    }
+};
 
   useEffect(() => {
     const fetchData = async () => {
@@ -145,8 +163,8 @@ const ReportColumns: React.FC = () => {
   const CargasConRetraso = carga1.reduce((acc, carga) => {
     // Determinar si el sílabo está retrasado
     const estaRetrasada = carga.silabo?.fEnvio && carga.semestre_academico?.fLimiteSilabo
-        ? new Date(carga.silabo.fEnvio) > new Date(carga.semestre_academico.fLimiteSilabo) // Revisión de fechas
-        : false; // En caso de valores no válidos, asumimos que no está retrasado
+      ? new Date(carga.silabo.fEnvio) > new Date(carga.semestre_academico.fLimiteSilabo) // Revisión de fechas
+      : false; // En caso de valores no válidos, asumimos que no está retrasado
 
     // Clasificar según el estado
     const clave = estaRetrasada ? "Con retraso" : "A tiempo";
@@ -155,24 +173,24 @@ const ReportColumns: React.FC = () => {
     acc[clave] = (acc[clave] || 0) + 1;
 
     return acc;
-}, {});
+  }, {});
 
-const pieData2 = {
-  labels: Object.keys(CargasConRetraso), // Etiquetas basadas en las claves del objeto
-  datasets: [
+  const pieData2 = {
+    labels: Object.keys(CargasConRetraso), // Etiquetas basadas en las claves del objeto
+    datasets: [
       {
-          data: Object.values(CargasConRetraso), // Datos de las categorías
-          backgroundColor: [
-              "#FFCE56", // Color para la categoría "Con retraso"
-              "#36A2EB", // Color para la categoría "A tiempo"
-          ],
-          hoverBackgroundColor: [
-              "#FFCE56",
-              "#36A2EB",
-          ],
+        data: Object.values(CargasConRetraso), // Datos de las categorías
+        backgroundColor: [
+          "#FFCE56", // Color para la categoría "Con retraso"
+          "#36A2EB", // Color para la categoría "A tiempo"
+        ],
+        hoverBackgroundColor: [
+          "#FFCE56",
+          "#36A2EB",
+        ],
       },
-  ],
-};
+    ],
+  };
 
   const pieData = {
     labels: Object.keys(filialCounts),
@@ -236,7 +254,7 @@ const pieData2 = {
               <h3 className="text-md font-semibold mb-2">Distribución por Filial</h3>
 
               <div className="flex my-3  justify-center items-center">
-                  <div className="w-48 h-48">
+                <div className="w-48 h-48">
                   <Pie data={pieData} />
 
                 </div>
@@ -342,8 +360,12 @@ const pieData2 = {
                         {`${carga.nomdocente || ''} ${carga.apedocente || ''}`}
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
-                        Notificar
-                      </td>
+                        <button
+                          onClick={() => handleNotificar(carga)}
+                          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                        >
+                          Notificar
+                        </button>                      </td>
                     </tr>
                   ))}
                 </tbody>

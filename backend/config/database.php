@@ -93,7 +93,7 @@ return [
     'charset' => 'utf8',
     'prefix' => '',
     'schema' => 'public',
-    'sslmode' => 'prefer', // Sigue usando prefer en local
+    'sslmode' => 'disable', // Sigue usando prefer en local
     'options' => extension_loaded('pdo_pgsql') ? [
         PDO::ATTR_EMULATE_PREPARES => false, // Mejor manejo de tipos
     ] : [],

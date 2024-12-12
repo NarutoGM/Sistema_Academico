@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NotificacionSilabo; // Clase de correo
+
+use Illuminate\Support\Facades\Validator;
 
 use App\Models\Docente;
 use App\Models\Horario;
@@ -58,11 +62,11 @@ class SubirSilaboController extends Controller
 
                             // Obtén las semanas relacionadas manualmente
                             $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
-                            ->where('idFilial', $silabo->idFilial)
-                            ->where('idDocente', $silabo->idDocente)
-                            ->orderBy('idSemana')  // Ordena por idSemana de forma ascendente (predeterminado)
-                            ->get();
-            
+                                ->where('idFilial', $silabo->idFilial)
+                                ->where('idDocente', $silabo->idDocente)
+                                ->orderBy('idSemana')  // Ordena por idSemana de forma ascendente (predeterminado)
+                                ->get();
+
 
                             // Agrega las semanas al silabo como un atributo
                             $carga->silabo->semanas = $semanas;
@@ -113,7 +117,7 @@ class SubirSilaboController extends Controller
             ], 401);
         }
     }
-    
+
     public function silaboReusar(Request $request)
     {
         $user = auth()->user();
@@ -152,11 +156,11 @@ class SubirSilaboController extends Controller
 
                             // Obtén las semanas relacionadas manualmente
                             $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
-                            ->where('idFilial', $silabo->idFilial)
-                            ->where('idDocente', $silabo->idDocente)
-                            ->orderBy('idSemana')  // Ordena por idSemana de forma ascendente (predeterminado)
-                            ->get();
-            
+                                ->where('idFilial', $silabo->idFilial)
+                                ->where('idDocente', $silabo->idDocente)
+                                ->orderBy('idSemana')  // Ordena por idSemana de forma ascendente (predeterminado)
+                                ->get();
+
 
                             // Agrega las semanas al silabo como un atributo
                             $carga->silabo->semanas = $semanas;
@@ -251,13 +255,13 @@ class SubirSilaboController extends Controller
                                 ->where('idCurso', $carga->idCurso)
                                 ->where('idEscuela', $carga->idEscuela)
                                 ->first();
-    
+
                             // Verificar si existe el PlanCursoAcademico y asignar el ciclo
                             if ($plancursoacademico) {
                                 $carga->ciclo = $plancursoacademico->ciclo;
                                 $carga->prerequisitos = $plancursoacademico->prerequisitos;
                             }
-    
+
                             return $carga;
                         })
                         ->map(function ($carga) {
@@ -268,19 +272,19 @@ class SubirSilaboController extends Controller
                                 ->first();
 
 
-                                $carga->silabo=null;
-                                if ($silabo) {
-    
-                                    $carga->silabo = $silabo;
-                                    $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
+                            $carga->silabo = null;
+                            if ($silabo) {
+
+                                $carga->silabo = $silabo;
+                                $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
                                     ->where('idFilial', $silabo->idFilial)
                                     ->where('idDocente', $silabo->idDocente)
                                     ->orderBy('idSemana')  // Ordena por idSemana de forma ascendente (predeterminado)
                                     ->get();
-                    
-                                 
-                                    $carga->silabo->semanas = $semanas;
-                                }
+
+
+                                $carga->silabo->semanas = $semanas;
+                            }
                             return $carga; // Omite las cargas sin sílabo
                         });
 
@@ -352,13 +356,13 @@ class SubirSilaboController extends Controller
                                 ->where('idCurso', $carga->idCurso)
                                 ->where('idEscuela', $carga->idEscuela)
                                 ->first();
-    
+
                             // Verificar si existe el PlanCursoAcademico y asignar el ciclo
                             if ($plancursoacademico) {
                                 $carga->ciclo = $plancursoacademico->ciclo;
                                 $carga->prerequisitos = $plancursoacademico->prerequisitos;
                             }
-    
+
                             return $carga;
                         })
                         ->map(function ($carga) {
@@ -369,38 +373,36 @@ class SubirSilaboController extends Controller
 
 
 
-                                if ($silabo) {
-    
-                                    $carga->silabo = $silabo;
-                                    $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
+                            if ($silabo) {
+
+                                $carga->silabo = $silabo;
+                                $semanas = Semana::where('idCargaDocente', $silabo->idCargaDocente)
                                     ->where('idFilial', $silabo->idFilial)
                                     ->where('idDocente', $silabo->idDocente)
                                     ->orderBy('idSemana')  // Ordena por idSemana de forma ascendente (predeterminado)
                                     ->get();
-                    
 
-                                    if ($silabo->estado == 1 && $silabo->activo == true) {
-                                        $carga->curso->estado_silabo = "Esperando aprobación";
-                                    } elseif ($silabo->estado == 3 && $silabo->activo == true) {
-                                        $carga->curso->estado_silabo = "Visado";
-                                        $carga->curso->observaciones = $silabo->observaciones;
-    
-                                    } elseif ($silabo->estado == 2 && $silabo->activo == true) {
-                                        $carga->curso->estado_silabo = "Rechazado";
-                                        $carga->curso->observaciones = $silabo->observaciones;
-    
-                                    }
-    
-                                    $carga->silabo->semanas = $semanas;
-                                }else {
-                                    // Si no existe un sílabo
-                                    $carga->curso->estado_silabo = "Sin envio de silabo";
+
+                                if ($silabo->estado == 1 && $silabo->activo == true) {
+                                    $carga->curso->estado_silabo = "Esperando aprobación";
+                                } elseif ($silabo->estado == 3 && $silabo->activo == true) {
+                                    $carga->curso->estado_silabo = "Visado";
+                                    $carga->curso->observaciones = $silabo->observaciones;
+                                } elseif ($silabo->estado == 2 && $silabo->activo == true) {
+                                    $carga->curso->estado_silabo = "Rechazado";
+                                    $carga->curso->observaciones = $silabo->observaciones;
                                 }
 
-                                $user = auth()->user();
-                                $carga->name = $user->name;
-                                $carga->lastname = $user->lastname;
-    
+                                $carga->silabo->semanas = $semanas;
+                            } else {
+                                // Si no existe un sílabo
+                                $carga->curso->estado_silabo = "Sin envio de silabo";
+                            }
+
+                            $user = auth()->user();
+                            $carga->name = $user->name;
+                            $carga->lastname = $user->lastname;
+
                             return $carga; // Omite las cargas sin sílabo
                         });
 
@@ -448,7 +450,6 @@ class SubirSilaboController extends Controller
                         'curso' => function ($query) {
                             $query->with(['departamento', 'facultad', 'area', 'regimenCurso', 'tipoCurso']);
                         },
-                        'escuela:idEscuela,name',
                     ])
                         ->where('idDirector', $directorescuela->idDirector)
                         ->where('idSemestreAcademico', 2)
@@ -465,6 +466,7 @@ class SubirSilaboController extends Controller
 
                             $carga->nomdocente = $docenteuser->name;
                             $carga->apedocente = $docenteuser->lastname;
+                            $carga->email = $docenteuser->email;
 
                             return $carga;
                         })
@@ -473,13 +475,12 @@ class SubirSilaboController extends Controller
                                 ->where('idCurso', $carga->idCurso)
                                 ->where('idEscuela', $carga->idEscuela)
                                 ->first();
-    
+
                             // Verificar si existe el PlanCursoAcademico y asignar el ciclo
                             if ($plancursoacademico) {
                                 $carga->ciclo = $plancursoacademico->ciclo;
-                                $carga->prerequisitos = $plancursoacademico->prerequisitos;
                             }
-    
+
                             return $carga;
                         })
                         ->map(function ($carga) {
@@ -490,11 +491,11 @@ class SubirSilaboController extends Controller
                                 ->first();
 
 
-                                $carga->silabo=null;
-                                if ($silabo) {
-    
-                                    $carga->silabo = $silabo;                                  
-                                }
+                            $carga->silabo = null;
+                            if ($silabo) {
+
+                                $carga->silabo = $silabo;
+                            }
                             return $carga; // Omite las cargas sin sílabo
                         });
 
@@ -672,19 +673,19 @@ class SubirSilaboController extends Controller
                     ->delete();
 
 
-                    $silabo = Silabo::create(array_merge(
-                        [
-                            'idCargaDocente' => $request->idCargaDocente,
-                            'idFilial' => $request->idFilial,
-                            'idDocente' => $request->idDocente,
-                            'idDirector' => $request->idDirector,
-                            'activo' => true, // Valor booleano directamente
-                            'estado' => 1 ,// Valor booleano directamente
-                            'fEnvio' => Carbon::now() // Valor booleano directamente
+                $silabo = Silabo::create(array_merge(
+                    [
+                        'idCargaDocente' => $request->idCargaDocente,
+                        'idFilial' => $request->idFilial,
+                        'idDocente' => $request->idDocente,
+                        'idDirector' => $request->idDirector,
+                        'activo' => true, // Valor booleano directamente
+                        'estado' => 1, // Valor booleano directamente
+                        'fEnvio' => Carbon::now() // Valor booleano directamente
 
-                        ],
-                        $validatedData['silabo']
-                    ));
+                    ],
+                    $validatedData['silabo']
+                ));
 
 
                 $silaboData = $validatedData['silabo'];
@@ -779,7 +780,7 @@ class SubirSilaboController extends Controller
                 'numero' => 'required|integer',
                 'observaciones' => 'nullable|string',
             ]);
-            $numero=$request->numero + 1;
+            $numero = $request->numero + 1;
             // Actualizar el sílabo directamente en la base de datos
             $updatedRows = Silabo::where('idCargaDocente', $validatedData['idCargaDocente'])
                 ->where('idFilial', $validatedData['idFilial'])
@@ -788,14 +789,44 @@ class SubirSilaboController extends Controller
                     'estado' => $numero,
                     'observaciones' => $validatedData['observaciones'] ?? null,
                 ]);
-    
+
+            $docente = Docente::where('idDocente', $validatedData['idDocente']);
+            $usuario = User::where('id', $docente->id);
+
+
+            // Enviar correo al usuario
+            if ($numero = 2) {
+                Mail::raw(
+                    "Hola {$usuario->name} {$usuario->lastname},\n\nLe hacemos un recordatorio de que su sílabo ha sido rechazado por las siguientes razones:\n\n" .
+                        "{$validatedData['observaciones']}\n\n" .
+                        "Atentamente,\nEl equipo académico.",
+                    function ($message) use ($usuario) {
+                        $message->to('t1053300121@unitru.edu.pe') // Usar el correo real del usuario
+                            ->subject('Notificación de Rechazo de Sílabo');
+                    }
+                );
+            } else {
+                if ($numero = 3) {
+                    Mail::raw(
+                        "Hola {$usuario->name} {$usuario->lastname},\n\nLe hacemos un recordatorio de que su sílabo ha sido aprobado, Mensaje del director:\n\n" .
+                            "{$validatedData['observaciones']}\n\n" .
+                            "Atentamente,\nEl equipo académico.",
+                        function ($message) use ($usuario) {
+                            $message->to('t1053300121@unitru.edu.pe') // Usar el correo real del usuario
+                                ->subject('Notificación de Rechazo de Sílabo');
+                        }
+                    );
+                }
+            }
+
+
             // Verificar si se actualizó algún registro
             if ($updatedRows === 0) {
                 return response()->json([
                     'message' => 'Sílabo no encontrado o no se realizaron cambios.',
                 ], 404);
             }
-    
+
             return response()->json([
                 'message' => 'Sílabo actualizado correctamente.',
             ], 200);
@@ -803,7 +834,7 @@ class SubirSilaboController extends Controller
             // Log del error
             Log::error('Error al procesar el sílabo: ' . $e->getMessage());
             Log::error('Detalles del error: ' . $e->getTraceAsString());
-    
+
             // Retornar respuesta de error
             return response()->json([
                 'message' => 'Hubo un error al procesar el sílabo.',
@@ -879,6 +910,49 @@ class SubirSilaboController extends Controller
 
             return response()->json([
                 'message' => 'Hubo un error al gestionar los horarios.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function notificarSilabo(Request $request)
+    {
+        // Validar los datos entrantes
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'lastname' => 'required|string|max:255',
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            // Extraer datos del request
+            $data = $request->only(['name', 'lastname', 'email']);
+
+            // Enviar correo sin vista
+            Mail::raw(
+                "Hola {$data['name']} {$data['lastname']},\n\nLe hacemos un recordatorio q debe subir su silabo al sistema.\n\nGracias,\nEl equipo académico.",
+                function ($message) use ($data) {
+                    $message->to('t1053300121@unitru.edu.pe')
+                        ->subject('Notificación de Sílabo');
+                }
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Notificación enviada con éxito',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al enviar la notificación',
                 'error' => $e->getMessage(),
             ], 500);
         }

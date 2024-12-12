@@ -93,6 +93,8 @@ export interface CargaDocente {
     silabo?: Silabo;
     nomdocente: string;
     apedocente: string;
+    name: string;
+    lastname: string;
 
 }
 
@@ -259,8 +261,10 @@ export const getReporte = async (): Promise<any> => {
 };
 
 export const getReporte2 = async (): Promise<any> => {
-    const authData = isAuthenticated();
 
+
+    const authData = isAuthenticated();
+    console.log(authData.token);
     if (!authData || !authData.token) {
         throw new Error('User is not authenticated or token is missing');
     }
@@ -356,4 +360,49 @@ export const enviarinfoSilabodirector = async (selectedCarga: any): Promise<any>
 };
 
 
+export const notificarSilabo = async (selectedCarga: {
+    name: string;
+    lastname: string;
+    email: string;
+}): Promise<any> => {
+    const authData = isAuthenticated(); // Verificar autenticación del usuario
+
+    console.log("Iniciando notificación para la carga docente...");
+
+    // Verificar autenticación
+    if (!authData || !authData.token) {
+        throw new Error('El usuario no está autenticado o falta el token');
+    }
+
+    try {
+        // Realizar la solicitud POST para notificar la carga docente
+        const response = await fetch(`${apiUrl}/notificarSilabo`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json', // Indica que enviamos datos en formato JSON
+                Authorization: `Bearer ${authData.token}`, // Incluir el token en la cabecera
+            },
+            body: JSON.stringify({
+                name: selectedCarga.name, // Incluir el campo name
+                lastname: selectedCarga.lastname, // Incluir el campo lastname
+                email: selectedCarga.email, // Incluir el campo email
+            }), // Enviar el objeto completo
+        });
+
+        // Verificar si la respuesta es exitosa
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Error en la respuesta del servidor:", errorText);
+            throw new Error('Error al notificar la carga docente');
+        }
+
+        // Procesar la respuesta como JSON
+        const data = await response.json();
+        console.log("Respuesta del servidor al notificar:", data);
+        return data; // Retornar los datos recibidos del servidor
+    } catch (error) {
+        console.error("Error al notificar la carga docente:", error);
+        throw error; // Re-lanzar el error para manejarlo fuera de esta función
+    }
+};
 
