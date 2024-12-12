@@ -29,6 +29,7 @@ class FilialController extends Controller
                     'id' => $docente->idDocente,
                     'nombre' => $docente->user->name ?? 'Sin nombre', // Si no hay nombre, usa 'Sin nombre'
                     'apellido' => $docente->user->lastname ?? 'Sin apellido', // Si no hay apellido, usa 'Sin apellido'
+                    'dni' => $docente ->user->dni ?? 'Sin DNI'
                 ];
             });
 

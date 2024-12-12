@@ -7,6 +7,9 @@ import {
 import 'quill/dist/quill.snow.css';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import SyllabusPieChart from './SyllabusPieChart';
+import SyllabusStats from './SyllabusStats';  // Asegúrate de ajustar la ruta de importación según la ubicación real
+import './style.css';
 
 const Index: React.FC = () => {
   const [cargaDocente, setCargaDocente] = useState<CargaDocente[]>([]);
@@ -171,6 +174,12 @@ const Index: React.FC = () => {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Reporte de silabos</h1>
+      {/* Componente del gráfico de pastel */}
+      <div className="grid grid-cols-2 gap-4">  
+        <SyllabusPieChart data={filteredData} />
+        <SyllabusStats data={filteredData} /> {/* Integración del componente de estadísticas */}
+      </div>
+      
       <h1 className="text-xl font-bold mb-4">Filtrar:</h1>
 
       {/* Filters */}
@@ -238,26 +247,32 @@ const Index: React.FC = () => {
             onChange={(e) => setDocente(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded w-full md:w-1/4"
           />
-          <button
-            onClick={handleDownloadPDF}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-800 transform hover:scale-105 transition-all duration-300"
+          
+          <button type="button" class="btn" onClick={handleDownloadPDF}>
+          <strong>DESCARGAR </strong>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3"
-              />
-            </svg>
-            Descargar
-          </button>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3"
+            />
+          </svg>
+          <div id="container-stars">
+            <div id="stars"></div>
+          </div>
+
+          <div id="glow">
+            <div class="circle"></div>
+            <div class="circle"></div>
+          </div>
+        </button>
 
         </div>
       </div>

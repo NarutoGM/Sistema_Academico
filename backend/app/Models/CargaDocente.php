@@ -13,7 +13,8 @@ class CargaDocente extends Model
     protected $table = 'cargadocente';
 
     // Clave primaria compuesta
-    protected $primaryKey = ['idCargaDocente', 'idFilial', 'idDocente'];
+    // protected $primaryKey = ['idCargaDocente', 'idFilial', 'idDocente'];
+    protected $primaryKey = null;
     public $incrementing = false; // Indica que la clave primaria no es autoincremental
     public $timestamps = false; // Desactiva los timestamps (created_at, updated_at)
 
@@ -32,20 +33,20 @@ class CargaDocente extends Model
         'idDirector'
     ];
 
-    // Sobrescribir el método para claves compuestas
-    protected function setKeysForSaveQuery($query)
-    {
-        $keys = $this->getKeyName();
-        if (!is_array($keys)) {
-            return parent::setKeysForSaveQuery($query);
-        }
+    // // Sobrescribir el método para claves compuestas
+    // protected function setKeysForSaveQuery($query)
+    // {
+    //     $keys = $this->getKeyName();
+    //     if (!is_array($keys)) {
+    //         return parent::setKeysForSaveQuery($query);
+    //     }
 
-        foreach ($keys as $key) {
-            $query->where($key, '=', $this->getAttribute($key));
-        }
+    //     foreach ($keys as $key) {
+    //         $query->where($key, '=', $this->getAttribute($key));
+    //     }
 
-        return $query;
-    }
+    //     return $query;
+    // }
     
     // Relación con el modelo Filial
     public function filial()
