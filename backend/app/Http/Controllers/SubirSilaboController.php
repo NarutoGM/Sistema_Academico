@@ -444,7 +444,7 @@ class SubirSilaboController extends Controller
 
                     $cargadocente = CargaDocente::with([
                         'filial',
-                        'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio', // Selecciona solo los campos necesarios
+                        'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio,fLimiteSilabo', // Selecciona solo los campos necesarios
                         'curso' => function ($query) {
                             $query->with(['departamento', 'facultad', 'area', 'regimenCurso', 'tipoCurso']);
                         },
