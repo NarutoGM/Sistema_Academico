@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EscuelaController;
 use App\Http\Controllers\FacultadController;
+use App\Http\Controllers\AperturaCursosController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -93,6 +94,8 @@ Route::post('/roles/guardar-permisos', [RolPermisoController::class, 'guardarPer
 
 Route::post('/roles/guardar-roles', [RoleUserController::class, 'guardarRoles']);
 
+Route::get('/aperturacursos',[AperturaCursosController::class, 'index']);
+
 Route::apiResource('escuelas', EscuelaController::class);
 Route::apiResource('facultades', FacultadController::class);
 
@@ -100,6 +103,8 @@ Route::get('/generate-token', [TokenController::class, 'generateAccessToken']);
 Route::get('/miscursos', [SubirSilaboController::class, 'index']); 
 Route::get('/versilabos', [SubirSilaboController::class, 'versilabos']); 
 Route::get('/reportesilabos', [SubirSilaboController::class, 'reportesilabos']); 
+Route::get('/reportesilabos2', [SubirSilaboController::class, 'reportesilabos2']); 
+
 Route::post('/silaboReusar', [SubirSilaboController::class, 'silaboReusar']); //silabos reutilizables
 
 Route::apiResource('condiciones', CondicionController::class);  
@@ -125,9 +130,5 @@ Route::post('gestionarsilabodirector', [SubirSilaboController::class, 'gestionar
 Route::get('/verhorarios', [HorariosController::class, 'verhorarios']);
 Route::post('/guardar-horarios', [HorariosController::class, 'guardarHorarios']);
 Route::get('/cursosFiltrados', [HorariosController::class, 'obtenerCursosFiltrados']);
-
-
-
-
 
 });
