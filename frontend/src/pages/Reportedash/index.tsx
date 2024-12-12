@@ -33,9 +33,9 @@ const ReportColumns: React.FC = () => {
     const fetchData = async () => {
       try {
 
-    
 
-        
+
+
         const data = await getReporte2();
         const cargadocente = data.cargadocente || [];
 
@@ -56,13 +56,20 @@ const ReportColumns: React.FC = () => {
           return map;
         }, {});
 
+        data3.forEach((item) => {
+          item.Enviados = 0;
+          item.Visado = 0;
+          item.Observados = 0;
+          item.Noenviados = 0;
+        });
+
 
         cargadocente.forEach((element) => {
 
           const ciclo = element.ciclo; // Obtener el ciclo del elemento
           if (cicloMap[ciclo] !== undefined) {
             const dataIndex = cicloMap[ciclo]; // Obtener el índice correspondiente en `data3`
-        
+
             if (element.silabo != null) {
               // Actualizar los campos según el estado del silabo
               if (element.silabo.estado == 1) {
@@ -77,7 +84,7 @@ const ReportColumns: React.FC = () => {
               data3[dataIndex].Noenviados += 1;
             }
           }
-        
+
 
 
           if (element.silabo != null) {
@@ -135,8 +142,38 @@ const ReportColumns: React.FC = () => {
   }, {});
 
 
+  const CargasConRetraso = carga1.reduce((acc, carga) => {
+    // Determinar si el sílabo está retrasado
+    const estaRetrasada = carga.silabo?.fEnvio && carga.semestre_academico?.fLimiteSilabo
+        ? new Date(carga.silabo.fEnvio) > new Date(carga.semestre_academico.fLimiteSilabo) // Revisión de fechas
+        : false; // En caso de valores no válidos, asumimos que no está retrasado
 
-  
+    // Clasificar según el estado
+    const clave = estaRetrasada ? "Con retraso" : "A tiempo";
+
+    // Incrementar el conteo en la categoría correspondiente
+    acc[clave] = (acc[clave] || 0) + 1;
+
+    return acc;
+}, {});
+
+const pieData2 = {
+  labels: Object.keys(CargasConRetraso), // Etiquetas basadas en las claves del objeto
+  datasets: [
+      {
+          data: Object.values(CargasConRetraso), // Datos de las categorías
+          backgroundColor: [
+              "#FFCE56", // Color para la categoría "Con retraso"
+              "#36A2EB", // Color para la categoría "A tiempo"
+          ],
+          hoverBackgroundColor: [
+              "#FFCE56",
+              "#36A2EB",
+          ],
+      },
+  ],
+};
+
   const pieData = {
     labels: Object.keys(filialCounts),
     datasets: [
@@ -163,22 +200,22 @@ const ReportColumns: React.FC = () => {
   };
   const VerticalStackedBarChart = () => {
     return (
-<ResponsiveContainer width="100%" height={400}>
-      <BarChart
-        data={data3}
-        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis type="category" dataKey="name" />
-        <YAxis type="number" />
-        <Tooltiprecharts />
-        <Legendrecharts />
-        <Bar dataKey="Enviados" stackId="a" fill="#8884d8" />
-        <Bar dataKey="Noenviados" stackId="a" fill="#d84c6f" />
-        <Bar dataKey="Observados" stackId="a" fill="#ffc658" />
-        <Bar dataKey="Visado" stackId="a" fill="#82ca9d" />
-      </BarChart>
-    </ResponsiveContainer>
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart
+          data={data3}
+          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis type="category" dataKey="name" />
+          <YAxis type="number" />
+          <Tooltiprecharts />
+          <Legendrecharts />
+          <Bar dataKey="Enviados" stackId="a" fill="#8884d8" />
+          <Bar dataKey="Noenviados" stackId="a" fill="#d84c6f" />
+          <Bar dataKey="Observados" stackId="a" fill="#ffc658" />
+          <Bar dataKey="Visado" stackId="a" fill="#82ca9d" />
+        </BarChart>
+      </ResponsiveContainer>
     );
   };
   return (
@@ -196,13 +233,24 @@ const ReportColumns: React.FC = () => {
           <h2 className="text-lg font-semibold mb-2">Sílabos Enviados</h2>
           {carga1 && carga1.length > 0 ? (
             <>
-              <div>
-                <h3 className="text-md font-semibold mb-2">Distribución por Filial</h3>
+              <h3 className="text-md font-semibold mb-2">Distribución por Filial</h3>
+
+              <div className="flex my-3  justify-center items-center">
+                  <div className="w-48 h-48">
+                  <Pie data={pieData} />
+
+                </div>
+
+
                 <div className="flex justify-center items-center">
                   <div className="w-48 h-48">
-                    <Pie data={pieData} />
+                    <Pie data={pieData2} />
+
                   </div>
-                </div>            </div>
+                </div>
+
+
+              </div>
               <table className="table-auto w-full border-collapse border border-gray-300 mb-4">
                 <thead>
                   <tr className="bg-gray-200">
