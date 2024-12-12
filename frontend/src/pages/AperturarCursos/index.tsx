@@ -6,6 +6,7 @@ import { getMisCursos, CargaDocente} from '@/pages/services/silabo.services';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 ChartJS.register(ArcElement, Tooltip, Legend);
+import { useNavigate } from 'react-router-dom';
 
 
 const Index: React.FC = () => {
@@ -19,6 +20,7 @@ const Index: React.FC = () => {
     const itemsPerPage = 5;
     const tableRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
     
 
     useEffect(() => {
@@ -88,6 +90,10 @@ const Index: React.FC = () => {
         Swal.fire('Éxito', 'Cursos seleccionados activados', 'success');
     };
 
+    const handleViewRequest = (rowData) => {
+        navigate('/solicitud-apertura', { state: { curso: rowData } });
+    };
+
     const filteredModalData = filteredData.filter(course => course.estado !== 'Aperturado');
     const activeCourses = filteredData.filter(course => course.estado !== 'No aperturado');
    
@@ -104,22 +110,6 @@ const Index: React.FC = () => {
             },
         ],
     };      
-    
-    const handleDownloadPDF = () => {
-        if (chartRef.current) {
-          // Usamos html2canvas para capturar el gráfico como una imagen
-          html2canvas(chartRef.current, { useCORS: true }).then((canvas) => {
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF();
-    
-            // Añadir el gráfico como imagen al PDF
-            pdf.addImage(imgData, 'PNG', 10, 10, 180, 150); // Ajusta las coordenadas y el tamaño
-    
-            // Guardar el PDF
-            pdf.save('grafico_pie.pdf');
-          });
-        }
-      };
 
     const generatePDF = async () => {
         const pdf = new jsPDF('p', 'mm', 'a4');
@@ -163,15 +153,6 @@ const Index: React.FC = () => {
                 }
             });
         }
-
-        if (chartRef.current) {
-            html2canvas(chartRef.current).then((canvas) => {
-                const imgData = canvas.toDataURL('image/png');
-                pdf.addImage(imgData, 'PNG', marginLeft, currentHeight, pageWidth - 2 * marginLeft, 100);
-                currentHeight += 110; // Ajustar la posición después de agregar la imagen                
-            });
-        }
-
         // Pie de página
         pdf.setFontSize(10);
         pdf.text(
@@ -189,6 +170,27 @@ const Index: React.FC = () => {
         // Ruta al archivo en la carpeta public
         const archivoURL = `${window.location.origin}/Malla2018.pdf`;
         window.open(archivoURL, '_blank');
+    };
+
+    const handleRequest = (rowData) => {
+        Swal.fire({
+            title: 'Formato de Petición',
+            html: `
+                <div style="text-align: left;">
+                    <p>Código del curso: ${rowData.idCurso}</p>
+                    <p>Nombre del curso: ${rowData.curso.name}</p>
+                    <p>Semestre: ${rowData.semestre_academico.nomSemestre}</p>
+                    <p>Solicitud: Aperturar el curso para el semestre correspondiente.</p>
+                </div>
+            `,
+            confirmButtonText: 'Aceptar',
+            showCancelButton: true,
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire('Éxito', 'La solicitud fue registrada correctamente.', 'success');
+            }
+        });
     };
 
     return (
@@ -244,6 +246,12 @@ const Index: React.FC = () => {
                 >
                     Ver Cursos
                 </button>
+                {/* <button
+                    onClick={navigate('/reporte-apertura')}
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                    Ver Reportes
+                </button> */}
                     
 
                     {/* Modal */}
@@ -303,6 +311,7 @@ const Index: React.FC = () => {
                             <th className="px-4 py-2 border-b font-medium text-white">Código</th>
                             <th className="px-4 py-2 border-b font-medium text-white">Curso</th>
                             <th className="px-4 py-2 border-b font-medium text-white">Estado</th>
+                            <th className="px-4 py-2 border-b font-medium text-white">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -311,19 +320,20 @@ const Index: React.FC = () => {
                                 <td className="px-4 py-2 border-b text-center">{carga.idCurso}</td>
                                 <td className="px-4 py-2 border-b text-center">{carga.curso?.name}</td>
                                 <td className="px-4 py-2 border-b text-center">{carga.estado}</td>
+                                <td className="px-4 py-2 border-b text-center">
+                                <button
+                                    onClick={() => handleViewRequest(carga)}
+                                    className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                                >
+                                    Ver Solicitud
+                                </button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
 
                 </table>
-            </div>
-            <div className="flex justify-center items-center mb-4">
-                <Pie data={chartData} /> {/* Gráfico de pastel */}
-            </div>
-            {/* <div>
-                <button onClick={handleDownloadPDF}>Generar PDF</button>
-            </div> */}
-            
+            </div>            
         </div>
     );
 };

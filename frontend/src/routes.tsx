@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createBrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router} from 'react-router-dom';
 
 import Loader from './common/Loader';
 import PageTitle from './components/PageTitle';
@@ -20,8 +21,8 @@ import MisCursos from './pages/MisCursos/index';
 import Versilabos from './pages/VerSilabos/index';
 import Reporte1 from './pages/Reportes/index';
 import AperturarCursos from './pages/AperturarCursos/index';
-
-
+import SolicitudApertura from './pages/AperturarCursos/SolicitudApertura';
+import ReportesPeticiones from './pages/AperturarCursos/ReportesPeticiones'; 
 
 
 import SignIn from './pages/Authentication/SignIn';
@@ -282,8 +283,25 @@ const router = createBrowserRouter([
                         <AperturarCursos/>
                     </ProtectedRoute>
                 ),
+            },
+            {
+                path:'/solicitud-apertura',
+                element: (
+                    <ProtectedRoute>
+                        <PageTitle title="Aperturar Cursos | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+                        <SolicitudApertura/>
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path:'/reporte-apertura',
+                element: (
+                    <ProtectedRoute>
+                        <PageTitle title="Aperturar Cursos | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+                        <ReportesPeticiones/>
+                    </ProtectedRoute>
+                ),
             }
-            
         ]
     },
 ]);
