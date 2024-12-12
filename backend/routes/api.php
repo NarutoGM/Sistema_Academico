@@ -131,8 +131,4 @@ Route::get('/verhorarios', [HorariosController::class, 'verhorarios']);
 Route::post('/guardar-horarios', [HorariosController::class, 'guardarHorarios']);
 Route::get('/cursosFiltrados', [HorariosController::class, 'obtenerCursosFiltrados']);
 
-
-
-
-
 });
