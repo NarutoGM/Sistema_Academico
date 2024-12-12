@@ -14,6 +14,8 @@ import PDFcombinado from './PDFcombinado.js';
 import ReportePDF from './ReportePDF'; // Importa el nuevo componente
 import ReporteObservaciones from './ReporteObservaciones';
 import ReporteDocentesFilial from './ReporteDocentesFilial';
+import PDFCargaAdicional from './PDFCargaAdicional'; // Ajusta la ruta según la ubicación del componente
+
 
 import { isAuthenticated } from '@/utils/auth';
 
@@ -344,7 +346,7 @@ const CargaDocente: React.FC = () => {
                       CHNL
                     </button>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-800">
+                  <td className="px-6 py-4 text-sm text-gray-800 flex gap-2">
                     {/* Botón para descargar el reporte PDF */}
 
                     <PDFcombinado
@@ -357,6 +359,9 @@ const CargaDocente: React.FC = () => {
                       idFilial={selectedFilial ?? 0}
                       idDirector={idDirector}
                     />
+
+                    {/* Botón CA */}
+                    <PDFCargaAdicional docente={docente} />
                   </td>
                 </tr>
               ))
