@@ -95,7 +95,7 @@ return [
     'schema' => 'public',
     'sslmode' => 'prefer', // Sigue usando prefer en local
     'options' => extension_loaded('pdo_pgsql') ? [
-        PDO::ATTR_EMULATE_PREPARES => true, // Mejor manejo de tipos
+        PDO::ATTR_EMULATE_PREPARES => false, // Mejor manejo de tipos
     ] : [],
 ],
 

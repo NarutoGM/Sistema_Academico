@@ -449,6 +449,8 @@ class SubirSilaboController extends Controller
                         'escuela:idEscuela,name',
                     ])
                         ->where('idDirector', $directorescuela->idDirector)
+                        ->where('idSemestreAcademico', 2)
+
                         ->get()
                         ->map(function ($carga) {
 
