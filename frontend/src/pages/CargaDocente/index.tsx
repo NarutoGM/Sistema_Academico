@@ -11,7 +11,9 @@ import {
 import AsignarCursosModal from './AsignarCursosModal';
 import CHNLmodal from './CHNLmodal';
 import PDFcombinado from './PDFcombinado.js';
-import ReportePDF from "./ReportePDF"; // Importa el nuevo componente
+import ReportePDF from './ReportePDF'; // Importa el nuevo componente
+import ReporteObservaciones from './ReporteObservaciones';
+
 import { isAuthenticated } from '@/utils/auth';
 
 const CargaDocente: React.FC = () => {
@@ -27,6 +29,15 @@ const CargaDocente: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loadingDocentes, setLoadingDocentes] = useState(false); // Estado para indicar si los docentes están cargando
 
+  const [docentesState, setDocentesState] = useState(() => {
+    const storedData = localStorage.getItem('docentesData');
+    return storedData ? JSON.parse(storedData) : {};
+  });
+
+  // Guardar docentesState en localStorage cuando cambie
+  useEffect(() => {
+    localStorage.setItem('docentesData', JSON.stringify(docentesState));
+  }, [docentesState]);
 
   const [selectedDocente, setSelectedDocente] = useState<Docente | null>(null);
   const [showModalCHL, setShowModalCHL] = useState(false);
@@ -153,6 +164,37 @@ const CargaDocente: React.FC = () => {
   //PDF
   const generatePDF = async (docenteId: number, docenteName: string) => {};
 
+  const handleCheckboxChange = (id: number) => {
+    setDocentesState((prevState: any) => {
+      const updatedState = { ...prevState };
+      updatedState[id] = {
+        ...updatedState[id],
+        observacion: !updatedState[id]?.observacion,
+      };
+      return updatedState;
+    });
+  };
+
+  const generateRandomDate = (id: number): string => {
+    if (docentesState[id]?.fechaEnvio) return docentesState[id].fechaEnvio;
+
+    const start = new Date('2024-09-01').getTime();
+    const end = new Date('2024-09-30').getTime();
+    const randomTimestamp = Math.random() * (end - start) + start;
+    const randomDate = new Date(randomTimestamp).toLocaleDateString('es-PE', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+
+    setDocentesState((prevState: any) => ({
+      ...prevState,
+      [id]: { ...prevState[id], fechaEnvio: randomDate },
+    }));
+
+    return randomDate;
+  };
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Carga Docente</h1>
@@ -206,6 +248,7 @@ const CargaDocente: React.FC = () => {
 
       {/* Mostrar tabla de docentes */}
       <div className="mt-6">
+        <h3 className="text-1x3 font-bold mb-4">Docentes por filial</h3>
         <table className="min-w-full bg-white  ">
           <thead className="bg-gray-100">
             <tr>
@@ -221,6 +264,7 @@ const CargaDocente: React.FC = () => {
               <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
                 Estado
               </th>
+
               <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
                 Acciones
               </th>
@@ -298,15 +342,96 @@ const CargaDocente: React.FC = () => {
               </tr>
             )}
           </tbody>
-          
         </table>
         <ReportePDF
-          disabled={loadingDocentes  || docentes.length === 0}
+          disabled={loadingDocentes || docentes.length === 0}
           docentes={filteredDocentes}
           idFilial={selectedFilial ?? 0}
           idDirector={idDirector}
-           /> 
+        />
 
+        <h3 className="text-1x3 font-bold mb-4">Observaciones</h3>
+        <table className="min-w-full bg-white">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                ID
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                Nombre
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                Observaciones
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                Accion
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                Fecha de Envío
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredDocentes
+              .filter((docente) => docente.nroCursos > 0)
+              .map((docente) => {
+                const observacion =
+                  docentesState[docente.id]?.observacion || false;
+                const fechaEnvio = generateRandomDate(docente.id);
+
+                return (
+                  <tr
+                    key={docente.id}
+                    className="hover:bg-gray-100 transition duration-300"
+                  >
+                    <td className="px-6 py-4 text-sm text-gray-800">
+                      {docente.id}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-800">
+                      {docente.nombre} {docente.apellido}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <span
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          observacion
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
+                        {observacion ? 'Sí' : 'No'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-800">
+                      <input
+                        type="checkbox"
+                        className="form-checkbox h-5 w-5 text-blue-600"
+                        checked={observacion}
+                        onChange={() => handleCheckboxChange(docente.id)}
+                      />
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-800">
+                      {fechaEnvio}
+                    </td>
+                  </tr>
+                );
+              })}
+          </tbody>
+        </table>
+
+        {/* Componente para el reporte de observaciones */}
+        <ReporteObservaciones
+          docentes={filteredDocentes.map((docente) => ({
+            id: docente.id,
+            nombre: docente.nombre,
+            apellido: docente.apellido,
+            nrocursos: docente.nroCursos,
+            observacion: docentesState[docente.id]?.observacion ? 'Sí' : 'No',
+            descripcion: docentesState[docente.id]?.observacion || false,
+            fechaEnvio:
+              docentesState[docente.id]?.fechaEnvio ||
+              generateRandomDate(docente.id),
+          }))}
+        />
 
         {/* Modal */}
         {showModalCHL && selectedDocente && selectedFilial !== null && (
@@ -318,7 +443,14 @@ const CargaDocente: React.FC = () => {
           />
         )}
 
-        
+        {showModalCHNL && selectedDocente && selectedFilial !== null && (
+          <CHNLmodal
+            docente={selectedDocente}
+            idFilial={selectedFilial}
+            idDirector={idDirector}
+            onClose={handleCloseModalCHNL}
+          />
+        )}
       </div>
     </div>
   );
