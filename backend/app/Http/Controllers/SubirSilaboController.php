@@ -444,13 +444,15 @@ class SubirSilaboController extends Controller
 
                     $cargadocente = CargaDocente::with([
                         'filial',
-                        'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio,fLimiteSilabo', // Selecciona solo los campos necesarios
-                        'curso',
+                        'semestreAcademico:idSemestreAcademico,nomSemestre,fTermino,fInicio', // Selecciona solo los campos necesarios
+                        'curso' => function ($query) {
+                            $query->with(['departamento', 'facultad', 'area', 'regimenCurso', 'tipoCurso']);
+                        },
                         'escuela:idEscuela,name',
                     ])
                         ->where('idDirector', $directorescuela->idDirector)
                         ->where('idSemestreAcademico', 2)
-
+                        ->where('estado', true)
                         ->get()
                         ->map(function ($carga) {
 
@@ -484,42 +486,15 @@ class SubirSilaboController extends Controller
                             $silabo = Silabo::where('idCargaDocente', $carga->idCargaDocente)
                                 ->where('idFilial', $carga->idFilial)
                                 ->where('idDocente', $carga->idDocente)
+                                ->where('estado', '!=', 0)
                                 ->first();
 
 
-
-                                if ($silabo!=null) {
+                                $carga->silabo=null;
+                                if ($silabo) {
     
-                                
-                    
-
-                                    if ($silabo->estado == 1 && $silabo->activo == true) {
-                                        $carga->curso->estado_silabo = "Esperando aprobación";
-                                        $carga->silabo = $silabo;
-
-                                    } elseif ($silabo->estado == 3 && $silabo->activo == true) {
-                                        $carga->curso->estado_silabo = "Visado";
-                                        $carga->curso->observaciones = $silabo->observaciones;
-                                        $carga->silabo = $silabo;
-
-    
-                                    } elseif ($silabo->estado == 2 && $silabo->activo == true) {
-                                        $carga->curso->estado_silabo = "Rechazado";
-                                        $carga->curso->observaciones = $silabo->observaciones;
-                                        $carga->silabo = $silabo;
-
-    
-                                    }
-    
-                                }else {
-                                    // Si no existe un sílabo
-                                    $carga->curso->estado_silabo = "Sin envio de silabo";
+                                    $carga->silabo = $silabo;                                  
                                 }
-
-                                $user = auth()->user();
-                                $carga->name = $user->name;
-                                $carga->lastname = $user->lastname;
-    
                             return $carga; // Omite las cargas sin sílabo
                         });
 

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getReporte2, CargaDocente } from "@/pages/services/silabo.services";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import { BarChart, Bar, XAxis, YAxis,  ResponsiveContainer } from 'recharts';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -9,6 +10,8 @@ const ReportColumns: React.FC = () => {
   const [carga1, setCarga1] = useState<CargaDocente[]>([]); // Sílabos Enviados
   const [carga2, setCarga2] = useState<CargaDocente[]>([]); // Sílabos No Enviados
   const [carga3, setCarga3] = useState<CargaDocente[]>([]); // Sílabos Observados
+  const [carga4, setCarga4] = useState<CargaDocente[]>([]); // Sílabos Observados
+  const [data2, setdata2] = useState<[]>([]); // Sílabos Observados
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,23 +27,45 @@ const ReportColumns: React.FC = () => {
         const esperando = [];
         const sinenvio = [];
         const visado = [];
+        const rechazados = [];
 
         cargadocente.forEach((element) => {
-          if (element.curso?.estado_silabo === "Esperando aprobación") {
-            esperando.push(element);
+          if (element.silabo != null) {
+            if (element.silabo.estado == 1) {
+              esperando.push(element);
+            }
+            if (element.silabo.estado == 3) {
+              visado.push(element);
+            }
+            if (element.silabo.estado == 2) {
+              rechazados.push(element);
+            }
+
           }
-          if (element.curso?.estado_silabo === "Sin envio de silabo") {
+
+          if (element.silabo == null) {
             sinenvio.push(element);
           }
-          if (element.curso?.estado_silabo === "Visado") {
-            visado.push(element);
-          }
+
         });
 
         setCarga1(esperando);
         console.log(esperando);
         setCarga2(sinenvio);
+        console.log(sinenvio);
+
         setCarga3(visado);
+        console.log(visado);
+
+        setCarga4(rechazados);
+        console.log(rechazados);
+
+        setdata2([
+          { name: "Sin Envío", NoEnviados: sinenvio.length },
+          { name: "Rechazados", Observados: rechazados.length },
+        ]);
+
+
       } catch (error) {
         console.error("Error al obtener los datos:", error);
       }
@@ -103,7 +128,7 @@ const ReportColumns: React.FC = () => {
                   <th className="border border-gray-300 px-4 py-2">Filial</th>
                   <th className="border border-gray-300 px-4 py-2">Semestre</th>
                   <th className="border border-gray-300 px-4 py-2">Ciclo</th>
-                  <th className="border border-gray-300 px-4 py-2">Estado</th>
+                  <th className="border border-gray-300 px-4 py-2">Docente</th>
 
                   <th className="border border-gray-300 px-4 py-2">Fecha de envio</th>
                 </tr>
@@ -116,8 +141,9 @@ const ReportColumns: React.FC = () => {
                     <td className="border border-gray-300 px-4 py-2">{carga.filial?.name || "N/A"}</td>
                     <td className="border border-gray-300 px-4 py-2">{carga.semestre_academico?.nomSemestre || "N/A"}</td>
                     <td className="border border-gray-300 px-4 py-2">{carga.ciclo || "N/A"}</td>
-                    <td className="border border-gray-300 px-4 py-2">{carga.curso?.estado_silabo || "N/A"}</td>
-
+                    <td className="border border-gray-300 px-4 py-2">
+                      {`${carga.nomdocente || ''} ${carga.apedocente || ''}`}
+                    </td>
                     <td className="border border-gray-300 px-4 py-2">
                       {carga.silabo?.fEnvio
                         ? new Date(carga.silabo.fEnvio).toLocaleDateString("es-ES")
@@ -137,14 +163,100 @@ const ReportColumns: React.FC = () => {
       {/* Segunda columna: Sílabos No Enviados */}
       <div className="flex-1 p-4 border border-gray-300 rounded-lg bg-white shadow">
         <h2 className="text-lg font-semibold mb-2">Sílabos No Enviados</h2>
-        {carga2.length > 0 ? (
-          <ul className="list-disc pl-5">
-            {carga2.map((silabo) => (
-              <li key={silabo.id}>{silabo.titulo}</li>
-            ))}
-          </ul>
+        <div className="flex justify-center items-center">
+        <div className="w-full h-64">
+          <ResponsiveContainer width="100%" height="100%">
+
+
+            
+            <BarChart data={data2} layout="vertical">
+              <XAxis type="number" />
+              <YAxis dataKey="name" type="category" />
+              <Bar dataKey="Observados" fill="#8884d8" />
+              <Bar dataKey="NoEnviados" fill="#82ca9d" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+        {carga2 && carga2.length > 0 ? (
+          <>
+            <div>
+              <h3 className="text-md font-semibold mb-2">Distribución no gestionados</h3>
+            </div>
+            <table className="table-auto w-full border-collapse border border-gray-300 mb-4">
+              <thead>
+                <tr className="bg-gray-200">
+                  <th className="border border-gray-300 px-4 py-2">CodCurso</th>
+                  <th className="border border-gray-300 px-4 py-2">Curso</th>
+                  <th className="border border-gray-300 px-4 py-2">Filial</th>
+                  <th className="border border-gray-300 px-4 py-2">Semestre</th>
+                  <th className="border border-gray-300 px-4 py-2">Ciclo</th>
+                  <th className="border border-gray-300 px-4 py-2">Docente</th>
+                  <th className="border border-gray-300 px-4 py-2">Notificar</th>
+
+                </tr>
+              </thead>
+              <tbody>
+                {carga2.map((carga) => (
+                  <tr key={carga.idCargaDocente} className="hover:bg-gray-100">
+                    <td className="border border-gray-300 px-4 py-2">{carga.idCurso || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">{carga.curso?.name || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">{carga.filial?.name || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">{carga.semestre_academico?.nomSemestre || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">{carga.ciclo || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {`${carga.nomdocente || ''} ${carga.apedocente || ''}`}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      Notificar
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+          </>
         ) : (
-          <p>No hay sílabos no enviados.</p>
+          <p>No hay sílabos enviados.</p>
+        )}
+        {carga4 && carga4.length > 0 ? (
+          <>
+            <div>
+              <h3 className="text-md font-semibold mb-2">Silabos observados</h3>
+            </div>
+            <table className="table-auto w-full border-collapse border border-gray-300 mb-4">
+              <thead>
+                <tr className="bg-gray-200">
+                  <th className="border border-gray-300 px-4 py-2">CodCurso</th>
+                  <th className="border border-gray-300 px-4 py-2">Curso</th>
+                  <th className="border border-gray-300 px-4 py-2">Filial</th>
+                  <th className="border border-gray-300 px-4 py-2">Semestre</th>
+                  <th className="border border-gray-300 px-4 py-2">Ciclo</th>
+                  <th className="border border-gray-300 px-4 py-2">Docente</th>
+
+                </tr>
+              </thead>
+              <tbody>
+                {carga4.map((carga) => (
+                  <tr key={carga.idCargaDocente} className="hover:bg-gray-100">
+                    <td className="border border-gray-300 px-4 py-2">{carga.idCurso || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">{carga.curso?.name || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">{carga.filial?.name || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">{carga.semestre_academico?.nomSemestre || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">{carga.ciclo || "N/A"}</td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {`${carga.nomdocente || ''} ${carga.apedocente || ''}`}
+                    </td>
+        
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+          </>
+        ) : (
+          <p>No hay sílabos enviados.</p>
         )}
       </div>
 
