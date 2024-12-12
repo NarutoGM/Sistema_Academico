@@ -114,7 +114,7 @@ const ReporteObservaciones: React.FC<ReporteObservacionesProps> = ({ docentes })
   return (
     <div className="flex flex-col items-end mt-6">
       {/* Canvas para el gráfico */}
-      <canvas ref={barChartRef} width={800} height={400}></canvas>
+      <canvas ref={barChartRef}></canvas>
 
       {/* Botón para generar PDF */}
       <button
@@ -124,7 +124,7 @@ const ReporteObservaciones: React.FC<ReporteObservacionesProps> = ({ docentes })
         }}
         className="bg-blue-500 text-white px-10 py-2 rounded-lg hover:bg-blue-600 transition duration-300 mt-4"
       >
-        Generar Reporte
+        Reporte Observaciones
       </button>
     </div>
   );

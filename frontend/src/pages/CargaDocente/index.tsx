@@ -13,6 +13,7 @@ import CHNLmodal from './CHNLmodal';
 import PDFcombinado from './PDFcombinado.js';
 import ReportePDF from './ReportePDF'; // Importa el nuevo componente
 import ReporteObservaciones from './ReporteObservaciones';
+import ReporteDocentesFilial from './ReporteDocentesFilial';
 
 import { isAuthenticated } from '@/utils/auth';
 
@@ -53,6 +54,33 @@ const CargaDocente: React.FC = () => {
     console.error('No se pudo obtener el idDirector');
     return;
   }
+
+  //Docentes filiales 1 y 3
+  const [filial1Docentes, setFilial1Docentes] = useState<Docente[]>([]);
+  const [filial3Docentes, setFilial3Docentes] = useState<Docente[]>([]);
+  const [docentesComunes, setDocentesComunes] = useState<Docente[]>([]);
+
+  // Cargar docentes para las filiales 1 y 3
+  useEffect(() => {
+    const fetchDocentesFiliales = async () => {
+      try {
+        const docentes1 = await getDocentesByFilial(1);
+        const docentes3 = await getDocentesByFilial(3);
+        setFilial1Docentes(docentes1);
+        setFilial3Docentes(docentes3);
+
+        // Identificar docentes que están en ambas filiales
+        const comunes = docentes1.filter((docente1) =>
+          docentes3.some((docente3) => docente1.id === docente3.id),
+        );
+        setDocentesComunes(comunes);
+      } catch (error) {
+        console.error('Error al cargar los docentes de filiales:', error);
+      }
+    };
+
+    fetchDocentesFiliales();
+  }, []);
 
   // Cargar filiales al iniciar el componente
   useEffect(() => {
@@ -417,7 +445,6 @@ const CargaDocente: React.FC = () => {
               })}
           </tbody>
         </table>
-
         {/* Componente para el reporte de observaciones */}
         <ReporteObservaciones
           docentes={filteredDocentes.map((docente) => ({
@@ -431,6 +458,71 @@ const CargaDocente: React.FC = () => {
               docentesState[docente.id]?.fechaEnvio ||
               generateRandomDate(docente.id),
           }))}
+        />
+
+        <h3 className="text-2xl font-bold mb-4">Docentes en Ambas Filiales</h3>
+        <table className="min-w-full bg-white border">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                Filial Trujillo
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                Filial ValleJequeteque
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                Ambas Filiales
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filial1Docentes.map((docente1, index) => (
+              <tr
+                key={docente1.id}
+                className="hover:bg-gray-100 transition duration-300"
+              >
+                <td className="px-6 py-4 text-sm text-gray-800">
+                  {docente1.nombre} {docente1.apellido}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-800">
+                  {filial3Docentes[index]
+                    ? `${filial3Docentes[index].nombre} ${filial3Docentes[index].apellido}`
+                    : ''}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-800">
+                  {docentesComunes.some((doc) => doc.id === docente1.id)
+                    ? `${docente1.nombre} ${docente1.apellido}`
+                    : ''}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {/* Componente para el reporte de docentes por filiales */}
+        <ReporteDocentesFilial
+          docentesFilial={[
+            ...filial1Docentes.map((docente1) => ({
+              id: docente1.id,
+              nombre: docente1.nombre,
+              apellido: docente1.apellido,
+              enFilial1: true, // Pertenece a Filial 1 porque está en `filial1Docentes`
+              enFilial3: filial3Docentes.some((doc) => doc.id === docente1.id), // Verificar si también está en Filial 3
+              enAmbas: docentesComunes.some((doc) => doc.id === docente1.id), // Verificar si está en ambas
+            })),
+            ...filial3Docentes
+              .filter(
+                (docente3) =>
+                  !filial1Docentes.some((doc) => doc.id === docente3.id),
+              ) // Excluir los que ya están en Filial 1
+              .map((docente3) => ({
+                id: docente3.id,
+                nombre: docente3.nombre,
+                apellido: docente3.apellido,
+                enFilial1: false, // No pertenece a Filial 1
+                enFilial3: true, // Pertenece a Filial 3 porque está en `filial3Docentes`
+                enAmbas: false, // No está en ambas porque no está en Filial 1
+              })),
+          ]}
         />
 
         {/* Modal */}
