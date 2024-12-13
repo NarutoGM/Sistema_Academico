@@ -111,6 +111,22 @@ const Index: React.FC = () => {
         ],
     };      
 
+    const chartDataBar = {
+        labels: ['Cursos'],
+        datasets: [
+            {
+                label: 'Cursos Aperturados',
+                data: [aperturadosCount],
+                backgroundColor: '#4CAF50',
+            },
+            {
+                label: 'Cursos No Aperturados',
+                data: [noAperturadosCount],
+                backgroundColor: '#F44336',
+            },
+        ],
+    };      
+
     const generatePDF = async () => {
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pageWidth = pdf.internal.pageSize.getWidth();
@@ -153,6 +169,19 @@ const Index: React.FC = () => {
                 }
             });
         }
+
+        // Captura de gráficos
+        if (chartRef.current) {
+            // Captura el gráfico de la referencia 'chartRef'
+            const canvas = await html2canvas(chartRef.current);
+            const imgData = canvas.toDataURL('image/png');
+            
+            // Añadir la imagen al PDF
+            pdf.addImage(imgData, 'PNG', marginLeft, currentHeight, 180, 90);
+            currentHeight += 100; // Asegurarse de dejar espacio después de la imagen
+        }
+
+
         // Pie de página
         pdf.setFontSize(10);
         pdf.text(
@@ -170,27 +199,6 @@ const Index: React.FC = () => {
         // Ruta al archivo en la carpeta public
         const archivoURL = `${window.location.origin}/Malla2018.pdf`;
         window.open(archivoURL, '_blank');
-    };
-
-    const handleRequest = (rowData) => {
-        Swal.fire({
-            title: 'Formato de Petición',
-            html: `
-                <div style="text-align: left;">
-                    <p>Código del curso: ${rowData.idCurso}</p>
-                    <p>Nombre del curso: ${rowData.curso.name}</p>
-                    <p>Semestre: ${rowData.semestre_academico.nomSemestre}</p>
-                    <p>Solicitud: Aperturar el curso para el semestre correspondiente.</p>
-                </div>
-            `,
-            confirmButtonText: 'Aceptar',
-            showCancelButton: true,
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire('Éxito', 'La solicitud fue registrada correctamente.', 'success');
-            }
-        });
     };
 
     return (
@@ -333,7 +341,13 @@ const Index: React.FC = () => {
                     </tbody>
 
                 </table>
-            </div>            
+            </div>    
+            <div className="flex justify-center items-center mb-4">
+                <Pie data={chartData} /> {/* Gráfico de pastel */}
+            </div>  
+            <div ref={chartRef} className="mb-8">
+                <Bar data={chartDataBar} />
+            </div>        
         </div>
     );
 };
