@@ -9,11 +9,13 @@
 `Funcionalidad 1`: Gestión de Escuela  
 `Funcionalidad 2`: Gestión de Departamentos Académicos  
 `Funcionalidad 3`: Gestión de Docentes  
-`Funcionalidad 4`: Gestión de Alumnos  
-`Funcionalidad 5`: Gestión de Roles y Permisos  
-`Funcionalidad 6`: Gestión de Horarios de Clase  
-`Funcionalidad 7`: Gestión de Registro de Asignaturas  
+`Funcionalidad 4`: Gestión de Roles y Permisos 
+`Funcionalidad 5`: Gestión de Horarios de Clase
+`Funcionalidad 6`: Gestión de Horarios
+`Funcionalidad 7`: Generación de Apertura de cursos
 `Funcionalidad 8`: Gestión de Sílabos  
+`Funcionalidad 9`: Gestión de reportes de sílabos
+`Funcionalidad 10`: Gestión de Carga Horaria
 
 ---
 
@@ -64,9 +66,14 @@ Sigue los pasos para tener un entorno de desarrollo funcionando:
    php artisan migrate
    ```
 
-6. **Inicia el servidor:**  
+6. **Inicia el servidor:**
+   # Backend
    ```bash
    php artisan serve
+   ```
+   # Frontend
+     ```bash
+   npm run dev
    ```
 
 ---
